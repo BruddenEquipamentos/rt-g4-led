@@ -1,0 +1,6 @@
+FreeRTOS_TAD_logs/
+.metadata/
+.settings/
+Debug/
+Drivers/
+Middlewares/
