@@ -4,3 +4,4 @@ FreeRTOS_TAD_logs/
 Debug/
 Drivers/
 Middlewares/
+main
