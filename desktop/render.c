@@ -3,5 +3,6 @@
 
 void treadmill_render(treadmill_t *treadmill) {
   printf("\033[H\033[J");
-  printf("Hello, World\n");
+  fprintf(stdout, "Treadmill State: %d\n", treadmill->state);
+  fprintf(stdout, "Treadmill Countdown Value: %d\n", treadmill->countdown.value);
 }

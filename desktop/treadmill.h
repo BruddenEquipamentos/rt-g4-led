@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#define START_TRAINING_COUNTDOWN_VALUE (3)
+
 typedef enum key {
   KEY_NONE,
   KEY_START,
@@ -29,6 +31,15 @@ typedef struct treadmill {
     uint32_t seconds;
     uint32_t meters;
   } training;
+
+  struct {
+    uint8_t value;
+    uint32_t ms;
+  } countdown;
+
+  void (*beep)(void);
+
+  uint32_t ms;
 
 } treadmill_t;
 

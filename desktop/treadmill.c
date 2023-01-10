@@ -1,3 +1,9 @@
 #include "treadmill.h"
 
-void treadmill_setup(treadmill_t *treadmill) { treadmill->state = STATE_INIT; }
+__attribute__((weak)) void beep(void) {
+}
+
+void treadmill_setup(treadmill_t *treadmill) {
+  treadmill->beep = beep;
+  treadmill->state = STATE_INIT;
+}

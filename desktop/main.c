@@ -5,9 +5,8 @@
 #include <unistd.h>
 
 #include "input.h"
-#include "treadmill.h"
-
 #include "render.h"
+#include "treadmill.h"
 #include "update.h"
 
 // struct screen {
@@ -71,25 +70,24 @@ static uint64_t get_time_ms() {
 
 static void *thread_main(void *arg) {
   treadmill_t *treadmill = (treadmill_t *)arg;
-  uint64_t time_ms = get_time_ms();
-  uint64_t simulation_ms = get_time_ms();
+  treadmill->ms = get_time_ms();
   for (;;) {
-    time_ms = get_time_ms();
-    while (simulation_ms < time_ms) {
-      simulation_ms = simulation_ms + 100;
+    while (treadmill->ms < get_time_ms()) {
+      treadmill->ms = treadmill->ms + 100;
       treadmill_update(treadmill);
     }
     treadmill_render(treadmill);
-    usleep(1000*100);
+    usleep(1000 * 100);
   }
   return NULL;
 }
+
+treadmill_t treadmill;
 
 int main(int argc, char *argv[]) {
   pthread_t input_thread;
   pthread_t main_thread;
 
-  treadmill_t treadmill;
   treadmill_setup(&treadmill);
 
   pthread_create(&input_thread, NULL, thread_input, &treadmill);
