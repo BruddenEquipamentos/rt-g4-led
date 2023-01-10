@@ -2,6 +2,8 @@
 
 #include <string.h>
 
+#include "programs.h"
+
 void treadmill_start_training_countdown(treadmill_t *treadmill) {
   treadmill->state = STATE_COUNTDOWN;
   treadmill->countdown.value = START_TRAINING_COUNTDOWN_VALUE;
@@ -83,4 +85,25 @@ void treadmill_incline_decrement(treadmill_t *treadmill) {
           treadmill->config.incline.min) {
     treadmill->training.incline -= treadmill->config.incline.step;
   }
+}
+
+void treadmill_program(treadmill_t *treadmill) {
+  treadmill->state = STATE_PROGRAM;
+  treadmill->program.id = 1;
+  program_load_default_value(treadmill);
+}
+
+void treadmill_next_program(treadmill_t *treadmill) {
+  if (treadmill->program.id+1 >= PROGRAM_TOTALS) treadmill->program.id = 1;
+  else treadmill->program.id++;
+  program_load_default_value(treadmill);
+}
+
+void treadmill_exit_program(treadmill_t *treadmill) {
+  treadmill->state = STATE_IDLE;
+  memset(&treadmill->program, 0x00, sizeof(struct program));
+}
+
+void treadmill_start_program(treadmill_t *treadmill) {
+  treadmill_start_training_countdown(treadmill);
 }

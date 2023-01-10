@@ -2,24 +2,11 @@
 #include "keypress.h"
 
 #include "action.h"
+#include "programs.h"
 
 static void treadmill_state_init_key_press(treadmill_t *treadmill,
                                            const key_t key) {
-  switch (key) {
-    case KEY_START:
-      break;
-    case KEY_STOP:
-      break;
-    case KEY_SPEED_INCREMENT:
-      break;
-    case KEY_SPEED_DECREMENT:
-      break;
-    case KEY_INCLINE_INCREMENT:
-      break;
-    case KEY_INCLINE_DECREMENT:
-      break;
-    default:;
-  }
+  switch (key) { default:; }
 }
 
 static void treadmill_state_idle_key_press(treadmill_t *treadmill,
@@ -28,35 +15,30 @@ static void treadmill_state_idle_key_press(treadmill_t *treadmill,
     case KEY_START:
       treadmill_start_training_countdown(treadmill);
       break;
-    case KEY_STOP:
+    case KEY_PROGRAM: {
+      treadmill_program(treadmill);
       break;
-    case KEY_SPEED_INCREMENT:
-      break;
-    case KEY_SPEED_DECREMENT:
-      break;
-    case KEY_INCLINE_INCREMENT:
-      break;
-    case KEY_INCLINE_DECREMENT:
-      break;
+    }
     default:;
+  }
+}
+
+static void treadmill_state_program_key_press(treadmill_t *treadmill,
+                                              const key_t key) {
+  // delegate
+  for (int idx = 0; idx < PROGRAM_TOTALS; ++idx) {
+    if (treadmill->program.id == key_press_program_callback[idx].id) {
+      key_press_program_callback[idx].key_press(treadmill, key);
+      return;
+    }
   }
 }
 
 static void treadmill_state_countdown_key_press(treadmill_t *treadmill,
                                                 const key_t key) {
   switch (key) {
-    case KEY_START:
-      break;
     case KEY_STOP:
       treadmill_abort_countdown(treadmill);
-      break;
-    case KEY_SPEED_INCREMENT:
-      break;
-    case KEY_SPEED_DECREMENT:
-      break;
-    case KEY_INCLINE_INCREMENT:
-      break;
-    case KEY_INCLINE_DECREMENT:
       break;
     default:;
   }
@@ -65,8 +47,6 @@ static void treadmill_state_countdown_key_press(treadmill_t *treadmill,
 static void treadmill_state_training_key_press(treadmill_t *treadmill,
                                                const key_t key) {
   switch (key) {
-    case KEY_START:
-      break;
     case KEY_STOP:
       treadmill_pause_training(treadmill);
       break;
@@ -136,6 +116,7 @@ typedef struct key_press_callback {
 static key_press_callback_t key_press_callback[] = {
     {.state = STATE_INIT, .key_press = treadmill_state_init_key_press},
     {.state = STATE_IDLE, .key_press = treadmill_state_idle_key_press},
+    {.state = STATE_PROGRAM, .key_press = treadmill_state_program_key_press},
     {.state = STATE_COUNTDOWN,
      .key_press = treadmill_state_countdown_key_press},
     {.state = STATE_TRAINING, .key_press = treadmill_state_training_key_press},

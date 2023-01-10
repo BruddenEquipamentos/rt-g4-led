@@ -48,10 +48,13 @@ static void *thread_input(void *arg) {
         treadmill_key_press(treadmill, KEY_INCLINE_DECREMENT);
         break;
       }
+      case 'o': {
+        treadmill_key_press(treadmill, KEY_PROGRAM);
+        break;
+      }
       default: {
       }
     }
-    printf("%c", ch);
     usleep(1000);
   }
   return NULL;

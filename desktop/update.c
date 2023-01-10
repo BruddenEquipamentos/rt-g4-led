@@ -7,6 +7,10 @@ static void treadmill_state_init_update(treadmill_t *treadmill) {
 
 static void treadmill_state_idle_update(treadmill_t *treadmill) {}
 
+static void treadmill_state_program_update(treadmill_t *treadmill) {
+
+}
+
 static void treadmill_state_countdown_update(treadmill_t *treadmill) {
   if (treadmill->countdown.ms == 0 &&
       treadmill->countdown.value >= START_TRAINING_COUNTDOWN_VALUE) {
@@ -47,6 +51,7 @@ typedef struct update_callback {
 static update_callback_t update_callback[] = {
     {.state = STATE_INIT, .update = treadmill_state_init_update},
     {.state = STATE_IDLE, .update = treadmill_state_idle_update},
+    {.state = STATE_PROGRAM, .update = treadmill_state_program_update},
     {.state = STATE_COUNTDOWN, .update = treadmill_state_countdown_update},
     {.state = STATE_TRAINING, .update = treadmill_state_training_update},
     {.state = STATE_PAUSED, .update = treadmill_state_paused_update},
