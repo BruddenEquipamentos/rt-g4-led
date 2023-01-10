@@ -28,12 +28,32 @@ typedef struct treadmill {
   state_t state;
 
   struct {
+    uint32_t ms;
     uint32_t seconds;
     uint32_t meters;
+    uint32_t kcal;
+
+    uint16_t speed;
+    int16_t incline;
   } training;
 
   struct {
+    struct {
+      uint16_t min;
+      uint16_t max;
+      uint16_t step;
+    } speed;
+    struct {
+      int16_t min;
+      int16_t max;
+      int16_t step;
+    } incline;
+  } config;
+  struct {
     uint8_t value;
+    uint16_t speed;
+    uint32_t meters;
+    int16_t incline;
     uint32_t ms;
   } countdown;
 

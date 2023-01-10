@@ -9,4 +9,9 @@ void treadmill_resume_training(treadmill_t *treadmill);
 void treadmill_finish_training(treadmill_t *treadmill);
 void treadmill_close_report(treadmill_t *treadmill);
 
+void treadmill_speed_increment(treadmill_t *treadmill);
+void treadmill_speed_decrement(treadmill_t *treadmill);
+void treadmill_incline_increment(treadmill_t *treadmill);
+void treadmill_incline_decrement(treadmill_t *treadmill);
+
 #endif

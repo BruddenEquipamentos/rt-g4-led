@@ -25,3 +25,49 @@ void treadmill_finish_training(treadmill_t *treadmill) {
 void treadmill_close_report(treadmill_t *treadmill) {
   treadmill->state = STATE_IDLE;
 }
+
+void treadmill_speed_set(treadmill_t *treadmill, const uint16_t speed) {
+  if (speed >= treadmill->config.speed.min &&
+      speed <= treadmill->config.speed.max) {
+    treadmill->training.speed = speed;
+  }
+}
+
+void treadmill_incline_set(treadmill_t *treadmill, const int16_t incline) {
+  if (incline >= treadmill->config.incline.min &&
+      incline <= treadmill->config.incline.max) {
+    treadmill->training.incline = incline;
+  }
+}
+
+void treadmill_speed_increment(treadmill_t *treadmill) {
+  if (treadmill->training.speed >= treadmill->config.speed.min &&
+      treadmill->training.speed + treadmill->config.speed.step <=
+          treadmill->config.speed.max) {
+    treadmill->training.speed += treadmill->config.speed.step;
+  }
+}
+
+void treadmill_speed_decrement(treadmill_t *treadmill) {
+  if (treadmill->training.speed >= treadmill->config.speed.min &&
+      treadmill->training.speed - treadmill->config.speed.step >=
+          treadmill->config.speed.min) {
+    treadmill->training.speed -= treadmill->config.speed.step;
+  }
+}
+
+void treadmill_incline_increment(treadmill_t *treadmill) {
+  if (treadmill->training.incline >= treadmill->config.incline.min &&
+      treadmill->training.incline + treadmill->config.incline.step <=
+          treadmill->config.incline.max) {
+    treadmill->training.incline += treadmill->config.incline.step;
+  }
+}
+
+void treadmill_incline_decrement(treadmill_t *treadmill) {
+  if (treadmill->training.incline >= treadmill->config.incline.min &&
+      treadmill->training.incline - treadmill->config.incline.step >=
+          treadmill->config.incline.min) {
+    treadmill->training.incline -= treadmill->config.incline.step;
+  }
+}

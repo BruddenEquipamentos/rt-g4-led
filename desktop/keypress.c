@@ -71,16 +71,16 @@ static void treadmill_state_training_key_press(treadmill_t *treadmill,
       treadmill_pause_training(treadmill);
       break;
     case KEY_SPEED_INCREMENT:
-      // todo
+      treadmill_speed_increment(treadmill);
       break;
     case KEY_SPEED_DECREMENT:
-      // todo
+      treadmill_speed_decrement(treadmill);
       break;
     case KEY_INCLINE_INCREMENT:
-      // todo
+      treadmill_incline_increment(treadmill);
       break;
     case KEY_INCLINE_DECREMENT:
-      // todo
+      treadmill_incline_decrement(treadmill);
       break;
     default:;
   }

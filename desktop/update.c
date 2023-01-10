@@ -7,8 +7,8 @@ static void treadmill_state_init_update(treadmill_t *treadmill) {
 static void treadmill_state_idle_update(treadmill_t *treadmill) {}
 
 static void treadmill_state_countdown_update(treadmill_t *treadmill) {
-  if (treadmill->countdown.value >= START_TRAINING_COUNTDOWN_VALUE &&
-      treadmill->countdown.ms == 0) {
+  if (treadmill->countdown.ms == 0 &&
+      treadmill->countdown.value >= START_TRAINING_COUNTDOWN_VALUE) {
     treadmill->countdown.value = START_TRAINING_COUNTDOWN_VALUE;
     treadmill->countdown.ms = treadmill->ms;
     treadmill->beep();
@@ -20,10 +20,20 @@ static void treadmill_state_countdown_update(treadmill_t *treadmill) {
     }
   } else {
     treadmill->state = STATE_TRAINING;
+    treadmill->training.seconds = 0;
+    treadmill->training.ms = treadmill->ms;
+    treadmill->training.speed = treadmill->config.speed.min;
   }
 }
 
-static void treadmill_state_training_update(treadmill_t *treadmill) {}
+static void treadmill_state_training_update(treadmill_t *treadmill) {
+  if (treadmill->ms - treadmill->training.ms >= 1000) {
+    treadmill->training.ms = treadmill->ms;
+    treadmill->training.seconds++;
+  }
+
+  // todo programs
+}
 
 static void treadmill_state_paused_update(treadmill_t *treadmill) {}
 
