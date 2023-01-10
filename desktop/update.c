@@ -1,4 +1,5 @@
 #include "update.h"
+#include "action.h"
 
 static void treadmill_state_init_update(treadmill_t *treadmill) {
   treadmill->state = STATE_IDLE;
@@ -19,10 +20,7 @@ static void treadmill_state_countdown_update(treadmill_t *treadmill) {
       treadmill->beep();
     }
   } else {
-    treadmill->state = STATE_TRAINING;
-    treadmill->training.seconds = 0;
-    treadmill->training.ms = treadmill->ms;
-    treadmill->training.speed = treadmill->config.speed.min;
+    treadmill_start_training(treadmill);
   }
 }
 
@@ -30,6 +28,8 @@ static void treadmill_state_training_update(treadmill_t *treadmill) {
   if (treadmill->ms - treadmill->training.ms >= 1000) {
     treadmill->training.ms = treadmill->ms;
     treadmill->training.seconds++;
+    treadmill->training.cm += (treadmill->training.speed * 27778) / 100000;
+    treadmill->training.meters = treadmill->training.cm/100;
   }
 
   // todo programs

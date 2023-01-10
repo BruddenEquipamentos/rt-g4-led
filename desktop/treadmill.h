@@ -27,9 +27,11 @@ typedef enum state {
 typedef struct treadmill {
   state_t state;
 
-  struct {
+  struct training {
     uint32_t ms;
     uint32_t seconds;
+
+    uint32_t cm;
     uint32_t meters;
     uint32_t kcal;
 

@@ -2,6 +2,7 @@
 #define ACTION_H
 #include "treadmill.h"
 
+void treadmill_start_training_countdown(treadmill_t *treadmill);
 void treadmill_start_training(treadmill_t *treadmill);
 void treadmill_abort_countdown(treadmill_t *treadmill);
 void treadmill_pause_training(treadmill_t *treadmill);

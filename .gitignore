@@ -6,3 +6,4 @@ Drivers/
 Middlewares/
 main
 *.dSYM
+.DS_Store

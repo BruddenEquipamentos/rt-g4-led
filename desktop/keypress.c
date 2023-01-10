@@ -26,7 +26,7 @@ static void treadmill_state_idle_key_press(treadmill_t *treadmill,
                                            const key_t key) {
   switch (key) {
     case KEY_START:
-      treadmill_start_training(treadmill);
+      treadmill_start_training_countdown(treadmill);
       break;
     case KEY_STOP:
       break;
