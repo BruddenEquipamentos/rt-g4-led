@@ -73,6 +73,10 @@ typedef struct treadmill {
     uint32_t ms;
   } countdown;
 
+  struct debug {
+    uint8_t print_states;
+  } debug;
+
   void (*beep)(void);
 
   uint32_t ms;
