@@ -1,0 +1,46 @@
+#ifndef RENDER_H
+#define RENDER_H
+
+#include "digits.h"
+
+typedef enum {
+    DOT_POSITION_NONE = 0x00,
+    DOT_POSITION_0 = 0x01,
+    DOT_POSITION_1 = 0x02,
+    DOT_POSITION_2 = 0x04,
+    DOT_POSITION_3 = 0x08,
+} dot_position_t;
+
+typedef struct display {
+    uint8_t on_addr;
+    dot_position_t dot_pos;
+    uint8_t addr[8];
+    uint8_t max_digits;
+    sdigit_t digits[4];
+    char visible;
+    struct {
+    	uint32_t interval;
+    	uint32_t time_ms;
+    } blink;
+} display_t;
+
+extern display_t* display_distance;
+extern display_t* display_time;
+extern display_t* display_speed;
+extern display_t* display_steps;
+extern display_t* display_calories;
+extern display_t* display_spm;
+extern display_t* display_power;
+extern display_t* display_bpm;
+
+void display_helper_hide_all_displays();
+void display_helper_show_all_displays();
+void display_helper_update_digits(display_t* display, const uint32_t value);
+void display_helper_update_time(display_t* display, const uint32_t seconds);
+
+void blink_field(const uint32_t update_time_ms, display_t *display, const uint32_t blink_interval_ms);
+void blink_field_reset();
+
+
+
+#endif

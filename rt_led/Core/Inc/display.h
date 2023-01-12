@@ -1,0 +1,27 @@
+/*
+ * display.h
+ *
+ *  Created on: Feb 1, 2021
+ *      Author: movement
+ */
+
+#ifndef INC_DISPLAY_H_
+#define INC_DISPLAY_H_
+
+#define DISPLAY_ADDRESS_WRITE 0xD0
+#define DISPLAY_ADDRESS_READ 0xD1
+#define DISPLAY_CMD_PAGEWRITE 0x80
+#define DISPLAY_CMD_DRIVEMODE 0x82
+#define DISPLAY_CMD_DRIVEMODE_CFG 0x02
+#define DISPLAY_CMD_SYSTEMMODE 0x82
+#define DISPLAY_CMD_SYSTEMMODE_ON 0x03
+#define DISPLAY_CMD_BLINK 0x84
+#define DISPLAY_CMD_BLINK_CFG 0x00
+#define DISPLAY_CMD_PWM 0xC0
+#define DISPLAY_CMD_PWM_CFG 0xFF
+
+void display_init();
+void display_render(void);
+//void display_render(xe_elliptical_t *elliptical);
+
+#endif /* INC_DISPLAY_H_ */

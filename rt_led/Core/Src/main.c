@@ -22,7 +22,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "display.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -604,10 +604,14 @@ static void MX_GPIO_Init(void)
 void StartDefaultTask(void const * argument)
 {
   /* USER CODE BEGIN 5 */
+
+	display_init();
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+
+	 display_render();
+     osDelay(1000);
   }
   /* USER CODE END 5 */
 }
