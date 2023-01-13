@@ -91,6 +91,7 @@ int main(int argc, char *argv[]) {
 
   treadmill_t treadmill;
   treadmill_setup(&treadmill);
+  treadmill.get_time_ms = get_time_ms;
 
   pthread_create(&input_thread, NULL, thread_input, &treadmill);
   pthread_create(&main_thread, NULL, thread_main, &treadmill);

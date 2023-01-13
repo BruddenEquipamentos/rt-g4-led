@@ -1,3 +1,7 @@
+## Jan 13, 2023
+
+- Added current programs
+
 ## Jan 12, 2023
 
 - Added temporary display test to hardware board.

@@ -30,6 +30,7 @@ typedef enum state {
 
 typedef struct treadmill {
   state_t state;
+  state_t previous_state;
 
   struct program {
     // program_id_t id; // temp hack - refences
@@ -51,6 +52,8 @@ typedef struct treadmill {
 
     uint16_t speed;
     int16_t incline;
+
+    uint8_t bpm;
   } training;
 
   struct {
@@ -78,6 +81,7 @@ typedef struct treadmill {
   } debug;
 
   void (*beep)(void);
+  uint32_t (*get_time_ms)(void);
 
   uint32_t ms;
 
