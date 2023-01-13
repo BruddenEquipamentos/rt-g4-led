@@ -23,6 +23,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "display.h"
+#include "keyboard.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -51,6 +52,7 @@ UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart3;
 
 osThreadId defaultTaskHandle;
+osThreadId keyboardTaskHandle;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -65,6 +67,7 @@ static void MX_ADC1_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_TIM16_Init(void);
 void StartDefaultTask(void const * argument);
+void KeyboardTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -133,6 +136,10 @@ int main(void)
   /* definition and creation of defaultTask */
   osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
+
+  /* definition and creation of keyboardTask */
+  osThreadDef(keyboardTask, KeyboardTask, osPriorityNormal, 0, 128);
+  keyboardTaskHandle = osThreadCreate(osThread(keyboardTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -421,7 +428,6 @@ static void MX_TIM16_Init(void)
   /* USER CODE BEGIN TIM16_Init 2 */
 
   /* USER CODE END TIM16_Init 2 */
-  HAL_TIM_MspPostInit(&htim16);
 
 }
 
@@ -526,21 +532,22 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOC, LED_Pin|TS10_Pin|TS11_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, CMD_Pin|W_HW_Pin|TS03_Pin|TS04_Pin
-                          |TS08_Pin|CONTR_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, CMD_Pin|W_HW_Pin|CONTR_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, TS05_Pin|TS09_Pin|TP1_Pin|TP2_Pin
-                          |TP3_Pin|TS00_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(TS09_GPIO_Port, TS09_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, TS10_Pin|TS11_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, TP1_Pin|TP2_Pin|TP3_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, TS01_Pin|TS02_Pin|TS06_Pin|TS07_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOD, TS06_Pin|TS07_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(TS08_GPIO_Port, TS08_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pins : LED_Pin TS10_Pin TS11_Pin */
   GPIO_InitStruct.Pin = LED_Pin|TS10_Pin|TS11_Pin;
@@ -550,39 +557,43 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : INC_MINUS_Pin SP_MINUS_Pin SP_PLUS_Pin INC_PLUS_Pin
-                           BK_RODA_Pin */
+                           BK_RODA_Pin TS05_Pin TS00_Pin */
   GPIO_InitStruct.Pin = INC_MINUS_Pin|SP_MINUS_Pin|SP_PLUS_Pin|INC_PLUS_Pin
-                          |BK_RODA_Pin;
+                          |BK_RODA_Pin|TS05_Pin|TS00_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : CMD_Pin W_HW_Pin TS03_Pin TS04_Pin
-                           TS08_Pin CONTR_Pin */
-  GPIO_InitStruct.Pin = CMD_Pin|W_HW_Pin|TS03_Pin|TS04_Pin
-                          |TS08_Pin|CONTR_Pin;
+  /*Configure GPIO pins : CMD_Pin W_HW_Pin TS08_Pin CONTR_Pin */
+  GPIO_InitStruct.Pin = CMD_Pin|W_HW_Pin|TS08_Pin|CONTR_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LO_PLUS_Pin LO_MINUS_Pin EMG_Pin */
-  GPIO_InitStruct.Pin = LO_PLUS_Pin|LO_MINUS_Pin|EMG_Pin;
+  /*Configure GPIO pins : LO_PLUS_Pin LO_MINUS_Pin TS03_Pin TS04_Pin
+                           EMG_Pin */
+  GPIO_InitStruct.Pin = LO_PLUS_Pin|LO_MINUS_Pin|TS03_Pin|TS04_Pin
+                          |EMG_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : TS05_Pin TS09_Pin TP1_Pin TP2_Pin
-                           TP3_Pin TS00_Pin */
-  GPIO_InitStruct.Pin = TS05_Pin|TS09_Pin|TP1_Pin|TP2_Pin
-                          |TP3_Pin|TS00_Pin;
+  /*Configure GPIO pins : TS09_Pin TP1_Pin TP2_Pin TP3_Pin */
+  GPIO_InitStruct.Pin = TS09_Pin|TP1_Pin|TP2_Pin|TP3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : TS01_Pin TS02_Pin TS06_Pin TS07_Pin */
-  GPIO_InitStruct.Pin = TS01_Pin|TS02_Pin|TS06_Pin|TS07_Pin;
+  /*Configure GPIO pins : TS01_Pin TS02_Pin */
+  GPIO_InitStruct.Pin = TS01_Pin|TS02_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : TS06_Pin TS07_Pin */
+  GPIO_InitStruct.Pin = TS06_Pin|TS07_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -614,6 +625,31 @@ void StartDefaultTask(void const * argument)
      osDelay(1000);
   }
   /* USER CODE END 5 */
+}
+
+/* USER CODE BEGIN Header_KeyboardTask */
+/**
+* @brief Function implementing the keyboardTask thread.
+* @param argument: Not used
+* @retval None
+*/
+enum key key_pressed = KEY_NONE;
+/* USER CODE END Header_KeyboardTask */
+void KeyboardTask(void const * argument)
+{
+  /* USER CODE BEGIN KeyboardTask */
+
+   key_pressed = get_key_pressed();
+
+
+  /* Infinite loop */
+  for(;;)
+  {
+    //
+    key_pressed = get_key_pressed();
+    osDelay(1);
+  }
+  /* USER CODE END KeyboardTask */
 }
 
 /**

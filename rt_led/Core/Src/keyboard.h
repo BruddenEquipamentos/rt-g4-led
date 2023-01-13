@@ -1,0 +1,28 @@
+#ifndef KEYBOARD_H
+#define KEYBOARD_H
+#include <stdint.h>
+
+enum key {
+  KEY_NONE = 0x0000,
+  KEY_STOP = 0x0001,
+  KEY_SPEED_DEC = 0x0002,
+  KEY_SPEED_5 = 0x0004,
+  KEY_SPEED_8 = 0x0008,
+  KEY_SPEED_11 = 0x0010,
+  KEY_SPEED_14 = 0x0020,
+  KEY_SPEED_INC = 0x0040,
+  KEY_START = 0x0080,
+  KEY_PROGRAM = 0x0100,
+  KEY_INCLINE_DEC = 0x0200,
+  KEY_INCLINE_INC = 0x0400,
+  KEY_INCLINE_3 = 0x0800,
+  KEY_INCLINE_6 = 0x1000,
+  KEY_INCLINE_9 = 0x2000,
+  KEY_INCLINE_12 = 0x4000,
+  KEY_SAC = 0x8000,
+};
+
+
+enum key get_key_pressed(void);
+
+#endif
