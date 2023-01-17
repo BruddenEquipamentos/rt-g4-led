@@ -6,8 +6,8 @@
 
 #include "input.h"
 #include "render.h"
-#include "treadmill.h"
-#include "update.h"
+#include "../shared/treadmill.h"
+#include "../shared/update.h"
 
 static void sigint(int i) {
   (void)i;

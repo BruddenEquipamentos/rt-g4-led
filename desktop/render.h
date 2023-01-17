@@ -1,6 +1,6 @@
 #ifndef RENDER_H
 #define RENDER_H
-#include "treadmill.h"
+#include "../shared/treadmill.h"
 
 void treadmill_render(treadmill_t *treadmill);
 
