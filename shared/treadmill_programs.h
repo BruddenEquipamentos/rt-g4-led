@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "key.h"
+#include "treadmill_key.h"
 
 typedef struct treadmill treadmill_t;
 

@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-#include "key.h"
-#include "programs.h"
+#include "treadmill_key.h"
+#include "treadmill_programs.h"
 
 #define START_TRAINING_COUNTDOWN_VALUE (3)
 

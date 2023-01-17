@@ -1,5 +1,5 @@
-#include "update.h"
-#include "action.h"
+#include "treadmill_update.h"
+#include "treadmill_action.h"
 
 static void treadmill_state_init_update(treadmill_t *treadmill) {
   treadmill->state = STATE_IDLE;

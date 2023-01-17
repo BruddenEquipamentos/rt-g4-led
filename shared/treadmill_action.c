@@ -1,8 +1,8 @@
-#include "action.h"
+#include "treadmill_action.h"
 
 #include <string.h>
 
-#include "programs.h"
+#include "treadmill_programs.h"
 
 void treadmill_start_training_countdown(treadmill_t *treadmill) {
   treadmill->state = STATE_COUNTDOWN;

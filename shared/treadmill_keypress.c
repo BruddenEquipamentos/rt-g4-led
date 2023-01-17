@@ -1,8 +1,8 @@
 
-#include "keypress.h"
+#include "treadmill_keypress.h"
 
-#include "action.h"
-#include "programs.h"
+#include "treadmill_action.h"
+#include "treadmill_programs.h"
 
 static void treadmill_state_init_key_press(treadmill_t *treadmill,
                                            const key_t key) {

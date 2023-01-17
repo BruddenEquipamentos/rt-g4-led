@@ -1,8 +1,8 @@
-#include "programs.h"
+#include "treadmill_programs.h"
 
 #include <assert.h>
 
-#include "action.h"
+#include "treadmill_action.h"
 #include "treadmill.h"
 
 static void program_time_key_press(treadmill_t *treadmill, const key_t key) {
