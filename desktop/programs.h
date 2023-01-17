@@ -3,8 +3,9 @@
 
 #include <stdint.h>
 
+#include "key.h"
+
 typedef struct treadmill treadmill_t;
-typedef enum key key_t;
 
 typedef enum program_id {
   PROGRAM_NONE = 0,
@@ -19,15 +20,15 @@ typedef enum program_id {
 } program_id_t;
 
 // 99 minutes
-#define PROGRAM_TIME_DEFAULT_TIME (60*5)
-#define PROGRAM_TIME_MIN_TIME (60*1)
-#define PROGRAM_TIME_MAX_TIME (60*99)
+#define PROGRAM_TIME_DEFAULT_TIME (60 * 5)
+#define PROGRAM_TIME_MIN_TIME (60 * 1)
+#define PROGRAM_TIME_MAX_TIME (60 * 99)
 #define PROGRAM_TIME_INC_TIME_STEP (60)
 
 // 99000 meters
-#define PROGRAM_DISTANCE_DEFAULT_DISTANCE (1000*5)
+#define PROGRAM_DISTANCE_DEFAULT_DISTANCE (1000 * 5)
 #define PROGRAM_DISTANCE_MIN_DISTANCE (500)
-#define PROGRAM_DISTANCE_MAX_DISTANCE (1000*99)
+#define PROGRAM_DISTANCE_MAX_DISTANCE (1000 * 99)
 #define PROGRAM_DISTANCE_INC_DISTANCE_STEP (100)
 
 // kcal

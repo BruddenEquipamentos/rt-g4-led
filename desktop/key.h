@@ -1,0 +1,15 @@
+#ifndef KEY_H
+#define KEY_H
+
+typedef enum key {
+  KEY_NONE,
+  KEY_START,
+  KEY_STOP,
+  KEY_SPEED_INCREMENT,
+  KEY_SPEED_DECREMENT,
+  KEY_INCLINE_INCREMENT,
+  KEY_INCLINE_DECREMENT,
+  KEY_PROGRAM,
+} key_t;
+
+#endif

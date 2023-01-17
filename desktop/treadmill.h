@@ -3,20 +3,10 @@
 
 #include <stdint.h>
 
+#include "key.h"
 #include "programs.h"
 
 #define START_TRAINING_COUNTDOWN_VALUE (3)
-
-typedef enum key {
-  KEY_NONE,
-  KEY_START,
-  KEY_STOP,
-  KEY_SPEED_INCREMENT,
-  KEY_SPEED_DECREMENT,
-  KEY_INCLINE_INCREMENT,
-  KEY_INCLINE_DECREMENT,
-  KEY_PROGRAM,
-} key_t;
 
 typedef enum state {
   STATE_INIT = 0,
@@ -33,8 +23,7 @@ typedef struct treadmill {
   state_t previous_state;
 
   struct program {
-    // program_id_t id; // temp hack - refences
-    int id;
+    program_id_t id; // temp hack - refences
 
     struct p_time p_time;
     struct p_distance p_distance;
@@ -54,6 +43,17 @@ typedef struct treadmill {
     int16_t incline;
 
     uint8_t bpm;
+
+    // struct {
+    //   int32_t incline
+    // } total;
+
+    // struct {
+    //   uint16_t speed;
+    //   int16_t incline;
+    //   uint8_t bpm;
+    // } average;
+
   } training;
 
   struct {

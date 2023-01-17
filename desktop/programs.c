@@ -5,10 +5,6 @@
 #include "action.h"
 #include "treadmill.h"
 
-struct program_time {};
-
-struct program_distance {};
-
 static void program_time_key_press(treadmill_t *treadmill, const key_t key) {
   switch (key) {
     case KEY_START:

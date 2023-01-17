@@ -10,6 +10,7 @@
 #include "update.h"
 
 static void sigint(int i) {
+  (void)i;
   input_restore();
   exit(1);
 }
@@ -90,12 +91,15 @@ static void *thread_main(void *arg) {
 }
 
 int main(int argc, char *argv[]) {
+  (void)argc;
+  (void)argv;
+
   pthread_t input_thread;
   pthread_t main_thread;
 
   treadmill_t treadmill;
   treadmill_setup(&treadmill);
-  treadmill.get_time_ms = get_time_ms;
+  treadmill.get_time_ms = (uint32_t (*)(void)) get_time_ms;
 
   pthread_create(&input_thread, NULL, thread_input, &treadmill);
   pthread_create(&main_thread, NULL, thread_main, &treadmill);

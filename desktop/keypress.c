@@ -6,6 +6,7 @@
 
 static void treadmill_state_init_key_press(treadmill_t *treadmill,
                                            const key_t key) {
+  (void)treadmill;
   switch (key) { default:; }
 }
 

@@ -54,6 +54,7 @@ static void render_panel(treadmill_t *treadmill, display_t *display) {
 }
 
 static void render_dot_matrix(treadmill_t *treadmill, display_t *display) {
+  (void)display;
   dotmatrix_offset = 22;
   static uint32_t frame_ms_start = 0;
   static int frame = 0;
