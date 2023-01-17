@@ -32,6 +32,10 @@ static void *thread_input(void *arg) {
         treadmill_key_press(treadmill, KEY_STOP);
         break;
       }
+      case 'q': {
+        treadmill_key_press(treadmill, KEY_PROGRAM);
+        break;
+      }
       case '=': {
         treadmill_key_press(treadmill, KEY_SPEED_INCREMENT);
         break;
