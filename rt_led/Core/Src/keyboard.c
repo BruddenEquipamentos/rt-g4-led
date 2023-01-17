@@ -1,8 +1,7 @@
-#include "keyboard.h"
-
 #include "main.h"
 #include "stm32g070xx.h"
 #include "cmsis_os.h"
+#include "keyboard.h"
 
 #define ROW0 TS00_GPIO_Port, TS00_Pin
 #define ROW1 TS01_GPIO_Port, TS01_Pin
@@ -38,7 +37,7 @@ static void set_columns_to_high(void) {
   osDelay(1);
 
 #define NUM_READS 4
-enum key get_key_pressed(void) {
+enum key  get_key_pressed(void) {
   enum key keys[NUM_READS] = {0};
   enum key *kPtr = NULL;
   enum key key = 0xffff;
@@ -46,16 +45,16 @@ enum key get_key_pressed(void) {
   for (int i = 0; i < NUM_READS; ++i) {
     kPtr = &keys[i];                                  // 16 ms
     READ_KEYS_STATE(kPtr, COL4, ROW5, KEY_STOP);      // 1
-    READ_KEYS_STATE(kPtr, COL2, ROW0, KEY_SPEED_DEC); // 2
+    READ_KEYS_STATE(kPtr, COL2, ROW0, KEY_SPEED_DECREMENT); // 2
     READ_KEYS_STATE(kPtr, COL1, ROW0, KEY_SPEED_5);   // 3
     READ_KEYS_STATE(kPtr, COL0, ROW0, KEY_SPEED_8);   // 4
     READ_KEYS_STATE(kPtr, COL0, ROW1, KEY_SPEED_11)   // 5
     READ_KEYS_STATE(kPtr, COL0, ROW2, KEY_SPEED_14);  // 6
-    READ_KEYS_STATE(kPtr, COL2, ROW1, KEY_SPEED_INC); // 7
+    READ_KEYS_STATE(kPtr, COL2, ROW1, KEY_SPEED_INCREMENT); // 7
     READ_KEYS_STATE(kPtr, COL1, ROW2, KEY_START);     // 8
     READ_KEYS_STATE(kPtr, COL4, ROW4, KEY_PROGRAM);   // 9
-    READ_KEYS_STATE(kPtr, COL5, ROW4, KEY_INCLINE_DEC); // 10
-    READ_KEYS_STATE(kPtr, COL5, ROW3, KEY_INCLINE_INC); // 11
+    READ_KEYS_STATE(kPtr, COL5, ROW4, KEY_INCLINE_DECREMENT); // 10
+    READ_KEYS_STATE(kPtr, COL5, ROW3, KEY_INCLINE_INCREMENT); // 11
     READ_KEYS_STATE(kPtr, COL4, ROW3, KEY_INCLINE_3);   // 12
     READ_KEYS_STATE(kPtr, COL3, ROW3, KEY_INCLINE_6);   // 13
     READ_KEYS_STATE(kPtr, COL3, ROW4, KEY_INCLINE_9);   // 14
@@ -74,8 +73,8 @@ enum key get_key_pressed(void) {
       key &= ~KEY_CONFIG;
   }
 
-  if (key & (KEY_SPEED_INC|KEY_SPEED_DEC)) {
-      key &= ~(KEY_SPEED_INC|KEY_SPEED_DEC);
+  if (key & (KEY_SPEED_INCREMENT|KEY_SPEED_DECREMENT)) {
+      key &= ~(KEY_SPEED_INCREMENT|KEY_SPEED_DECREMENT);
       key |= KEY_LUB;
   } else {
       key &= ~KEY_LUB;
