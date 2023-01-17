@@ -94,7 +94,8 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  SET_BIT(SYSCFG->CFGR1, SYSCFG_CFGR1_UCPD1_STROBE);
+  SET_BIT(SYSCFG->CFGR1, SYSCFG_CFGR1_UCPD2_STROBE);
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -388,9 +389,9 @@ static void MX_TIM16_Init(void)
 
   /* USER CODE END TIM16_Init 1 */
   htim16.Instance = TIM16;
-  htim16.Init.Prescaler = 0;
+  htim16.Init.Prescaler = 200;
   htim16.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim16.Init.Period = 65535;
+  htim16.Init.Period = 40;
   htim16.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim16.Init.RepetitionCounter = 0;
   htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -403,7 +404,7 @@ static void MX_TIM16_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 0;
+  sConfigOC.Pulse = 10;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
@@ -428,6 +429,7 @@ static void MX_TIM16_Init(void)
   /* USER CODE BEGIN TIM16_Init 2 */
 
   /* USER CODE END TIM16_Init 2 */
+  HAL_TIM_MspPostInit(&htim16);
 
 }
 
@@ -615,13 +617,11 @@ static void MX_GPIO_Init(void)
 void StartDefaultTask(void const * argument)
 {
   /* USER CODE BEGIN 5 */
-
-	display_init();
+  display_init();
   /* Infinite loop */
   for(;;)
   {
-
-	 display_render();
+     display_render();
      osDelay(1000);
   }
   /* USER CODE END 5 */
@@ -633,23 +633,50 @@ void StartDefaultTask(void const * argument)
 * @param argument: Not used
 * @retval None
 */
-enum key key_pressed = KEY_NONE;
 /* USER CODE END Header_KeyboardTask */
 void KeyboardTask(void const * argument)
 {
   /* USER CODE BEGIN KeyboardTask */
-
-   key_pressed = get_key_pressed();
-
-
+  enum key key_pressed = KEY_NONE;
+  enum key previous_key = KEY_NONE;
+  HAL_TIM_PWM_Stop(&htim16, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
+  osDelay(5000);
+  HAL_TIM_PWM_Stop(&htim16, TIM_CHANNEL_1);
   /* Infinite loop */
   for(;;)
   {
-    //
     key_pressed = get_key_pressed();
+
+    if (key_pressed != previous_key) {
+
+    }
+
+    previous_key = key_pressed;
     osDelay(1);
   }
   /* USER CODE END KeyboardTask */
+}
+
+/**
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM1 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
+
+  /* USER CODE END Callback 0 */
+  if (htim->Instance == TIM1) {
+    HAL_IncTick();
+  }
+  /* USER CODE BEGIN Callback 1 */
+
+  /* USER CODE END Callback 1 */
 }
 
 /**

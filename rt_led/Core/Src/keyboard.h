@@ -20,6 +20,8 @@ enum key {
   KEY_INCLINE_9 = 0x2000,
   KEY_INCLINE_12 = 0x4000,
   KEY_SAC = 0x8000,
+  KEY_CONFIG = 0x10000,
+  KEY_LUB = 0x20000
 };
 
 

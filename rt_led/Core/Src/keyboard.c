@@ -2,6 +2,7 @@
 
 #include "main.h"
 #include "stm32g070xx.h"
+#include "cmsis_os.h"
 
 #define ROW0 TS00_GPIO_Port, TS00_Pin
 #define ROW1 TS01_GPIO_Port, TS01_Pin
@@ -36,83 +37,49 @@ static void set_columns_to_high(void) {
   set_columns_to_high();                         \
   osDelay(1);
 
-#define NUM_READS 5
+#define NUM_READS 4
 enum key get_key_pressed(void) {
   enum key keys[NUM_READS] = {0};
   enum key *kPtr = NULL;
   enum key key = 0xffff;
 
   for (int i = 0; i < NUM_READS; ++i) {
-    kPtr = &keys[i];
-    READ_KEYS_STATE(kPtr, COL0, ROW2, KEY_SPEED_14);  // 1 14km/h
-    // READ_KEYS_STATE(kPtr, COL0, ROW1, KEY_SPEED_11);
-    READ_KEYS_STATE(kPtr, COL0, ROW0, KEY_SPEED_8);
-    READ_KEYS_STATE(kPtr, COL1, ROW0, KEY_SPEED_5);
-    READ_KEYS_STATE(kPtr, COL1, ROW2, KEY_START);
-    READ_KEYS_STATE(kPtr, COL2, ROW0, KEY_SPEED_DEC);
-    // READ_KEYS_STATE(kPtr, COL2, ROW1, KEY_SPEED_INC);  // 1 14km/h
-
-    READ_KEYS_STATE(kPtr, COL3, ROW5, KEY_INCLINE_12);
-    // READ_KEYS_STATE(kPtr, COL3, ROW4, KEY_INCLINE_9);
-    // READ_KEYS_STATE(kPtr, COL3, ROW3, KEY_INCLINE_6);
-    READ_KEYS_STATE(kPtr, COL4, ROW3, KEY_INCLINE_3);
-
-    READ_KEYS_STATE(kPtr, COL4, ROW4, KEY_PROGRAM);
-    // READ_KEYS_STATE(kPtr, COL4, ROW5, KEY_STOP);
-    osDelay(2);
+    kPtr = &keys[i];                                  // 16 ms
+    READ_KEYS_STATE(kPtr, COL4, ROW5, KEY_STOP);      // 1
+    READ_KEYS_STATE(kPtr, COL2, ROW0, KEY_SPEED_DEC); // 2
+    READ_KEYS_STATE(kPtr, COL1, ROW0, KEY_SPEED_5);   // 3
+    READ_KEYS_STATE(kPtr, COL0, ROW0, KEY_SPEED_8);   // 4
+    READ_KEYS_STATE(kPtr, COL0, ROW1, KEY_SPEED_11)   // 5
+    READ_KEYS_STATE(kPtr, COL0, ROW2, KEY_SPEED_14);  // 6
+    READ_KEYS_STATE(kPtr, COL2, ROW1, KEY_SPEED_INC); // 7
+    READ_KEYS_STATE(kPtr, COL1, ROW2, KEY_START);     // 8
+    READ_KEYS_STATE(kPtr, COL4, ROW4, KEY_PROGRAM);   // 9
+    READ_KEYS_STATE(kPtr, COL5, ROW4, KEY_INCLINE_DEC); // 10
+    READ_KEYS_STATE(kPtr, COL5, ROW3, KEY_INCLINE_INC); // 11
+    READ_KEYS_STATE(kPtr, COL4, ROW3, KEY_INCLINE_3);   // 12
+    READ_KEYS_STATE(kPtr, COL3, ROW3, KEY_INCLINE_6);   // 13
+    READ_KEYS_STATE(kPtr, COL3, ROW4, KEY_INCLINE_9);   // 14
+    READ_KEYS_STATE(kPtr, COL3, ROW5, KEY_INCLINE_12);  // 15
+    READ_KEYS_STATE(kPtr, COL1, ROW1, KEY_SAC);         // 16
   }
 
   for (int i = 0; i < NUM_READS;++i) {
     key &= keys[i];
   }
 
+  if (key & KEY_START && key & KEY_STOP) {
+      key &= ~(KEY_START | KEY_STOP);
+      key |= KEY_CONFIG;
+  } else {
+      key &= ~KEY_CONFIG;
+  }
+
+  if (key & (KEY_SPEED_INC|KEY_SPEED_DEC)) {
+      key &= ~(KEY_SPEED_INC|KEY_SPEED_DEC);
+      key |= KEY_LUB;
+  } else {
+      key &= ~KEY_LUB;
+  }
+
   return key;
-
-  //  HAL_GPIO_WritePin(COL0, GPIO_PIN_RESET);
-  //  if (HAL_GPIO_ReadPin(ROW2) == GPIO_PIN_RESET) {
-  //    keys |= KEY_STOP;
-  //  }
-  //  HAL_GPIO_WritePin(COL0, GPIO_PIN_SET);
-
-  // READ_KEYS_STATE(kPtr, COL5, ROW3, KEY_INCLINE_INC);
-  // READ_KEYS_STATE(kPtr, COL5, ROW4, KEY_INCLINE_DEC);
-
-  // READ_KEYS_STATE(kPtr, COL3, ROW5, KEY_STOP);     // 1 PROGRAM
-  // READ_KEYS_STATE(kPtr, COL4, ROW4, KEY_STOP);  // 1 PROGRAM
-
-  // READ_KEYS_STATE(kPtr, COL2, ROW0, KEY_SPEED_DEC);    // 2
-  // READ_KEYS_STATE(kPtr, COL1, ROW0, KEY_SPEED_5);      // 3
-  // READ_KEYS_STATE(kPtr, COL0, ROW0, KEY_SPEED_8);      // 4
-  // READ_KEYS_STATE(kPtr, COL0, ROW1, KEY_SPEED_11)      // 5
-  // READ_KEYS_STATE(kPtr, COL0, ROW2, KEY_SPEED_14);     // 6
-  // READ_KEYS_STATE(kPtr, COL2, ROW1, KEY_SPEED_INC);    // 7
-  // READ_KEYS_STATE(kPtr, COL1, ROW2, KEY_START);        // 8
-  // READ_KEYS_STATE(kPtr, COL4, ROW4, KEY_PROGRAM);      // 9
-  // READ_KEYS_STATE(kPtr, COL5, ROW4, KEY_INCLINE_DEC);  // 10
-  // READ_KEYS_STATE(kPtr, COL5, ROW3, KEY_INCLINE_INC);  // 11
-  // READ_KEYS_STATE(kPtr, COL4, ROW3, KEY_INCLINE_3);    // 12
-  // READ_KEYS_STATE(kPtr, COL3, ROW3, KEY_INCLINE_6);    // 13
-  // READ_KEYS_STATE(kPtr, COL3, ROW4, KEY_INCLINE_9);    // 14
-  // READ_KEYS_STATE(kPtr, COL3, ROW5, KEY_INCLINE_12);   // 15
-  // READ_KEYS_STATE(kPtr, COL1, ROW1, KEY_SAC);          // 16
-
-  //return keys;
-
-  //  static uint8_t i;
-  //  if ((keys & KEY_START) && (keys & KEY_STOP)) {
-  //    return 0x10;  // 16 - STAT+STOP - Config
-  //  }
-  //
-  //  if ((keys & KEY_SPEED_INC) && (keys & (KEY_SPEED_DEC | KEY_INCLINE_INC)))
-  //  {
-  //    return 0x11;  // 17 - SPEED INC + SPEED DEC - LUB
-  //  } else {
-  //    for (i = 0; i < 16; ++i) {
-  //      if (keys & (1 << i)) {
-  //        return i + 1;
-  //      }
-  //    }
-  //  }
-  //
-  //  return KEY_NONE;
 }
