@@ -1,5 +1,5 @@
-#ifndef ACTION_H
-#define ACTION_H
+#ifndef TREADMILL_ACTION_H
+#define TREADMILL_ACTION_H
 #include "treadmill.h"
 
 void treadmill_program(treadmill_t *treadmill);

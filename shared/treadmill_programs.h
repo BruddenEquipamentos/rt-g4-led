@@ -1,5 +1,5 @@
-#ifndef PROGRAMS_H
-#define PROGRAMS_H
+#ifndef TREADMILL_PROGRAMS_H
+#define TREADMILL_PROGRAMS_H
 
 #include <stdint.h>
 
