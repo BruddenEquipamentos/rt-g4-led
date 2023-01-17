@@ -24,6 +24,7 @@
 /* USER CODE BEGIN Includes */
 #include "display.h"
 #include "keyboard.h"
+#include "treadmill.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/

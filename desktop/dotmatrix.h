@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "dm_digits.h"
+#include "../shared/d_digits.h"
 
 extern int dotmatrix_offset;
 

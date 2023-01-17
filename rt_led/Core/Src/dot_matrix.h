@@ -1,7 +1,7 @@
 #ifndef DOT_MATRIX_H
 #define DOT_MATRIX_H
 
-#include "dm_digits.h"
+#include "d_digits.h"
 
 void dot_matrix_render_program(uint8_t *buffer, int program_number);
 void dot_matrix_render_load_level(uint8_t *buffer, int load_level);

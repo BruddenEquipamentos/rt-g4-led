@@ -1,4 +1,4 @@
-#include "dm_digits.h"
+#include "d_digits.h"
 
 const digit_t dm_space = {
     .cols = 0,
@@ -431,7 +431,7 @@ const digit_t *dm_number(const int number) {
 }
 
 const digit_t *dm_digit(char ch) {
-    for (uint32_t i = 0; i < sizeof(dm_map)/sizeof(digit_t); ++i) {
+    for (uint32_t i = 0; i < sizeof(dm_map)/sizeof(digit_map_t); ++i) {
         if (dm_map[i].ch == ch) return dm_map[i].dm;
     }
     return 0;
