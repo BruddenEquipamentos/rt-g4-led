@@ -25,6 +25,7 @@
 #include "display.h"
 #include "keyboard.h"
 #include "treadmill.h"
+#include "beep.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -43,6 +44,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
+DMA_HandleTypeDef hdma_adc1;
 
 I2C_HandleTypeDef hi2c1;
 
@@ -54,6 +56,9 @@ UART_HandleTypeDef huart3;
 
 osThreadId defaultTaskHandle;
 osThreadId keyboardTaskHandle;
+osThreadId beepTaskHandle;
+osMessageQId beepEventQueueHandle;
+osTimerId beepTimerHandle;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -61,6 +66,7 @@ osThreadId keyboardTaskHandle;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_USART3_UART_Init(void);
@@ -69,6 +75,8 @@ static void MX_USART1_UART_Init(void);
 static void MX_TIM16_Init(void);
 void StartDefaultTask(void const * argument);
 void KeyboardTask(void const * argument);
+void BeepTask(void const * argument);
+void beepTimerCallback(void const * argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -76,6 +84,17 @@ void KeyboardTask(void const * argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+#define ADC_SAMPLE_SIZE 8
+#define ADC_BUFFER_SIZE (ADC_SAMPLE_SIZE * 1)
+static uint32_t adc_values[ADC_BUFFER_SIZE]; // 2 is the number of channels
+uint16_t adc_hrm = 0;
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
+  if(hadc->Instance == ADC1) {
+    int sum = 0;
+    for (int i = 0; i < ADC_SAMPLE_SIZE; ++i) sum += adc_values[i];
+    adc_hrm = (uint16_t)(sum/ADC_SAMPLE_SIZE);
+  }
+}
 
 /* USER CODE END 0 */
 
@@ -100,6 +119,7 @@ int main(void)
   /* USER CODE END Init */
 
   /* Configure the system clock */
+  SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
 
@@ -107,6 +127,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_I2C1_Init();
   MX_TIM3_Init();
   MX_USART3_UART_Init();
@@ -125,9 +146,19 @@ int main(void)
   /* add semaphores, ... */
   /* USER CODE END RTOS_SEMAPHORES */
 
+  /* Create the timer(s) */
+  /* definition and creation of beepTimer */
+  osTimerDef(beepTimer, beepTimerCallback);
+  beepTimerHandle = osTimerCreate(osTimer(beepTimer), osTimerOnce, NULL);
+
   /* USER CODE BEGIN RTOS_TIMERS */
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
+
+  /* Create the queue(s) */
+  /* definition and creation of beepEventQueue */
+  osMessageQDef(beepEventQueue, 1, uint16_t);
+  beepEventQueueHandle = osMessageCreate(osMessageQ(beepEventQueue), NULL);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -142,8 +173,14 @@ int main(void)
   osThreadDef(keyboardTask, KeyboardTask, osPriorityNormal, 0, 128);
   keyboardTaskHandle = osThreadCreate(osThread(keyboardTask), NULL);
 
+  /* definition and creation of beepTask */
+  osThreadDef(beepTask, BeepTask, osPriorityNormal, 0, 128);
+  beepTaskHandle = osThreadCreate(osThread(beepTask), NULL);
+
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
+  HAL_ADCEx_Calibration_Start(&hadc1);
+  HAL_ADC_Start_DMA(&hadc1, adc_values, ADC_BUFFER_SIZE);
   /* USER CODE END RTOS_THREADS */
 
   /* Start scheduler */
@@ -229,15 +266,14 @@ static void MX_ADC1_Init(void)
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   hadc1.Init.LowPowerAutoWait = DISABLE;
   hadc1.Init.LowPowerAutoPowerOff = DISABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.ContinuousConvMode = ENABLE;
   hadc1.Init.NbrOfConversion = 1;
-  hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.DMAContinuousRequests = ENABLE;
   hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
-  hadc1.Init.SamplingTimeCommon1 = ADC_SAMPLETIME_1CYCLE_5;
-  hadc1.Init.SamplingTimeCommon2 = ADC_SAMPLETIME_1CYCLE_5;
+  hadc1.Init.SamplingTimeCommon1 = ADC_SAMPLETIME_160CYCLES_5;
+  hadc1.Init.SamplingTimeCommon2 = ADC_SAMPLETIME_79CYCLES_5;
   hadc1.Init.OversamplingMode = DISABLE;
   hadc1.Init.TriggerFrequencyMode = ADC_TRIGGER_FREQ_HIGH;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
@@ -518,6 +554,22 @@ static void MX_USART3_UART_Init(void)
 }
 
 /**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 3, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -639,10 +691,6 @@ void KeyboardTask(void const * argument)
   /* USER CODE BEGIN KeyboardTask */
   enum key key_pressed = KEY_NONE;
   enum key previous_key = KEY_NONE;
-  HAL_TIM_PWM_Stop(&htim16, TIM_CHANNEL_1);
-  HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
-  osDelay(250);
-  HAL_TIM_PWM_Stop(&htim16, TIM_CHANNEL_1);
   /* Infinite loop */
   for(;;)
   {
@@ -652,10 +700,105 @@ void KeyboardTask(void const * argument)
 
     }
 
+    if (key_pressed != KEY_NONE)  {
+	beep_t beep;
+	beep = BEEP_KEYPRESS_ACK;
+	xQueueSend(beepEventQueueHandle, &beep, 0);
+    }
+
     previous_key = key_pressed;
     osDelay(1);
   }
   /* USER CODE END KeyboardTask */
+}
+
+/* USER CODE BEGIN Header_BeepTask */
+/**
+* @brief Function implementing the beepTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_BeepTask */
+void BeepTask(void const * argument)
+{
+  /* USER CODE BEGIN BeepTask */
+  beep_t beep;
+
+  beep = BEEP_KEYPRESS_ACK;
+  xQueueSend(beepEventQueueHandle, &beep, 0);
+  /* Infinite loop */
+  for(;;)
+  {
+    if (xQueueReceive(beepEventQueueHandle, &beep, portMAX_DELAY) == pdPASS) {
+      HAL_TIM_PWM_Stop(&htim16, TIM_CHANNEL_1);
+      switch (beep) {
+        case BEEP_KEYPRESS_ACK: {
+          TIM16->CNT = 0;
+          TIM16->PSC = 100;
+          TIM16->ARR = 40;
+          TIM16->CCR2 = 10;
+          HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
+          osTimerStart(beepTimerHandle, pdMS_TO_TICKS(100));
+          break;
+        }
+        case BEEP_KEYPRESS_NAK: {
+          TIM16->CNT = 0;
+          TIM16->PSC = 600;
+          TIM16->ARR = 40;
+          TIM16->CCR2 = 20;
+          HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
+          osTimerStart(beepTimerHandle, pdMS_TO_TICKS(100));
+          break;
+        }
+        case BEEP_COUNTDOWN_COUNT: {
+          TIM16->CNT = 0;
+          TIM16->PSC = 120;
+          TIM16->ARR = 40;
+          TIM16->CCR2 = 20;
+          HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
+          osTimerStart(beepTimerHandle, pdMS_TO_TICKS(250));
+          break;
+        }
+        case BEEP_COUNTDOWN_END: {
+          TIM16->CNT = 0;
+          TIM16->PSC = 110;
+          TIM16->ARR = 40;
+          TIM16->CCR2 = 20;
+          HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
+          osTimerStart(beepTimerHandle, pdMS_TO_TICKS(500));
+          break;
+        }
+        case BEEP_REST: {
+          TIM16->CNT = 0;
+          TIM16->PSC = 120;
+          TIM16->ARR = 40;
+          TIM16->CCR2 = 2;
+          HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
+          osTimerStart(beepTimerHandle, pdMS_TO_TICKS(50));
+          break;
+        }
+        case BEEP_PROGRAM_FINISHED: {
+          TIM16->CNT = 0;
+          TIM16->PSC = 110;
+          TIM16->ARR = 40;
+          TIM16->CCR2 = 20;
+          HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
+          osTimerStart(beepTimerHandle, pdMS_TO_TICKS(500));
+        }
+      }
+    }
+
+    osDelay(1);
+  }
+  /* USER CODE END BeepTask */
+}
+
+/* beepTimerCallback function */
+void beepTimerCallback(void const * argument)
+{
+  /* USER CODE BEGIN beepTimerCallback */
+  HAL_TIM_PWM_Stop(&htim16, TIM_CHANNEL_1);
+  /* USER CODE END beepTimerCallback */
 }
 
 /**
