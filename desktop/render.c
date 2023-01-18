@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 #include "display.h"
-#include "dotmatrix.h"
+#include "../shared/d_dot_matrix.h"
 
 static uint32_t calc_pace(const uint16_t speed) {
   return ((60000000 / speed) * 6) / 1000;
@@ -55,7 +55,6 @@ static void render_panel(treadmill_t *treadmill, display_t *display) {
 
 static void render_dot_matrix(treadmill_t *treadmill, display_t *display) {
   (void)display;
-  dotmatrix_offset = 22;
   static uint32_t frame_ms_start = 0;
   static int frame = 0;
   if (treadmill->state != treadmill->previous_state) {
@@ -77,19 +76,20 @@ static void render_dot_matrix(treadmill_t *treadmill, display_t *display) {
   switch (treadmill->state) {
     case STATE_PAUSED: {
       int length = dm_compute_length("PAUSED");
-      dotmatrix_render_text("PAUSED", frame);
+      dot_matrix_render_text("PAUSED", frame);
       if (frame > length + 16) frame = 0;
       break;
     }
     default: {
       if (treadmill->state == STATE_COUNTDOWN) {
-        dotmatrix_print_number(treadmill->countdown.value);
+        dot_matrix_print_number(treadmill->countdown.value);
       } else {
-        dotmatrix_clear_buffer();
+        dot_matrix_clear_buffer();
       }
-      dotmatrix_print_buffer();
     };
   }
+
+  dot_matrix_render();
 }
 
 void treadmill_render(treadmill_t *treadmill) {

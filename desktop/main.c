@@ -8,6 +8,7 @@
 #include "render.h"
 #include "../shared/treadmill.h"
 #include "../shared/treadmill_update.h"
+#include "../shared/d_dot_matrix.h"
 
 static void sigint(int i) {
   (void)i;
@@ -76,9 +77,24 @@ static uint64_t get_time_ms() {
   return ms;
 }
 
+void render_dot_matrix(const uint16_t buffer[5]) {
+  const int offset = 22;
+  for (int row = 0; row < 5; row++) {
+    for (int i = 0; i < offset; ++i) fprintf(stdout, " ");
+    for (int col = 15; col >= 0; --col) {
+      if ((buffer[row] >> col) & 1)
+        fprintf(stdout, "▗");
+      else
+        fprintf(stdout, " ");
+    }
+    fprintf(stdout, "\n");
+  }
+}
+
 static void *thread_main(void *arg) {
   treadmill_t *treadmill = (treadmill_t *)arg;
   treadmill->ms = get_time_ms();
+
   for (;;) {
     while (treadmill->ms < get_time_ms()) {
       treadmill->ms = treadmill->ms + 100;
@@ -99,6 +115,7 @@ int main(int argc, char *argv[]) {
 
   treadmill_t treadmill;
   treadmill_setup(&treadmill);
+  _dot_matrix_render = render_dot_matrix;
   treadmill.get_time_ms = (uint32_t (*)(void)) get_time_ms;
 
   pthread_create(&input_thread, NULL, thread_input, &treadmill);

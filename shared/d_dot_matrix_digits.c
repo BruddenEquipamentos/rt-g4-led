@@ -1,4 +1,4 @@
-#include "d_digits.h"
+#include "d_dot_matrix_digits.h"
 
 const digit_t dm_space = {
     .cols = 0,

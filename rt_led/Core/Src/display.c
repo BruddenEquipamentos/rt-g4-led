@@ -9,8 +9,9 @@
 
 #include <string.h>
 
+#include "d_dot_matrix.h"
+
 #include "digits.h"
-#include "dot_matrix.h"
 #include "main.h"
 #include "render.h"
 
@@ -197,6 +198,21 @@ static void display_helper_render_test(display_t* display, uint8_t value) {
   display->digits[0] = value % 10;
 }
 
+static void display_update_dot_matrix_buffer(uint8_t *buffer, uint16_t dm_buffer[5]){
+  static const uint8_t column_address[16] = {
+      0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27};
+
+  static const uint8_t row_value[5] = {
+      0x01, 0x02, 0x04, 0x08, 0x10};
+
+  for (int row = 0; row < 5; ++row) {
+      for (int col = 15; col >= 0; --col) {
+	 if ((dm_buffer[row]>>col) & 1) buffer[column_address[15-col]] |= row_value[row];
+	 else buffer[column_address[15-col]] &= ~row_value[row];
+      }
+  }
+}
+
 static void display_render_test(uint8_t* buffer, uint8_t* page_buffer) {
   static uint8_t value = 0;
   display_helper_render_test(display_distance, value);
@@ -209,12 +225,15 @@ static void display_render_test(uint8_t* buffer, uint8_t* page_buffer) {
   display_helper_render_test(display_bpm, value);
   value = (value + 1) % 10;
 
+  //dot_matrix_render_column_line(15);
+
   static uint8_t column = 0;
-  dot_matrix_render_column_line(page_buffer, column);
-  column = (column + 1)%17;
-  if (column == 0) {
-    dot_matrix_clear_buffer(page_buffer);
+  if (column == 16) {
+    column = 0;
+    dot_matrix_clear_buffer();
   }
+  dot_matrix_render_column_line(column);
+  column = (column + 1);
 }
 
 void display_render(void) {
@@ -224,7 +243,7 @@ void display_render(void) {
 
   display_render_test(buffer, page_buffer);
 
-  //render_display_distance(display_distance, page_buffer);
+  // render_display_distance(display_distance, page_buffer);
   render_display(display_distance, page_buffer);
   render_display(display_time, page_buffer);
   render_display(display_speed, page_buffer);
@@ -233,6 +252,9 @@ void display_render(void) {
   render_display(display_spm, page_buffer);
   render_display(display_power, page_buffer);
   render_display(display_bpm, page_buffer);
+
+  // convert buffer to page buffer mapping
+  display_update_dot_matrix_buffer(page_buffer, dot_matrix_buffer);
 
   if (memcmp(buffer_sent, buffer, 0x32) != 0) {
     if (HAL_I2C_Master_Transmit(&hi2c1, DISPLAY_ADDRESS_WRITE, buffer, BUFSIZE,

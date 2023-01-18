@@ -100,7 +100,6 @@ int main(void)
   /* USER CODE END Init */
 
   /* Configure the system clock */
-  SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
 
@@ -642,7 +641,7 @@ void KeyboardTask(void const * argument)
   enum key previous_key = KEY_NONE;
   HAL_TIM_PWM_Stop(&htim16, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
-  osDelay(5000);
+  osDelay(250);
   HAL_TIM_PWM_Stop(&htim16, TIM_CHANNEL_1);
   /* Infinite loop */
   for(;;)
