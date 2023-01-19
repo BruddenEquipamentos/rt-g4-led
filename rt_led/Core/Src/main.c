@@ -60,7 +60,7 @@ osThreadId beepTaskHandle;
 osMessageQId beepEventQueueHandle;
 osTimerId beepTimerHandle;
 /* USER CODE BEGIN PV */
-
+treadmill_t treadmill;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -179,6 +179,11 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
+  treadmill_setup(&treadmill);
+  treadmill.get_time_ms = HAL_GetTick;
+
+  display_init();
+
   HAL_ADCEx_Calibration_Start(&hadc1);
   HAL_ADC_Start_DMA(&hadc1, adc_values, ADC_BUFFER_SIZE);
   /* USER CODE END RTOS_THREADS */
@@ -669,12 +674,16 @@ static void MX_GPIO_Init(void)
 void StartDefaultTask(void const * argument)
 {
   /* USER CODE BEGIN 5 */
-  display_init();
+  treadmill.ms = HAL_GetTick();
   /* Infinite loop */
   for(;;)
   {
+    while (treadmill.ms < HAL_GetTick()) {
+      treadmill.ms += 100;
+      treadmill_update(&treadmill);
+    }
      display_render();
-     osDelay(1000);
+     osDelay(20);
   }
   /* USER CODE END 5 */
 }
@@ -697,17 +706,19 @@ void KeyboardTask(void const * argument)
     key_pressed = get_key_pressed();
 
     if (key_pressed != previous_key) {
-
+	// count time
     }
 
     if (key_pressed != KEY_NONE)  {
+	treadmill_key_press(&treadmill, key_pressed);
+
 	beep_t beep;
 	beep = BEEP_KEYPRESS_ACK;
 	xQueueSend(beepEventQueueHandle, &beep, 0);
     }
 
     previous_key = key_pressed;
-    osDelay(1);
+    osDelay(5);
   }
   /* USER CODE END KeyboardTask */
 }

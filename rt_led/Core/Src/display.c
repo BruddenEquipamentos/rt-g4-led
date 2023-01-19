@@ -79,7 +79,10 @@ static void render_display(display_t* display, uint8_t* buffer) {
 static void render_display_distance(display_t* display, uint8_t* buffer) {
   // 0.50 (500 m)
   render_display_clear(display, buffer);
+
+  display->dot_pos = DOT_POSITION_2;
   if (!display->visible) return;
+
   if (display->digits[3] > DIGIT_0 && display->digits[3])
     render_to_display(display, display->digits[3], 3, buffer);
 
@@ -143,27 +146,28 @@ static void render_display_calories(display_t* display, uint8_t* buffer) {
   render_dot(display, buffer);
 }
 
-static void render_display_spm(display_t* display, uint8_t* buffer) {
+static void render_display_pace(display_t* display, uint8_t* buffer) {
   // 0, 10, 100, 1000
   render_display_clear(display, buffer);
   if (!display->visible) return;
   if (display->digits[3] > DIGIT_0)
     render_to_display(display, display->digits[3], 3, buffer);
-  if (display->digits[3] > DIGIT_0 || display->digits[2] > DIGIT_0)
+  //if (display->digits[3] > DIGIT_0 || display->digits[2] > DIGIT_0)
     render_to_display(display, display->digits[2], 2, buffer);
-  if (display->digits[2] > DIGIT_0 || display->digits[1] > DIGIT_0)
+  //if (display->digits[2] > DIGIT_0 || display->digits[1] > DIGIT_0)
     render_to_display(display, display->digits[1], 1, buffer);
   render_to_display(display, display->digits[0], 0, buffer);
   render_dot(display, buffer);
 }
 
-static void render_display_power(display_t* display, uint8_t* buffer) {
+static void render_display_incline(display_t* display, uint8_t* buffer) {
   // 0, 10, 100 -- digits are reversed
   render_display_clear(display, buffer);
+  display->dot_pos = DOT_POSITION_2;
   if (!display->visible) return;
   if (display->digits[2] > DIGIT_0)
     render_to_display(display, display->digits[2], 0, buffer);
-  if (display->digits[2] > DIGIT_0 || display->digits[1] > DIGIT_0)
+  //if (display->digits[2] > DIGIT_0 || display->digits[1] > DIGIT_0)
     render_to_display(display, display->digits[1], 1, buffer);
   render_to_display(display, display->digits[0], 2, buffer);
   render_dot(display, buffer);
@@ -220,8 +224,8 @@ static void display_render_test(uint8_t* buffer, uint8_t* page_buffer) {
   display_helper_render_test(display_speed, value);
   display_helper_render_test(display_steps, value);
   display_helper_render_test(display_calories, value);
-  display_helper_render_test(display_spm, value);
-  display_helper_render_test(display_power, value);
+  display_helper_render_test(display_pace, value);
+  display_helper_render_test(display_incline, value);
   display_helper_render_test(display_bpm, value);
   value = (value + 1) % 10;
 
@@ -241,17 +245,15 @@ void display_render(void) {
   static uint8_t buffer_sent[0x32] = {0x00};
   static uint8_t* page_buffer = &buffer[2];
 
-  display_render_test(buffer, page_buffer);
-
-  // render_display_distance(display_distance, page_buffer);
-  render_display(display_distance, page_buffer);
-  render_display(display_time, page_buffer);
-  render_display(display_speed, page_buffer);
-  render_display(display_steps, page_buffer);
-  render_display(display_calories, page_buffer);
-  render_display(display_spm, page_buffer);
-  render_display(display_power, page_buffer);
-  render_display(display_bpm, page_buffer);
+//  display_render_test(buffer, page_buffer);
+  render_display_distance(display_distance, page_buffer);
+  render_display_time(display_time, page_buffer);
+  render_display_steps(display_steps, page_buffer);
+  render_display_calories(display_calories, page_buffer);
+  render_display_incline(display_incline, page_buffer);
+  render_display_bpm(display_bpm, page_buffer);
+  render_display_pace(display_pace, page_buffer);
+  render_display_speed(display_speed, page_buffer);
 
   // convert buffer to page buffer mapping
   display_update_dot_matrix_buffer(page_buffer, dot_matrix_buffer);

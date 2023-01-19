@@ -16,8 +16,8 @@ display_t* display_time = &display_two;
 display_t* display_speed = &display_three;
 display_t* display_steps = &display_four;
 display_t* display_calories = &display_five;
-display_t* display_spm = &display_six;
-display_t* display_power = &display_seven;
+display_t* display_pace = &display_six;
+display_t* display_incline = &display_seven;
 display_t* display_bpm = &display_eight;
 
 void blink_field_reset() {
@@ -26,8 +26,8 @@ void blink_field_reset() {
   display_speed->blink.time_ms = 0;
   display_steps->blink.time_ms = 0;
   display_calories->blink.time_ms = 0;
-  display_spm->blink.time_ms = 0;
-  display_power->blink.time_ms = 0;
+  display_pace->blink.time_ms = 0;
+  display_incline->blink.time_ms = 0;
   display_bpm->blink.time_ms = 0;
 }
 
@@ -50,8 +50,8 @@ void display_helper_hide_all_displays() {
   display_speed->visible = 0;
   display_steps->visible = 0;
   display_calories->visible = 0;
-  display_spm->visible = 0;
-  display_power->visible = 0;
+  display_pace->visible = 0;
+  display_incline->visible = 0;
   display_bpm->visible = 0;
 }
 
@@ -62,8 +62,8 @@ void display_helper_show_all_displays() {
   display_speed->visible = 1;
   display_steps->visible = 1;
   display_calories->visible = 1;
-  display_spm->visible = 1;
-  display_power->visible = 1;
+  display_pace->visible = 1;
+  display_incline->visible = 1;
   display_bpm->visible = 1;
 }
 

@@ -29,8 +29,8 @@ extern display_t* display_time;
 extern display_t* display_speed;
 extern display_t* display_steps;
 extern display_t* display_calories;
-extern display_t* display_spm;
-extern display_t* display_power;
+extern display_t* display_pace;
+extern display_t* display_incline;
 extern display_t* display_bpm;
 
 void display_helper_hide_all_displays();
