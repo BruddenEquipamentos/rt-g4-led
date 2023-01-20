@@ -1,5 +1,5 @@
-#ifndef D_DIGITS_H
-#define D_DIGITS_H
+#ifndef DM_DIGITS_H
+#define DM_DIGITS_H
 
 #include <stdint.h>
 

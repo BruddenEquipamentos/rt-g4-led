@@ -1,9 +1,9 @@
-#ifndef D_DOT_MATRIX_H
-#define D_DOT_MATRIX_H
+#ifndef DM_H
+#define DM_H
 
 #include <stdint.h>
 
-#include "d_dot_matrix_digits.h"
+#include "dm_digits.h"
 
 void dot_matrix_render(void);
 void dot_matrix_clear_buffer(void);

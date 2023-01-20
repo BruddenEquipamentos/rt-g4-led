@@ -8,7 +8,7 @@
 #include "render.h"
 #include "../shared/treadmill.h"
 #include "../shared/treadmill_update.h"
-#include "../shared/d_dot_matrix.h"
+#include "../shared/dm.h"
 
 static void sigint(int i) {
   (void)i;

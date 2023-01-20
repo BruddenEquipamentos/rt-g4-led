@@ -2,8 +2,38 @@
 
 #include <stdio.h>
 
-#include "display.h"
-#include "../shared/d_dot_matrix.h"
+#include "../shared/dm.h"
+
+#define DISPLAY_FIELD_BUFFER_MAX_LENGTH 8
+
+typedef struct display_fields {
+    char output[DISPLAY_FIELD_BUFFER_MAX_LENGTH];
+    struct {
+        uint32_t interval;
+        uint32_t time_ms;
+    } blink;
+} display_fields_t;
+
+typedef struct display {
+    display_fields_t distance;
+    display_fields_t time;
+    display_fields_t speed;
+    display_fields_t kcal;
+    display_fields_t program;
+    display_fields_t pace;
+    display_fields_t incline;
+    display_fields_t bpm;
+} display_t;
+
+
+display_t* display_distance;
+display_t* display_time;
+display_t* display_speed;
+display_t* display_steps;
+display_t* display_calories;
+display_t* display_pace;
+display_t* display_incline;
+display_t* display_bpm;
 
 static uint32_t calc_pace(const uint16_t speed) {
   return ((60000000 / speed) * 6) / 1000;
@@ -92,8 +122,42 @@ static void render_dot_matrix(treadmill_t *treadmill, display_t *display) {
   dot_matrix_render();
 }
 
+static void render_init(treadmill_t *treadmill) {}
+
+static void render_idle(treadmill_t *treadmill) {}
+
+static void render_program(treadmill_t *treadmill) {}
+
+static void render_countdown(treadmill_t *treadmill) {}
+
+static void render_training(treadmill_t *treadmill) {}
+
+static void render_paused(treadmill_t *treadmill) {}
+
+static void render_report(treadmill_t *treadmill) {}
+
+typedef struct render_scene_callback {
+  state_t state;
+  void (*render)(treadmill_t *treadmill);
+} render_scene_callback_t;
+
+static render_scene_callback_t render_scene_callback[] = {
+    {.state = STATE_INIT, .render = render_init},
+    {.state = STATE_IDLE, .render = render_idle},
+    {.state = STATE_PROGRAM, .render = render_program},
+    {.state = STATE_COUNTDOWN, .render = render_countdown},
+    {.state = STATE_TRAINING, .render = render_training},
+    {.state = STATE_PAUSED, .render = render_paused},
+    {.state = STATE_REPORT, .render = render_report},
+};
+
 void treadmill_render(treadmill_t *treadmill) {
   static display_t display;
+  for (state_t i = 0; i < sizeof(render_scene_callback) / sizeof(render_scene_callback_t); ++i) {
+    if (treadmill->state == render_scene_callback[i].state) {
+      render_scene_callback[i].render(treadmill);
+    }
+  }
 
   printf("\033[H\033[J");
   printf("------------------------------------------------------------\n");

@@ -1,4 +1,4 @@
-#include "d_dot_matrix.h"
+#include "dm.h"
 void (*_dot_matrix_render)(const uint16_t dot_matrix[5]) = 0;
 
 uint16_t dot_matrix_buffer[5];

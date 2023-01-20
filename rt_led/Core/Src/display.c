@@ -9,7 +9,7 @@
 
 #include <string.h>
 
-#include "d_dot_matrix.h"
+#include "dm.h"
 
 #include "digits.h"
 #include "main.h"
