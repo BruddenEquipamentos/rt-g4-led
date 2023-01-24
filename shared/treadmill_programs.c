@@ -181,7 +181,7 @@ key_press_program_callback_t key_press_program_callback[PROGRAM_TOTALS] = {
 };
 
 void program_load_default_value(treadmill_t *treadmill) {
-  assert(treadmill->state != SCENE_TRAINING);
+  assert(treadmill->scene != SCENE_TRAINING);
 
   switch (treadmill->program.id) {
     case PROGRAM_TIME: {

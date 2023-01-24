@@ -376,6 +376,17 @@ const digit_t dm_x = {
     }
 };
 
+const digit_t dm_B = {
+    .cols = 3,
+    .data = {
+        0b110,
+        0b101,
+        0b110,
+        0b101,
+        0b110,
+    }
+};
+
 digit_map_t dm_map[] = {
     {.ch=' ', .dm=&dm_space},
     {.ch='%', .dm=&dm_percentage},
@@ -393,6 +404,7 @@ digit_map_t dm_map[] = {
     {.ch='8', .dm=&dm_8},
     {.ch='9', .dm=&dm_9},
     {.ch='A', .dm=&dm_A},
+    {.ch='B', .dm=&dm_B},
     {.ch='C', .dm=&dm_C},
     {.ch='D', .dm=&dm_D},
     {.ch='E', .dm=&dm_E},

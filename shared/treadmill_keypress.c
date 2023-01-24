@@ -10,6 +10,12 @@ static void treadmill_scene_init_key_press(treadmill_t *treadmill,
   switch (key) { default:; }
 }
 
+static void treadmill_scene_lub_key_press(treadmill_t *treadmill, const key_t key) {
+    if (key != KEY_NONE) {
+      treadmill_set_scene(treadmill, SCENE_IDLE);
+    }
+}
+
 static void treadmill_scene_idle_key_press(treadmill_t *treadmill,
                                            const key_t key) {
   switch (key) {
@@ -141,6 +147,7 @@ typedef struct key_press_callback {
 
 static key_press_callback_t key_press_callback[] = {
     {.state = SCENE_INIT, .key_press = treadmill_scene_init_key_press},
+    {.state = SCENE_LUB, .key_press = treadmill_scene_lub_key_press},
     {.state = SCENE_IDLE, .key_press = treadmill_scene_idle_key_press},
     {.state = SCENE_PROGRAM, .key_press = treadmill_scene_program_key_press},
     {.state = SCENE_COUNTDOWN,
@@ -155,7 +162,7 @@ void treadmill_key_press(treadmill_t *treadmill, const key_t key) {
   for (treadmill_scene_t state = SCENE_INIT;
        state < sizeof(key_press_callback) / sizeof(key_press_callback_t);
        state++) {
-    if (treadmill->state == key_press_callback[state].state) {
+    if (treadmill->scene == key_press_callback[state].state) {
       key_press_callback[state].key_press(treadmill, key);
       return;
     }

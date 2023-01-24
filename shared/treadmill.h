@@ -8,20 +8,26 @@
 #include "beep.h"
 
 #define START_TRAINING_COUNTDOWN_VALUE (3)
+#define LUB_NOTIFICATION_SCENE_TIME (5000)
+#define IDLE_SCENE_TIME (10000)
 
 typedef enum treadmill_scene {
   SCENE_INIT = 0,
   SCENE_IDLE,
+  SCENE_LUB,
   SCENE_PROGRAM,
   SCENE_COUNTDOWN,
   SCENE_TRAINING,
   SCENE_PAUSED,
   SCENE_REPORT,
+  SCENE_TOTALS,
 } treadmill_scene_t;
 
+extern char *scene_name[];
 typedef struct treadmill {
-  treadmill_scene_t state;
-  treadmill_scene_t previous_state;
+  treadmill_scene_t scene;
+  treadmill_scene_t previous_scene;
+  uint32_t scene_tick;
 
   struct program {
     program_id_t id; // temp hack - refences
@@ -93,5 +99,6 @@ typedef struct treadmill {
 void treadmill_setup(treadmill_t *treadmill);
 void treadmill_key_press(treadmill_t *treadmill, const key_t key);
 void treadmill_update(treadmill_t *treadmill);
+void treadmill_set_scene(treadmill_t *treadmill, treadmill_scene_t scene);
 
 #endif

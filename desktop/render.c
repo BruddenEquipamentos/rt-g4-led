@@ -84,8 +84,8 @@ static void render_panel(treadmill_t *treadmill, display_t *display) {
 
 static void render_dot_matrix(treadmill_t *treadmill, display_t *display) {
   (void)display;
-  if (treadmill->state != treadmill->previous_state) {
-    switch (treadmill->state) {
+  if (treadmill->scene != treadmill->previous_scene) {
+    switch (treadmill->scene) {
       case SCENE_PAUSED: {
         dm_tick = 0;
         dm_frame = 0;
@@ -100,15 +100,19 @@ static void render_dot_matrix(treadmill_t *treadmill, display_t *display) {
     dm_frame++;
   }
 
-  switch (treadmill->state) {
+  switch (treadmill->scene) {
     case SCENE_PAUSED: {
       int length = dm_compute_length("PAUSED");
       dm_render_text("PAUSED", dm_frame);
       if (dm_frame > length + 16) dm_frame = 0;
       break;
     }
+    case SCENE_LUB: {
+      dm_render_text("LUB", 15);
+      break;
+    }
     default: {
-      if (treadmill->state == SCENE_COUNTDOWN) {
+      if (treadmill->scene == SCENE_COUNTDOWN) {
         dm_render_number(treadmill->countdown.value);
       } else {
         dm_clear_buffer();
@@ -120,6 +124,10 @@ static void render_dot_matrix(treadmill_t *treadmill, display_t *display) {
 }
 
 static void render_init(treadmill_t *treadmill) {}
+
+static void render_lub(treadmill_t *treadmill) {
+  // dm_render_text("LUB", 10);
+}
 
 static void render_idle(treadmill_t *treadmill) {}
 
@@ -140,6 +148,7 @@ typedef struct render_scene_callback {
 
 static render_scene_callback_t render_scene_callback[] = {
     {.state = SCENE_INIT, .render = render_init},
+    {.state = SCENE_LUB, .render = render_lub},
     {.state = SCENE_IDLE, .render = render_idle},
     {.state = SCENE_PROGRAM, .render = render_program},
     {.state = SCENE_COUNTDOWN, .render = render_countdown},
@@ -153,7 +162,7 @@ void treadmill_render(treadmill_t *treadmill) {
   for (treadmill_scene_t i = 0;
        i < sizeof(render_scene_callback) / sizeof(render_scene_callback_t);
        ++i) {
-    if (treadmill->state == render_scene_callback[i].state) {
+    if (treadmill->scene == render_scene_callback[i].state) {
       render_scene_callback[i].render(treadmill);
     }
   }
@@ -166,7 +175,7 @@ void treadmill_render(treadmill_t *treadmill) {
   printf("------------------------------------------------------------\n");
 
   if (treadmill->debug.print_states) {
-    fprintf(stdout, "Treadmill State: %d\n", treadmill->state);
+    fprintf(stdout, "Treadmill State: %s\n", scene_name[treadmill->scene]);
     fprintf(stdout, "Treadmill Countdown Value: %d\n",
             treadmill->countdown.value);
     fprintf(stdout, "Treadmill Training Centimeters: %d\n",
@@ -181,5 +190,5 @@ void treadmill_render(treadmill_t *treadmill) {
             treadmill->training.incline);
   }
 
-  treadmill->previous_state = treadmill->state;
+  treadmill->previous_scene = treadmill->scene;
 }

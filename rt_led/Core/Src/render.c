@@ -207,11 +207,11 @@ void render(treadmill_t *treadmill) {
   render_helper_update_digits(display_bpm, 0);
 
   for (treadmill_scene_t i = 0; i < sizeof(render_scene_callback) / sizeof(render_scene_callback_t); ++i) {
-    if (treadmill->state == render_scene_callback[i].state) {
+    if (treadmill->scene == render_scene_callback[i].state) {
       render_scene_callback[i].render(treadmill);
     }
   }
 
-  treadmill->previous_state = treadmill->state;
+  treadmill->previous_scene = treadmill->scene;
 
 }
