@@ -9,19 +9,19 @@
 
 #define START_TRAINING_COUNTDOWN_VALUE (3)
 
-typedef enum treadmill_state {
-  STATE_INIT = 0,
-  STATE_IDLE,
-  STATE_PROGRAM,
-  STATE_COUNTDOWN,
-  STATE_TRAINING,
-  STATE_PAUSED,
-  STATE_REPORT,
-} treadmill_state_t;
+typedef enum treadmill_scene {
+  SCENE_INIT = 0,
+  SCENE_IDLE,
+  SCENE_PROGRAM,
+  SCENE_COUNTDOWN,
+  SCENE_TRAINING,
+  SCENE_PAUSED,
+  SCENE_REPORT,
+} treadmill_scene_t;
 
 typedef struct treadmill {
-  treadmill_state_t state;
-  treadmill_state_t previous_state;
+  treadmill_scene_t state;
+  treadmill_scene_t previous_state;
 
   struct program {
     program_id_t id; // temp hack - refences

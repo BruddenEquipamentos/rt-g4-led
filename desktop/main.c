@@ -122,7 +122,6 @@ int main(int argc, char *argv[]) {
   pthread_create(&main_thread, NULL, thread_main, &treadmill);
 
   pthread_join(main_thread, NULL);
-  pthread_join(in
-	       put_thread, NULL);
+  pthread_join(input_thread, NULL);
   return 0;
 }

@@ -4,13 +4,13 @@
 #include "treadmill_action.h"
 #include "treadmill_programs.h"
 
-static void treadmill_state_init_key_press(treadmill_t *treadmill,
+static void treadmill_scene_init_key_press(treadmill_t *treadmill,
                                            const key_t key) {
   (void)treadmill;
   switch (key) { default:; }
 }
 
-static void treadmill_state_idle_key_press(treadmill_t *treadmill,
+static void treadmill_scene_idle_key_press(treadmill_t *treadmill,
                                            const key_t key) {
   switch (key) {
     case KEY_START:
@@ -24,7 +24,7 @@ static void treadmill_state_idle_key_press(treadmill_t *treadmill,
   }
 }
 
-static void treadmill_state_program_key_press(treadmill_t *treadmill,
+static void treadmill_scene_program_key_press(treadmill_t *treadmill,
                                               const key_t key) {
   // delegate
   for (int idx = 0; idx < PROGRAM_TOTALS; ++idx) {
@@ -35,7 +35,7 @@ static void treadmill_state_program_key_press(treadmill_t *treadmill,
   }
 }
 
-static void treadmill_state_countdown_key_press(treadmill_t *treadmill,
+static void treadmill_scene_countdown_key_press(treadmill_t *treadmill,
                                                 const key_t key) {
   switch (key) {
     case KEY_STOP:
@@ -45,7 +45,7 @@ static void treadmill_state_countdown_key_press(treadmill_t *treadmill,
   }
 }
 
-static void treadmill_state_training_key_press(treadmill_t *treadmill,
+static void treadmill_scene_training_key_press(treadmill_t *treadmill,
                                                const key_t key) {
   switch (key) {
     case KEY_STOP:
@@ -92,7 +92,7 @@ static void treadmill_state_training_key_press(treadmill_t *treadmill,
   }
 }
 
-static void treadmill_state_paused_key_press(treadmill_t *treadmill,
+static void treadmill_scene_paused_key_press(treadmill_t *treadmill,
                                              const key_t key) {
   switch (key) {
     case KEY_START:
@@ -113,7 +113,7 @@ static void treadmill_state_paused_key_press(treadmill_t *treadmill,
   }
 }
 
-static void treadmill_state_report_key_press(treadmill_t *treadmill,
+static void treadmill_scene_report_key_press(treadmill_t *treadmill,
                                              const key_t key) {
   switch (key) {
     case KEY_START:
@@ -135,24 +135,24 @@ static void treadmill_state_report_key_press(treadmill_t *treadmill,
 }
 
 typedef struct key_press_callback {
-  treadmill_state_t state;
+  treadmill_scene_t state;
   void (*key_press)(treadmill_t *treadmill, const key_t key);
 } key_press_callback_t;
 
 static key_press_callback_t key_press_callback[] = {
-    {.state = STATE_INIT, .key_press = treadmill_state_init_key_press},
-    {.state = STATE_IDLE, .key_press = treadmill_state_idle_key_press},
-    {.state = STATE_PROGRAM, .key_press = treadmill_state_program_key_press},
-    {.state = STATE_COUNTDOWN,
-     .key_press = treadmill_state_countdown_key_press},
-    {.state = STATE_TRAINING, .key_press = treadmill_state_training_key_press},
-    {.state = STATE_PAUSED, .key_press = treadmill_state_paused_key_press},
-    {.state = STATE_REPORT, .key_press = treadmill_state_report_key_press},
+    {.state = SCENE_INIT, .key_press = treadmill_scene_init_key_press},
+    {.state = SCENE_IDLE, .key_press = treadmill_scene_idle_key_press},
+    {.state = SCENE_PROGRAM, .key_press = treadmill_scene_program_key_press},
+    {.state = SCENE_COUNTDOWN,
+     .key_press = treadmill_scene_countdown_key_press},
+    {.state = SCENE_TRAINING, .key_press = treadmill_scene_training_key_press},
+    {.state = SCENE_PAUSED, .key_press = treadmill_scene_paused_key_press},
+    {.state = SCENE_REPORT, .key_press = treadmill_scene_report_key_press},
 };
 
 void treadmill_key_press(treadmill_t *treadmill, const key_t key) {
   treadmill->beep(BEEP_KEYPRESS_ACK);
-  for (treadmill_state_t state = STATE_INIT;
+  for (treadmill_scene_t state = SCENE_INIT;
        state < sizeof(key_press_callback) / sizeof(key_press_callback_t);
        state++) {
     if (treadmill->state == key_press_callback[state].state) {

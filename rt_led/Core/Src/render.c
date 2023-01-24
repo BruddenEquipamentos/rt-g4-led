@@ -179,18 +179,18 @@ static void render_report(treadmill_t *treadmill) {
 }
 
 typedef struct render_scene_callback {
-  treadmill_state_t state;
+  treadmill_scene_t state;
   void (*render)(treadmill_t *treadmill);
 } render_scene_callback_t;
 
 static render_scene_callback_t render_scene_callback[] = {
-    {.state = STATE_INIT, .render = render_init},
-    {.state = STATE_IDLE, .render = render_idle},
-    {.state = STATE_PROGRAM, .render = render_program},
-    {.state = STATE_COUNTDOWN, .render = render_countdown},
-    {.state = STATE_TRAINING, .render = render_training},
-    {.state = STATE_PAUSED, .render = render_paused},
-    {.state = STATE_REPORT, .render = render_report},
+    {.state = SCENE_INIT, .render = render_init},
+    {.state = SCENE_IDLE, .render = render_idle},
+    {.state = SCENE_PROGRAM, .render = render_program},
+    {.state = SCENE_COUNTDOWN, .render = render_countdown},
+    {.state = SCENE_TRAINING, .render = render_training},
+    {.state = SCENE_PAUSED, .render = render_paused},
+    {.state = SCENE_REPORT, .render = render_report},
 };
 
 
@@ -206,7 +206,7 @@ void render(treadmill_t *treadmill) {
   render_helper_update_digits(display_pace, 0);
   render_helper_update_digits(display_bpm, 0);
 
-  for (treadmill_state_t i = 0; i < sizeof(render_scene_callback) / sizeof(render_scene_callback_t); ++i) {
+  for (treadmill_scene_t i = 0; i < sizeof(render_scene_callback) / sizeof(render_scene_callback_t); ++i) {
     if (treadmill->state == render_scene_callback[i].state) {
       render_scene_callback[i].render(treadmill);
     }

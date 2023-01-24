@@ -2,20 +2,20 @@
 
 #include "treadmill_action.h"
 
-static void treadmill_state_init_update(treadmill_t *treadmill) {
-  treadmill->state = STATE_IDLE;
+static void treadmill_scene_init_update(treadmill_t *treadmill) {
+  treadmill->state = SCENE_IDLE;
 }
 
-static void treadmill_state_idle_update(treadmill_t *treadmill) {}
+static void treadmill_scene_idle_update(treadmill_t *treadmill) {}
 
-static void treadmill_state_program_update(treadmill_t *treadmill) {}
+static void treadmill_scene_program_update(treadmill_t *treadmill) {}
 
 static uint16_t treadmill_compute_pace(uint16_t speed) {
   //
   return 0;
 }
 
-static void treadmill_state_countdown_update(treadmill_t *treadmill) {
+static void treadmill_scene_countdown_update(treadmill_t *treadmill) {
   if (treadmill->countdown.ms == 0 &&
       treadmill->countdown.value >= START_TRAINING_COUNTDOWN_VALUE) {
     treadmill->countdown.value = START_TRAINING_COUNTDOWN_VALUE;
@@ -33,7 +33,7 @@ static void treadmill_state_countdown_update(treadmill_t *treadmill) {
   }
 }
 
-static void treadmill_state_training_update(treadmill_t *treadmill) {
+static void treadmill_scene_training_update(treadmill_t *treadmill) {
   if (treadmill->ms - treadmill->training.ms >= 1000) {
     treadmill->training.ms = treadmill->ms;
     treadmill->training.seconds++;
@@ -46,27 +46,27 @@ static void treadmill_state_training_update(treadmill_t *treadmill) {
   // todo programs
 }
 
-static void treadmill_state_paused_update(treadmill_t *treadmill) {}
+static void treadmill_scene_paused_update(treadmill_t *treadmill) {}
 
-static void treadmill_state_report_update(treadmill_t *treadmill) {}
+static void treadmill_scene_report_update(treadmill_t *treadmill) {}
 
 typedef struct update_callback {
-  treadmill_state_t state;
+  treadmill_scene_t state;
   void (*update)(treadmill_t *treadmill);
 } update_callback_t;
 
 static update_callback_t update_callback[] = {
-    {.state = STATE_INIT, .update = treadmill_state_init_update},
-    {.state = STATE_IDLE, .update = treadmill_state_idle_update},
-    {.state = STATE_PROGRAM, .update = treadmill_state_program_update},
-    {.state = STATE_COUNTDOWN, .update = treadmill_state_countdown_update},
-    {.state = STATE_TRAINING, .update = treadmill_state_training_update},
-    {.state = STATE_PAUSED, .update = treadmill_state_paused_update},
-    {.state = STATE_REPORT, .update = treadmill_state_report_update},
+    {.state = SCENE_INIT, .update = treadmill_scene_init_update},
+    {.state = SCENE_IDLE, .update = treadmill_scene_idle_update},
+    {.state = SCENE_PROGRAM, .update = treadmill_scene_program_update},
+    {.state = SCENE_COUNTDOWN, .update = treadmill_scene_countdown_update},
+    {.state = SCENE_TRAINING, .update = treadmill_scene_training_update},
+    {.state = SCENE_PAUSED, .update = treadmill_scene_paused_update},
+    {.state = SCENE_REPORT, .update = treadmill_scene_report_update},
 };
 
 void treadmill_update(treadmill_t *treadmill) {
-  for (treadmill_state_t state = STATE_INIT;
+  for (treadmill_scene_t state = SCENE_INIT;
        state < sizeof(update_callback) / sizeof(update_callback_t); state++) {
     if (treadmill->state == update_callback[state].state) {
       update_callback[state].update(treadmill);

@@ -5,39 +5,39 @@
 #include "treadmill_programs.h"
 
 void treadmill_start_training_countdown(treadmill_t *treadmill) {
-  treadmill->state = STATE_COUNTDOWN;
+  treadmill->state = SCENE_COUNTDOWN;
   treadmill->countdown.value = START_TRAINING_COUNTDOWN_VALUE;
   treadmill->countdown.ms = 0;
 }
 
 void treadmill_start_training(treadmill_t *treadmill) {
-  treadmill->state = STATE_TRAINING;
+  treadmill->state = SCENE_TRAINING;
   memset(&treadmill->training, 0x00, sizeof(struct training));
   treadmill->training.ms = treadmill->ms;
   treadmill->training.speed = treadmill->config.speed.min;
 }
 
 void treadmill_abort_countdown(treadmill_t *treadmill) {
-  treadmill->state = STATE_IDLE;
+  treadmill->state = SCENE_IDLE;
 }
 
 void treadmill_pause_training(treadmill_t *treadmill) {
   treadmill->training.speed = 0;
-  treadmill->state = STATE_PAUSED;
+  treadmill->state = SCENE_PAUSED;
 }
 
 void treadmill_resume_training(treadmill_t *treadmill) {
   treadmill->training.speed = treadmill->config.speed.min;
   treadmill->training.ms = treadmill->ms;
-  treadmill->state = STATE_TRAINING;
+  treadmill->state = SCENE_TRAINING;
 }
 
 void treadmill_finish_training(treadmill_t *treadmill) {
-  treadmill->state = STATE_REPORT;
+  treadmill->state = SCENE_REPORT;
 }
 
 void treadmill_close_report(treadmill_t *treadmill) {
-  treadmill->state = STATE_IDLE;
+  treadmill->state = SCENE_IDLE;
   memset(&treadmill->training, 0x00, sizeof(struct training));
 }
 
@@ -73,7 +73,7 @@ void treadmill_speed_decrement(treadmill_t *treadmill) {
 
 void treadmill_set_speed(treadmill_t *treadmill, const uint16_t speed) {
   if (speed > treadmill->config.speed.max) return;
-  if (speed > 0 && treadmill < treadmill->config.speed.min) return;
+  if (speed > 0 && treadmill->training.speed < treadmill->config.speed.min) return;
   treadmill->training.speed = speed;
 }
 
@@ -100,7 +100,7 @@ void treadmill_incline_decrement(treadmill_t *treadmill) {
 }
 
 void treadmill_program(treadmill_t *treadmill) {
-  treadmill->state = STATE_PROGRAM;
+  treadmill->state = SCENE_PROGRAM;
   treadmill->program.id = 1;
   program_load_default_value(treadmill);
 }
@@ -112,7 +112,7 @@ void treadmill_next_program(treadmill_t *treadmill) {
 }
 
 void treadmill_exit_program(treadmill_t *treadmill) {
-  treadmill->state = STATE_IDLE;
+  treadmill->state = SCENE_IDLE;
   memset(&treadmill->program, 0x00, sizeof(struct program));
 }
 

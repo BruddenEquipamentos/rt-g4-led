@@ -86,7 +86,7 @@ static void render_dot_matrix(treadmill_t *treadmill, display_t *display) {
   (void)display;
   if (treadmill->state != treadmill->previous_state) {
     switch (treadmill->state) {
-      case STATE_PAUSED: {
+      case SCENE_PAUSED: {
         dm_tick = 0;
         dm_frame = 0;
         break;
@@ -101,14 +101,14 @@ static void render_dot_matrix(treadmill_t *treadmill, display_t *display) {
   }
 
   switch (treadmill->state) {
-    case STATE_PAUSED: {
+    case SCENE_PAUSED: {
       int length = dm_compute_length("PAUSED");
       dm_render_text("PAUSED", dm_frame);
       if (dm_frame > length + 16) dm_frame = 0;
       break;
     }
     default: {
-      if (treadmill->state == STATE_COUNTDOWN) {
+      if (treadmill->state == SCENE_COUNTDOWN) {
         dm_render_number(treadmill->countdown.value);
       } else {
         dm_clear_buffer();
@@ -134,23 +134,23 @@ static void render_paused(treadmill_t *treadmill) {}
 static void render_report(treadmill_t *treadmill) {}
 
 typedef struct render_scene_callback {
-  treadmill_state_t state;
+  treadmill_scene_t state;
   void (*render)(treadmill_t *treadmill);
 } render_scene_callback_t;
 
 static render_scene_callback_t render_scene_callback[] = {
-    {.state = STATE_INIT, .render = render_init},
-    {.state = STATE_IDLE, .render = render_idle},
-    {.state = STATE_PROGRAM, .render = render_program},
-    {.state = STATE_COUNTDOWN, .render = render_countdown},
-    {.state = STATE_TRAINING, .render = render_training},
-    {.state = STATE_PAUSED, .render = render_paused},
-    {.state = STATE_REPORT, .render = render_report},
+    {.state = SCENE_INIT, .render = render_init},
+    {.state = SCENE_IDLE, .render = render_idle},
+    {.state = SCENE_PROGRAM, .render = render_program},
+    {.state = SCENE_COUNTDOWN, .render = render_countdown},
+    {.state = SCENE_TRAINING, .render = render_training},
+    {.state = SCENE_PAUSED, .render = render_paused},
+    {.state = SCENE_REPORT, .render = render_report},
 };
 
 void treadmill_render(treadmill_t *treadmill) {
   static display_t display;
-  for (treadmill_state_t i = 0;
+  for (treadmill_scene_t i = 0;
        i < sizeof(render_scene_callback) / sizeof(render_scene_callback_t);
        ++i) {
     if (treadmill->state == render_scene_callback[i].state) {
