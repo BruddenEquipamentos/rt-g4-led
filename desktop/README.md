@@ -1,3 +1,13 @@
+## Jan 24, 2024
+
+-
+
+## Jan 23, 2023
+
+- Shortcut keys handler
+
+- Inverter communication thread
+
 ## Jan 17, 2023
 
 - Fixed - Pullup on Board PD0 and PA15 (TS01 and T05)

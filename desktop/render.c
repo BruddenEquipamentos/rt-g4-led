@@ -7,33 +7,32 @@
 #define DISPLAY_FIELD_BUFFER_MAX_LENGTH 8
 
 typedef struct display_fields {
-    char output[DISPLAY_FIELD_BUFFER_MAX_LENGTH];
-    struct {
-        uint32_t interval;
-        uint32_t time_ms;
-    } blink;
+  char output[DISPLAY_FIELD_BUFFER_MAX_LENGTH];
+  struct {
+    uint32_t interval;
+    uint32_t time_ms;
+  } blink;
 } display_fields_t;
 
 typedef struct display {
-    display_fields_t distance;
-    display_fields_t time;
-    display_fields_t speed;
-    display_fields_t kcal;
-    display_fields_t program;
-    display_fields_t pace;
-    display_fields_t incline;
-    display_fields_t bpm;
+  display_fields_t distance;
+  display_fields_t time;
+  display_fields_t speed;
+  display_fields_t kcal;
+  display_fields_t program;
+  display_fields_t pace;
+  display_fields_t incline;
+  display_fields_t bpm;
 } display_t;
 
-
-display_t* display_distance;
-display_t* display_time;
-display_t* display_speed;
-display_t* display_steps;
-display_t* display_calories;
-display_t* display_pace;
-display_t* display_incline;
-display_t* display_bpm;
+display_t *display_distance;
+display_t *display_time;
+display_t *display_speed;
+display_t *display_program;
+display_t *display_calories;
+display_t *display_pace;
+display_t *display_incline;
+display_t *display_bpm;
 
 static uint32_t calc_pace(const uint16_t speed) {
   return ((60000000 / speed) * 6) / 1000;
@@ -85,41 +84,39 @@ static void render_panel(treadmill_t *treadmill, display_t *display) {
 
 static void render_dot_matrix(treadmill_t *treadmill, display_t *display) {
   (void)display;
-  static uint32_t frame_ms_start = 0;
-  static int frame = 0;
   if (treadmill->state != treadmill->previous_state) {
     switch (treadmill->state) {
       case STATE_PAUSED: {
-        frame_ms_start = 0;
-        frame = 0;
+        dm_tick = 0;
+        dm_frame = 0;
         break;
       }
       default:;
     }
   }
 
-  if (treadmill->get_time_ms() - frame_ms_start > 100) {
-    frame_ms_start = treadmill->get_time_ms();
-    frame++;
+  if (treadmill->get_time_ms() - dm_tick > 100) {
+    dm_tick = treadmill->get_time_ms();
+    dm_frame++;
   }
 
   switch (treadmill->state) {
     case STATE_PAUSED: {
       int length = dm_compute_length("PAUSED");
-      dot_matrix_render_text("PAUSED", frame);
-      if (frame > length + 16) frame = 0;
+      dm_render_text("PAUSED", dm_frame);
+      if (dm_frame > length + 16) dm_frame = 0;
       break;
     }
     default: {
       if (treadmill->state == STATE_COUNTDOWN) {
-        dot_matrix_print_number(treadmill->countdown.value);
+        dm_render_number(treadmill->countdown.value);
       } else {
-        dot_matrix_clear_buffer();
+        dm_clear_buffer();
       }
     };
   }
 
-  dot_matrix_render();
+  dm_render();
 }
 
 static void render_init(treadmill_t *treadmill) {}
@@ -137,7 +134,7 @@ static void render_paused(treadmill_t *treadmill) {}
 static void render_report(treadmill_t *treadmill) {}
 
 typedef struct render_scene_callback {
-  state_t state;
+  treadmill_state_t state;
   void (*render)(treadmill_t *treadmill);
 } render_scene_callback_t;
 
@@ -153,7 +150,9 @@ static render_scene_callback_t render_scene_callback[] = {
 
 void treadmill_render(treadmill_t *treadmill) {
   static display_t display;
-  for (state_t i = 0; i < sizeof(render_scene_callback) / sizeof(render_scene_callback_t); ++i) {
+  for (treadmill_state_t i = 0;
+       i < sizeof(render_scene_callback) / sizeof(render_scene_callback_t);
+       ++i) {
     if (treadmill->state == render_scene_callback[i].state) {
       render_scene_callback[i].render(treadmill);
     }

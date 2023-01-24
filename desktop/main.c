@@ -115,13 +115,14 @@ int main(int argc, char *argv[]) {
 
   treadmill_t treadmill;
   treadmill_setup(&treadmill);
-  _dot_matrix_render = render_dot_matrix;
+  _dm_render = render_dot_matrix;
   treadmill.get_time_ms = (uint32_t (*)(void)) get_time_ms;
 
   pthread_create(&input_thread, NULL, thread_input, &treadmill);
   pthread_create(&main_thread, NULL, thread_main, &treadmill);
 
   pthread_join(main_thread, NULL);
-  pthread_join(input_thread, NULL);
+  pthread_join(in
+	       put_thread, NULL);
   return 0;
 }

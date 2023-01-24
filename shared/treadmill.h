@@ -5,10 +5,11 @@
 
 #include "treadmill_key.h"
 #include "treadmill_programs.h"
+#include "beep.h"
 
 #define START_TRAINING_COUNTDOWN_VALUE (3)
 
-typedef enum state {
+typedef enum treadmill_state {
   STATE_INIT = 0,
   STATE_IDLE,
   STATE_PROGRAM,
@@ -16,11 +17,11 @@ typedef enum state {
   STATE_TRAINING,
   STATE_PAUSED,
   STATE_REPORT,
-} state_t;
+} treadmill_state_t;
 
 typedef struct treadmill {
-  state_t state;
-  state_t previous_state;
+  treadmill_state_t state;
+  treadmill_state_t previous_state;
 
   struct program {
     program_id_t id; // temp hack - refences
@@ -41,6 +42,8 @@ typedef struct treadmill {
 
     uint16_t speed;
     int16_t incline;
+
+    uint16_t pace;
 
     uint8_t bpm;
 
@@ -80,7 +83,7 @@ typedef struct treadmill {
     uint8_t print_states;
   } debug;
 
-  void (*beep)(void);
+  void (*beep)(beep_t beep);
   uint32_t (*get_time_ms)(void);
 
   uint32_t ms;
