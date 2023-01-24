@@ -71,6 +71,18 @@ void treadmill_speed_decrement(treadmill_t *treadmill) {
   }
 }
 
+void treadmill_set_speed(treadmill_t *treadmill, const uint16_t speed) {
+  if (speed > treadmill->config.speed.max) return;
+  if (speed > 0 && treadmill < treadmill->config.speed.min) return;
+  treadmill->training.speed = speed;
+}
+
+void treadmill_set_incline(treadmill_t *treadmill, const int16_t incline) {
+  if (incline > treadmill->config.incline.max) return;
+  if (incline < treadmill->config.incline.min) return;
+  treadmill->training.incline = incline;
+}
+
 void treadmill_incline_increment(treadmill_t *treadmill) {
   if (treadmill->training.incline >= treadmill->config.incline.min &&
       treadmill->training.incline + treadmill->config.incline.step <=

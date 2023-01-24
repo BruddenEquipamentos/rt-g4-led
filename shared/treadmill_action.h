@@ -16,6 +16,9 @@ void treadmill_speed_decrement(treadmill_t *treadmill);
 void treadmill_incline_increment(treadmill_t *treadmill);
 void treadmill_incline_decrement(treadmill_t *treadmill);
 
+void treadmill_set_speed(treadmill_t *treadmill, const uint16_t speed);
+void treadmill_set_incline(treadmill_t *treadmill, const int16_t incline);
+
 void treadmill_next_program(treadmill_t *treadmill);
 void treadmill_exit_program(treadmill_t *treadmill);
 void treadmill_start_program(treadmill_t *treadmill);

@@ -63,6 +63,31 @@ static void treadmill_state_training_key_press(treadmill_t *treadmill,
     case KEY_INCLINE_DECREMENT:
       treadmill_incline_decrement(treadmill);
       break;
+    case KEY_SPEED_5:
+      treadmill_set_speed(treadmill, 500);
+      break;
+    case KEY_SPEED_8:
+      treadmill_set_speed(treadmill, 800);
+      break;
+    case KEY_SPEED_11:
+      treadmill_set_speed(treadmill, 1100);
+      break;
+    case KEY_SPEED_14:
+      treadmill_set_speed(treadmill, 1400);
+      break;
+    case KEY_INCLINE_3:
+      treadmill_set_incline(treadmill, 30);
+      break;
+    case KEY_INCLINE_6:
+      treadmill_set_incline(treadmill, 60);
+      break;
+    case KEY_INCLINE_9:
+      treadmill_set_incline(treadmill, 90);
+      break;
+    case KEY_INCLINE_12:
+      treadmill_set_incline(treadmill, 120);
+      break;
+
     default:;
   }
 }
@@ -110,7 +135,7 @@ static void treadmill_state_report_key_press(treadmill_t *treadmill,
 }
 
 typedef struct key_press_callback {
-  state_t state;
+  treadmill_state_t state;
   void (*key_press)(treadmill_t *treadmill, const key_t key);
 } key_press_callback_t;
 
@@ -126,7 +151,8 @@ static key_press_callback_t key_press_callback[] = {
 };
 
 void treadmill_key_press(treadmill_t *treadmill, const key_t key) {
-  for (state_t state = STATE_INIT;
+  treadmill->beep(BEEP_KEYPRESS_ACK);
+  for (treadmill_state_t state = STATE_INIT;
        state < sizeof(key_press_callback) / sizeof(key_press_callback_t);
        state++) {
     if (treadmill->state == key_press_callback[state].state) {
