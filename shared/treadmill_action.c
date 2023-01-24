@@ -102,7 +102,7 @@ void treadmill_incline_decrement(treadmill_t *treadmill) {
 void treadmill_program(treadmill_t *treadmill) {
   treadmill->program.id = 1;
   program_load_default_value(treadmill);
-  treadmill_set_scene(treadmill, SCENE_REPORT);
+  treadmill_set_scene(treadmill, SCENE_PROGRAM);
 }
 
 void treadmill_next_program(treadmill_t *treadmill) {

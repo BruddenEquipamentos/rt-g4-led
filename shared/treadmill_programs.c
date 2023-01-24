@@ -2,8 +2,14 @@
 
 #include <assert.h>
 
-#include "treadmill_action.h"
 #include "treadmill.h"
+#include "treadmill_action.h"
+
+char *programs_name[] = {
+    "PROGRAM_NONE",     "PROGRAM_TIME",         "PROGRAM_DISTANCE",
+    "PROGRAM_CALORIES", "PROGRAM_HIIT",         "PROGRAM_WALK_30MIN",
+    "PROGRAM_FAT_BURN", "PROGRAM_SUPER_CARDIO",
+};
 
 static void program_time_key_press(treadmill_t *treadmill, const key_t key) {
   switch (key) {
@@ -197,15 +203,24 @@ void program_load_default_value(treadmill_t *treadmill) {
       break;
     }
     case PROGRAM_HIIT: {
+      treadmill->program.p_hiit.time = PROGRAM_HIIT_DEFAULT_TIME;
+      treadmill->program.p_hiit.speed_t1 = PROGRAM_HIIT_DEFAULT_SPEED_T1;
+      treadmill->program.p_hiit.speed_t2 = PROGRAM_HIIT_DEFAULT_SPEED_T2;
       break;
     }
     case PROGRAM_WALK_30MIN: {
+      treadmill->program.p_walk_30min.target_speed =
+          PROGRAM_WALK_30MIN_DEFAULT_TARGET_SPEED;
       break;
     }
     case PROGRAM_FAT_BURN: {
+      treadmill->program.p_fat_burn.seconds = PROGRAM_FAT_BURN_DEFAULT_TIME;
+      treadmill->program.p_fat_burn.age = PROGRAM_FAT_BURN_DEFAULT_AGE;
       break;
     }
     case PROGRAM_SUPER_CARDIO: {
+      treadmill->program.p_super_cardio.seconds = PROGRAM_SUPER_CARDIO_DEFAULT_TIME;
+      treadmill->program.p_super_cardio.age = PROGRAM_SUPER_CARDIO_DEFAULT_AGE;
       break;
     }
     default:;

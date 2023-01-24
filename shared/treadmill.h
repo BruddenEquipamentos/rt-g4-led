@@ -31,11 +31,13 @@ typedef struct treadmill {
 
   struct program {
     program_id_t id; // temp hack - refences
-
     struct p_time p_time;
     struct p_distance p_distance;
     struct p_calories p_calories;
-
+    struct p_hiit p_hiit;
+    struct p_walk_30min p_walk_30min;
+    struct p_fat_burn p_fat_burn;
+    struct p_super_cardio p_super_cardio;
   } program;
 
   struct training {

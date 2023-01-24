@@ -5,6 +5,8 @@
 
 #include "treadmill_key.h"
 
+extern char *programs_name[];
+
 typedef struct treadmill treadmill_t;
 
 typedef enum program_id {
@@ -37,6 +39,22 @@ typedef enum program_id {
 #define PROGRAM_CALORIES_MAX_CALORIES (9900)
 #define PROGRAM_CALORIES_INC_CALORIES_STEP (100)
 
+// hiit
+#define PROGRAM_HIIT_DEFAULT_TIME (10 * 60 * 1000)  // 10 min
+#define PROGRAM_HIIT_DEFAULT_SPEED_T1 (300)         // 3.0 km/h
+#define PROGRAM_HIIT_DEFAULT_SPEED_T2 (700)         // 7.0 km/h
+
+// walk 30 min
+#define PROGRAM_WALK_30MIN_DEFAULT_TARGET_SPEED (600)
+
+// fat burn
+#define PROGRAM_FAT_BURN_DEFAULT_TIME (10*60*1000) // 10 min
+#define PROGRAM_FAT_BURN_DEFAULT_AGE (30) // 30
+
+// super cardio
+#define PROGRAM_SUPER_CARDIO_DEFAULT_TIME (10*60*1000)
+#define PROGRAM_SUPER_CARDIO_DEFAULT_AGE (30)
+
 struct p_time {
   uint32_t seconds;
 };
@@ -50,10 +68,8 @@ struct p_calories {
 };
 
 struct p_hiit {
-  uint32_t series;
-  uint32_t seconds_t1;
+  uint32_t time;
   uint32_t speed_t1;
-  uint32_t seconds_t2;
   uint32_t speed_t2;
 };
 
@@ -62,8 +78,8 @@ struct p_walk_30min {
 };
 
 struct p_fat_burn {
-  uint8_t age;
   uint32_t seconds;
+  uint8_t age;
 };
 
 struct p_super_cardio {

@@ -79,7 +79,7 @@ static void render_panel(treadmill_t *treadmill, display_t *display) {
   printf("%16s%16s%16s\n\n", display->program.output, display->program.output,
          display->pace.output);
   printf("%16s%16s%16s\n", "INCLINE", "", "BPM");
-  printf("%16s%16s%16s\n\n", display->incline.output, "", display->bpm.output);
+  printf("%16s%16s%16s\n\n", display->incline.output, display->program.output, display->bpm.output);
 }
 
 static void render_dot_matrix(treadmill_t *treadmill, display_t *display) {
@@ -175,7 +175,9 @@ void treadmill_render(treadmill_t *treadmill) {
   printf("------------------------------------------------------------\n");
 
   if (treadmill->debug.print_states) {
-    fprintf(stdout, "Treadmill State: %s\n", scene_name[treadmill->scene]);
+    fprintf(stdout, "Treadmill Scene: %s\n", scene_name[treadmill->scene]);
+    fprintf(stdout, "Treadmill Program Name: %s\n", programs_name[treadmill->program.id]);
+
     fprintf(stdout, "Treadmill Countdown Value: %d\n",
             treadmill->countdown.value);
     fprintf(stdout, "Treadmill Training Centimeters: %d\n",
