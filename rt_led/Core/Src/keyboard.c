@@ -34,7 +34,9 @@ static void set_columns_to_high(void) {
   else                                           \
     *ptr_keys = (*ptr_keys | key);               \
   set_columns_to_high();                         \
-  osDelay(1);
+  __asm("nop\n");__asm("nop\n");
+  //osDelay(1);
+  //__asm("nop\n");__asm("nop\n");
 
 #define NUM_READS 4
 enum key  get_key_pressed(void) {
@@ -73,7 +75,7 @@ enum key  get_key_pressed(void) {
       key &= ~KEY_CONFIG;
   }
 
-  if (key & (KEY_SPEED_INCREMENT|KEY_SPEED_DECREMENT)) {
+  if (key == (KEY_SPEED_INCREMENT|KEY_SPEED_DECREMENT)) {
       key &= ~(KEY_SPEED_INCREMENT|KEY_SPEED_DECREMENT);
       key |= KEY_LUB;
   } else {

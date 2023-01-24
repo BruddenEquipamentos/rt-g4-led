@@ -21,7 +21,7 @@
 #define DISPLAY_CMD_PWM_CFG 0xFF
 
 void display_init();
-void display_render(void);
-//void display_render(xe_elliptical_t *elliptical);
+void display_update(void);
+//void display_update(xe_elliptical_t *elliptical);
 
 #endif /* INC_DISPLAY_H_ */

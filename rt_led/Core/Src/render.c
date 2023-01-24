@@ -14,8 +14,8 @@ static display_t display_eight = {.on_addr = 0x20, .addr = {0x20, 0x21, 0x22, 0x
 display_t* display_distance = &display_one;
 display_t* display_time = &display_two;
 display_t* display_speed = &display_three;
-display_t* display_steps = &display_four;
-display_t* display_calories = &display_five;
+display_t* display_calories = &display_four;
+display_t* display_program = &display_five;
 display_t* display_pace = &display_six;
 display_t* display_incline = &display_seven;
 display_t* display_bpm = &display_eight;
@@ -24,7 +24,7 @@ void blink_field_reset() {
   display_distance->blink.time_ms = 0;
   display_time->blink.time_ms = 0;
   display_speed->blink.time_ms = 0;
-  display_steps->blink.time_ms = 0;
+  display_program->blink.time_ms = 0;
   display_calories->blink.time_ms = 0;
   display_pace->blink.time_ms = 0;
   display_incline->blink.time_ms = 0;
@@ -43,38 +43,38 @@ void blink_field(const uint32_t update_time_ms, display_t* display, const uint32
   }
 }
 
-void display_helper_hide_all_displays() {
+void render_helper_hide_all_displays() {
   // TODO: could make as widgets from a parent scene/window or a list of display_t
   display_distance->visible = 0;
   display_time->visible = 0;
   display_speed->visible = 0;
-  display_steps->visible = 0;
+  display_program->visible = 0;
   display_calories->visible = 0;
   display_pace->visible = 0;
   display_incline->visible = 0;
   display_bpm->visible = 0;
 }
 
-void display_helper_show_all_displays() {
+void render_helper_show_all_displays() {
   // TODO: could make as widgets from a parent scene/window or a list of display_t
   display_distance->visible = 1;
   display_time->visible = 1;
   display_speed->visible = 1;
-  display_steps->visible = 1;
   display_calories->visible = 1;
+  display_program->visible = 1;
   display_pace->visible = 1;
   display_incline->visible = 1;
   display_bpm->visible = 1;
 }
 
-void display_helper_update_digits(display_t* display, const uint32_t value) {
+void render_helper_update_digits(display_t* display, const uint32_t value) {
   display->digits[3] = value / 1000;
   display->digits[2] = value % 1000 / 100;
   display->digits[1] = value % 100 / 10;
   display->digits[0] = value % 10;
 }
 
-void display_helper_update_time(display_t* display, const uint32_t seconds) {
+void render_helper_update_time(display_t* display, const uint32_t seconds) {
   uint32_t min = seconds / 60;
   uint32_t sec = seconds % 60;
   display->digits[3] = min / 10;
@@ -83,7 +83,7 @@ void display_helper_update_time(display_t* display, const uint32_t seconds) {
   display->digits[0] = sec % 10;
 }
 
-void display_helper_update_distance(display_t* display, const uint32_t meters) {
+void render_helper_update_distance(display_t* display, const uint32_t meters) {
   uint32_t km = meters / 1000;
   uint32_t m = (meters % 1000) / 10;
   display->digits[3] = km / 10;
@@ -92,7 +92,7 @@ void display_helper_update_distance(display_t* display, const uint32_t meters) {
   display->digits[0] = m % 10;
 }
 
-void display_helper_update_speed(display_t* display, const uint32_t kmh) {
+void render_helper_update_speed(display_t* display, const uint32_t kmh) {
   uint32_t spd_km = kmh / 100;
   uint32_t spd_m = kmh % 100;
   display->digits[2] = spd_km / 10;
@@ -100,19 +100,118 @@ void display_helper_update_speed(display_t* display, const uint32_t kmh) {
   display->digits[0] = spd_m / 10;
 }
 
-static void display_helper_render_rest(display_t* display) {
-  display->dot_pos = DOT_POSITION_NONE;
-  display->digits[3] = DIGIT_r;
-  display->digits[2] = DIGIT_E;
-  display->digits[1] = DIGIT_5;
-  display->digits[0] = DIGIT_t;
+//static void render_helper_render_rest(display_t* display) {
+//  display->dot_pos = DOT_POSITION_NONE;
+//  display->digits[3] = DIGIT_r;
+//  display->digits[2] = DIGIT_E;
+//  display->digits[1] = DIGIT_5;
+//  display->digits[0] = DIGIT_t;
+//}
+//
+//static void render_helper_render_go(display_t* display) {
+//  display->dot_pos = DOT_POSITION_NONE;
+//  display->digits[3] = DIGIT_EMPTY;
+//  display->digits[2] = DIGIT_6;
+//  display->digits[1] = DIGIT_o;
+//  display->digits[0] = DIGIT_EMPTY;
+//}
+
+static void helper_show_all_displays() {
+  // TODO: could make as widgets from a parent scene/window or a list of display_t
+  display_distance->visible = 1;
+  display_time->visible = 1;
+  display_speed->visible = 1;
+  display_program->visible = 0;
+  display_calories->visible = 1;
+  display_incline->visible = 1;
+  display_pace->visible = 1;
+  display_bpm->visible = 1;
 }
 
-static void display_helper_render_go(display_t* display) {
-  display->dot_pos = DOT_POSITION_NONE;
-  display->digits[3] = DIGIT_EMPTY;
-  display->digits[2] = DIGIT_6;
-  display->digits[1] = DIGIT_o;
-  display->digits[0] = DIGIT_EMPTY;
+static void render_init(treadmill_t *treadmill) {
+  dm_clear_buffer();
 }
 
+static void render_idle(treadmill_t *treadmill) {
+  dm_clear_buffer();
+}
+
+static void render_program(treadmill_t *treadmill) {
+
+}
+
+static void render_countdown(treadmill_t *treadmill) {
+  if (treadmill->countdown.value > 0) {
+    dm_render_number(treadmill->countdown.value);
+  } else {
+    dm_clear_buffer();
+  }
+}
+
+static void render_training(treadmill_t *treadmill) {
+  display_program->visible = 0;
+  render_helper_update_distance(display_distance, treadmill->training.meters);
+  render_helper_update_time(display_time,treadmill->training.seconds);
+  render_helper_update_speed(display_speed, treadmill->training.speed);
+  render_helper_update_digits(display_calories, treadmill->training.kcal);
+  // todo: program
+
+}
+
+static void render_paused(treadmill_t *treadmill) {
+  if (treadmill->get_time_ms() - dm_tick > 100) {
+    dm_tick = treadmill->get_time_ms();
+    int length = dm_compute_length("PAUSA");
+    dm_render_text("PAUSA", dm_frame);
+    dm_frame++;
+    if (dm_frame > length + 16) dm_frame = 0;
+  }
+}
+
+static void render_report(treadmill_t *treadmill) {
+  if (treadmill->get_time_ms() - dm_tick > 50) {
+    dm_tick = treadmill->get_time_ms();
+    int length = dm_compute_length("RELATORIO");
+    dm_render_text("RELATORIO", dm_frame);
+    dm_frame++;
+    if (dm_frame > length + 16) dm_frame = 0;
+  }
+}
+
+typedef struct render_scene_callback {
+  treadmill_state_t state;
+  void (*render)(treadmill_t *treadmill);
+} render_scene_callback_t;
+
+static render_scene_callback_t render_scene_callback[] = {
+    {.state = STATE_INIT, .render = render_init},
+    {.state = STATE_IDLE, .render = render_idle},
+    {.state = STATE_PROGRAM, .render = render_program},
+    {.state = STATE_COUNTDOWN, .render = render_countdown},
+    {.state = STATE_TRAINING, .render = render_training},
+    {.state = STATE_PAUSED, .render = render_paused},
+    {.state = STATE_REPORT, .render = render_report},
+};
+
+
+void render(treadmill_t *treadmill) {
+  helper_show_all_displays();
+
+  render_helper_update_digits(display_distance, 0);
+  render_helper_update_digits(display_time, 0);
+  render_helper_update_digits(display_speed, 0);
+  render_helper_update_digits(display_program, 0);
+  render_helper_update_digits(display_calories, 0);
+  render_helper_update_digits(display_incline, 0);
+  render_helper_update_digits(display_pace, 0);
+  render_helper_update_digits(display_bpm, 0);
+
+  for (treadmill_state_t i = 0; i < sizeof(render_scene_callback) / sizeof(render_scene_callback_t); ++i) {
+    if (treadmill->state == render_scene_callback[i].state) {
+      render_scene_callback[i].render(treadmill);
+    }
+  }
+
+  treadmill->previous_state = treadmill->state;
+
+}

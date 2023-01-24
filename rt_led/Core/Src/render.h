@@ -3,6 +3,8 @@
 
 #include "digits.h"
 
+#include "treadmill.h"
+
 typedef enum {
     DOT_POSITION_NONE = 0x00,
     DOT_POSITION_0 = 0x01,
@@ -27,7 +29,7 @@ typedef struct display {
 extern display_t* display_distance;
 extern display_t* display_time;
 extern display_t* display_speed;
-extern display_t* display_steps;
+extern display_t* display_program;
 extern display_t* display_calories;
 extern display_t* display_pace;
 extern display_t* display_incline;
@@ -41,6 +43,6 @@ void display_helper_update_time(display_t* display, const uint32_t seconds);
 void blink_field(const uint32_t update_time_ms, display_t *display, const uint32_t blink_interval_ms);
 void blink_field_reset();
 
-
+void render(treadmill_t *treamdill);
 
 #endif

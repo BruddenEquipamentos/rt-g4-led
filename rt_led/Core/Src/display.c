@@ -9,9 +9,8 @@
 
 #include <string.h>
 
-#include "dm.h"
-
 #include "digits.h"
+#include "dm.h"
 #include "main.h"
 #include "render.h"
 
@@ -118,7 +117,7 @@ static void render_display_speed(display_t* display, uint8_t* buffer) {
   render_dot(display, buffer);
 }
 
-static void render_display_steps(display_t* display, uint8_t* buffer) {
+static void render_display_program(display_t* display, uint8_t* buffer) {
   // 0, 10, 100, 1000
   render_display_clear(display, buffer);
   if (!display->visible) return;
@@ -152,10 +151,10 @@ static void render_display_pace(display_t* display, uint8_t* buffer) {
   if (!display->visible) return;
   if (display->digits[3] > DIGIT_0)
     render_to_display(display, display->digits[3], 3, buffer);
-  //if (display->digits[3] > DIGIT_0 || display->digits[2] > DIGIT_0)
-    render_to_display(display, display->digits[2], 2, buffer);
-  //if (display->digits[2] > DIGIT_0 || display->digits[1] > DIGIT_0)
-    render_to_display(display, display->digits[1], 1, buffer);
+  // if (display->digits[3] > DIGIT_0 || display->digits[2] > DIGIT_0)
+  render_to_display(display, display->digits[2], 2, buffer);
+  // if (display->digits[2] > DIGIT_0 || display->digits[1] > DIGIT_0)
+  render_to_display(display, display->digits[1], 1, buffer);
   render_to_display(display, display->digits[0], 0, buffer);
   render_dot(display, buffer);
 }
@@ -167,8 +166,8 @@ static void render_display_incline(display_t* display, uint8_t* buffer) {
   if (!display->visible) return;
   if (display->digits[2] > DIGIT_0)
     render_to_display(display, display->digits[2], 0, buffer);
-  //if (display->digits[2] > DIGIT_0 || display->digits[1] > DIGIT_0)
-    render_to_display(display, display->digits[1], 1, buffer);
+  // if (display->digits[2] > DIGIT_0 || display->digits[1] > DIGIT_0)
+  render_to_display(display, display->digits[1], 1, buffer);
   render_to_display(display, display->digits[0], 2, buffer);
   render_dot(display, buffer);
 }
@@ -202,53 +201,55 @@ static void display_helper_render_test(display_t* display, uint8_t value) {
   display->digits[0] = value % 10;
 }
 
-static void display_update_dot_matrix_buffer(uint8_t *buffer, uint16_t dm_buffer[5]){
-  static const uint8_t column_address[16] = {
-      0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27};
+static void display_update_dm_buffer(uint8_t* buffer,
+                                             uint16_t dm_buffer[5]) {
+  static const uint8_t column_address[16] = {0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D,
+                                             0x1E, 0x1F, 0x20, 0x21, 0x22, 0x23,
+                                             0x24, 0x25, 0x26, 0x27};
 
-  static const uint8_t row_value[5] = {
-      0x01, 0x02, 0x04, 0x08, 0x10};
+  static const uint8_t row_value[5] = {0x01, 0x02, 0x04, 0x08, 0x10};
 
   for (int row = 0; row < 5; ++row) {
-      for (int col = 15; col >= 0; --col) {
-	 if ((dm_buffer[row]>>col) & 1) buffer[column_address[15-col]] |= row_value[row];
-	 else buffer[column_address[15-col]] &= ~row_value[row];
-      }
+    for (int col = 15; col >= 0; --col) {
+      if ((dm_buffer[row] >> col) & 1)
+        buffer[column_address[15 - col]] |= row_value[row];
+      else
+        buffer[column_address[15 - col]] &= ~row_value[row];
+    }
   }
 }
 
-static void display_render_test(uint8_t* buffer, uint8_t* page_buffer) {
+static void display_update_test(uint8_t* buffer, uint8_t* page_buffer) {
   static uint8_t value = 0;
   display_helper_render_test(display_distance, value);
   display_helper_render_test(display_time, value);
   display_helper_render_test(display_speed, value);
-  display_helper_render_test(display_steps, value);
+  display_helper_render_test(display_program, value);
   display_helper_render_test(display_calories, value);
   display_helper_render_test(display_pace, value);
   display_helper_render_test(display_incline, value);
   display_helper_render_test(display_bpm, value);
   value = (value + 1) % 10;
 
-  //dot_matrix_render_column_line(15);
+  // dm_render_column_line(15);
 
   static uint8_t column = 0;
   if (column == 16) {
     column = 0;
-    dot_matrix_clear_buffer();
+    dm_clear_buffer();
   }
-  dot_matrix_render_column_line(column);
+  dm_render_column_line(column);
   column = (column + 1);
 }
 
-void display_render(void) {
+void display_update(void) {
   static uint8_t buffer[0x32] = {DISPLAY_CMD_PAGEWRITE, 0x00};
   static uint8_t buffer_sent[0x32] = {0x00};
   static uint8_t* page_buffer = &buffer[2];
 
-//  display_render_test(buffer, page_buffer);
   render_display_distance(display_distance, page_buffer);
   render_display_time(display_time, page_buffer);
-  render_display_steps(display_steps, page_buffer);
+  render_display_program(display_program, page_buffer);
   render_display_calories(display_calories, page_buffer);
   render_display_incline(display_incline, page_buffer);
   render_display_bpm(display_bpm, page_buffer);
@@ -256,7 +257,7 @@ void display_render(void) {
   render_display_speed(display_speed, page_buffer);
 
   // convert buffer to page buffer mapping
-  display_update_dot_matrix_buffer(page_buffer, dot_matrix_buffer);
+  display_update_dm_buffer(page_buffer, dm_buffer);
 
   if (memcmp(buffer_sent, buffer, 0x32) != 0) {
     if (HAL_I2C_Master_Transmit(&hi2c1, DISPLAY_ADDRESS_WRITE, buffer, BUFSIZE,
