@@ -23,6 +23,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "display.h"
+#include "render.h"
 #include "keyboard.h"
 #include "treadmill.h"
 #include "beep.h"
@@ -57,6 +58,7 @@ UART_HandleTypeDef huart3;
 osThreadId defaultTaskHandle;
 osThreadId keyboardTaskHandle;
 osThreadId beepTaskHandle;
+osThreadId inverterCommTasHandle;
 osMessageQId beepEventQueueHandle;
 osTimerId beepTimerHandle;
 /* USER CODE BEGIN PV */
@@ -76,10 +78,13 @@ static void MX_TIM16_Init(void);
 void StartDefaultTask(void const * argument);
 void KeyboardTask(void const * argument);
 void BeepTask(void const * argument);
+void InverterCommTask(void const * argument);
 void beepTimerCallback(void const * argument);
 
 /* USER CODE BEGIN PFP */
-
+static void beep(beep_t beep) {
+  xQueueSend(beepEventQueueHandle, &beep, 0);
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -174,13 +179,18 @@ int main(void)
   keyboardTaskHandle = osThreadCreate(osThread(keyboardTask), NULL);
 
   /* definition and creation of beepTask */
-  osThreadDef(beepTask, BeepTask, osPriorityNormal, 0, 128);
+  osThreadDef(beepTask, BeepTask, osPriorityLow, 0, 128);
   beepTaskHandle = osThreadCreate(osThread(beepTask), NULL);
+
+  /* definition and creation of inverterCommTas */
+  osThreadDef(inverterCommTas, InverterCommTask, osPriorityAboveNormal, 0, 128);
+  inverterCommTasHandle = osThreadCreate(osThread(inverterCommTas), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   treadmill_setup(&treadmill);
   treadmill.get_time_ms = HAL_GetTick;
+  treadmill.beep = beep;
 
   display_init();
 
@@ -490,10 +500,10 @@ static void MX_USART1_UART_Init(void)
 
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
-  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.BaudRate = 9600;
+  huart1.Init.WordLength = UART_WORDLENGTH_9B;
   huart1.Init.StopBits = UART_STOPBITS_1;
-  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Parity = UART_PARITY_EVEN;
   huart1.Init.Mode = UART_MODE_TX_RX;
   huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   huart1.Init.OverSampling = UART_OVERSAMPLING_16;
@@ -512,7 +522,7 @@ static void MX_USART1_UART_Init(void)
   {
     Error_Handler();
   }
-  if (HAL_UARTEx_DisableFifoMode(&huart1) != HAL_OK)
+  if (HAL_UARTEx_EnableFifoMode(&huart1) != HAL_OK)
   {
     Error_Handler();
   }
@@ -682,8 +692,10 @@ void StartDefaultTask(void const * argument)
       treadmill.ms += 100;
       treadmill_update(&treadmill);
     }
-     display_render();
-     osDelay(20);
+     //display_update();
+    render(&treadmill);
+    display_update();
+    osDelay(20);
   }
   /* USER CODE END 5 */
 }
@@ -704,21 +716,13 @@ void KeyboardTask(void const * argument)
   for(;;)
   {
     key_pressed = get_key_pressed();
-
     if (key_pressed != previous_key) {
-	// count time
+      if (key_pressed != KEY_NONE)  {
+          treadmill_key_press(&treadmill, key_pressed);
+      }
     }
-
-    if (key_pressed != KEY_NONE)  {
-	treadmill_key_press(&treadmill, key_pressed);
-
-	beep_t beep;
-	beep = BEEP_KEYPRESS_ACK;
-	xQueueSend(beepEventQueueHandle, &beep, 0);
-    }
-
     previous_key = key_pressed;
-    osDelay(5);
+    osDelay(2);
   }
   /* USER CODE END KeyboardTask */
 }
@@ -742,7 +746,8 @@ void BeepTask(void const * argument)
   {
     if (xQueueReceive(beepEventQueueHandle, &beep, portMAX_DELAY) == pdPASS) {
       HAL_TIM_PWM_Stop(&htim16, TIM_CHANNEL_1);
-      switch (beep) {
+      if (beep != BEEP_KEYPRESS_ACK) continue;
+      switch (beep ) {
         case BEEP_KEYPRESS_ACK: {
           TIM16->CNT = 0;
           TIM16->PSC = 100;
@@ -763,7 +768,7 @@ void BeepTask(void const * argument)
         }
         case BEEP_COUNTDOWN_COUNT: {
           TIM16->CNT = 0;
-          TIM16->PSC = 120;
+          TIM16->PSC = 120*2;
           TIM16->ARR = 40;
           TIM16->CCR2 = 20;
           HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
@@ -772,7 +777,7 @@ void BeepTask(void const * argument)
         }
         case BEEP_COUNTDOWN_END: {
           TIM16->CNT = 0;
-          TIM16->PSC = 110;
+          TIM16->PSC = 110*2;
           TIM16->ARR = 40;
           TIM16->CCR2 = 20;
           HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
@@ -802,6 +807,30 @@ void BeepTask(void const * argument)
     osDelay(1);
   }
   /* USER CODE END BeepTask */
+}
+
+/* USER CODE BEGIN Header_InverterCommTask */
+/**
+* @brief Function implementing the inverterCommTas thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_InverterCommTask */
+void InverterCommTask(void const * argument)
+{
+  /* USER CODE BEGIN InverterCommTask */
+  uint8_t cmd[] = {0x02, 0x41, 0x00, 0x02, 0x42, 0x00, 0x02, 0x43, 0x00};
+
+  /* Infinite loop */
+  for(;;)
+  {
+    if (treadmill.training.speed >= treadmill.config.speed.min)
+      cmd[2] = (treadmill.training.speed - (treadmill.config.speed.min-10))/10;
+
+    HAL_UART_Transmit(&huart1, cmd, 9, 1);
+    osDelay(100);
+  }
+  /* USER CODE END InverterCommTask */
 }
 
 /* beepTimerCallback function */
