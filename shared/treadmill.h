@@ -38,6 +38,7 @@ typedef struct treadmill {
     struct p_walk_30min p_walk_30min;
     struct p_fat_burn p_fat_burn;
     struct p_super_cardio p_super_cardio;
+    uint8_t param_index;
   } program;
 
   struct training {

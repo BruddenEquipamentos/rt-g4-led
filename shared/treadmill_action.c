@@ -108,6 +108,7 @@ void treadmill_program(treadmill_t *treadmill) {
 void treadmill_next_program(treadmill_t *treadmill) {
   if (treadmill->program.id+1 >= PROGRAM_TOTALS) treadmill->program.id = 1;
   else treadmill->program.id++;
+  treadmill->program.param_index = 0;
   program_load_default_value(treadmill);
 }
 
