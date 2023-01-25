@@ -104,4 +104,7 @@ void treadmill_key_press(treadmill_t *treadmill, const key_t key);
 void treadmill_update(treadmill_t *treadmill);
 void treadmill_set_scene(treadmill_t *treadmill, treadmill_scene_t scene);
 
+uint32_t treadmill_calculate_pace(treadmill_t *treadmill);
+
+
 #endif

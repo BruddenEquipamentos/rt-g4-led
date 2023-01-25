@@ -93,12 +93,62 @@ static void program_calories_key_press(treadmill_t *treadmill,
 static void program_hiit_key_press(treadmill_t *treadmill, const key_t key) {
   switch (key) {
     case KEY_START:
+      switch (treadmill->program.param_index) {
+        case 0:
+          treadmill->program.param_index++;
+          break;
+        case 1:
+          treadmill->program.param_index++;
+          break;
+        case 2:
+          treadmill_start_program(treadmill);
+          break;
+      }
       break;
     case KEY_STOP:
+      treadmill_exit_program(treadmill);
       break;
     case KEY_SPEED_INCREMENT:
+      switch (treadmill->program.param_index) {
+        case 0:
+          if (treadmill->program.p_hiit.time + PROGRAM_HIIT_TIME_STEP <=
+              PROGRAM_HIIT_MAX_TIME)
+            treadmill->program.p_hiit.time += PROGRAM_HIIT_TIME_STEP;
+          break;
+        case 1:
+          if (treadmill->program.p_hiit.speed_t1 +
+                  treadmill->config.speed.step <=
+              treadmill->config.speed.max)
+            treadmill->program.p_hiit.speed_t1 += treadmill->config.speed.step;
+          break;
+        case 2:
+          if (treadmill->program.p_hiit.speed_t2 +
+                  treadmill->config.speed.step <=
+              treadmill->config.speed.max)
+            treadmill->program.p_hiit.speed_t2 += treadmill->config.speed.step;
+          break;
+      }
       break;
     case KEY_SPEED_DECREMENT:
+      switch (treadmill->program.param_index) {
+        case 0:
+          if (treadmill->program.p_hiit.time - PROGRAM_HIIT_TIME_STEP >=
+              PROGRAM_HIIT_MIN_TIME)
+            treadmill->program.p_hiit.time -= PROGRAM_HIIT_TIME_STEP;
+          break;
+        case 1:
+          if (treadmill->program.p_hiit.speed_t1 -
+                  treadmill->config.speed.step >=
+              treadmill->config.speed.min)
+            treadmill->program.p_hiit.speed_t1 -= treadmill->config.speed.step;
+          break;
+        case 2:
+          if (treadmill->program.p_hiit.speed_t2 -
+                  treadmill->config.speed.step >=
+              treadmill->config.speed.min)
+            treadmill->program.p_hiit.speed_t2 -= treadmill->config.speed.step;
+          break;
+      }
       break;
     case KEY_INCLINE_INCREMENT:
       break;
@@ -114,12 +164,24 @@ static void program_hiit_key_press(treadmill_t *treadmill, const key_t key) {
 void program_walk_30min_key_press(treadmill_t *treadmill, const key_t key) {
   switch (key) {
     case KEY_START:
+      treadmill_start_program(treadmill);
       break;
     case KEY_STOP:
+      treadmill_exit_program(treadmill);
       break;
     case KEY_SPEED_INCREMENT:
+      if (treadmill->program.p_walk_30min.target_speed +
+              treadmill->config.speed.step <=
+          treadmill->config.speed.max)
+        treadmill->program.p_walk_30min.target_speed +=
+            treadmill->config.speed.step;
       break;
     case KEY_SPEED_DECREMENT:
+      if (treadmill->program.p_walk_30min.target_speed -
+              treadmill->config.speed.step >=
+          treadmill->config.speed.min)
+        treadmill->program.p_walk_30min.target_speed -=
+            treadmill->config.speed.step;
       break;
     case KEY_INCLINE_INCREMENT:
       break;
@@ -136,12 +198,47 @@ static void program_fat_burn_key_press(treadmill_t *treadmill,
                                        const key_t key) {
   switch (key) {
     case KEY_START:
+      switch (treadmill->program.param_index) {
+        case 0:
+          treadmill->program.param_index++;
+          break;
+        case 1:
+          treadmill_start_program(treadmill);
+          break;
+      }
       break;
     case KEY_STOP:
+      treadmill_exit_program(treadmill);
       break;
     case KEY_SPEED_INCREMENT:
+      switch (treadmill->program.param_index) {
+        case 0:
+          if (treadmill->program.p_fat_burn.seconds +
+                  PROGRAM_FAT_BURN_TIME_STEP <=
+              PROGRAM_FAT_BURN_MAX_TIME)
+            treadmill->program.p_fat_burn.seconds += PROGRAM_FAT_BURN_TIME_STEP;
+          break;
+        case 1:
+          if (treadmill->program.p_fat_burn.age + PROGRAM_FAT_BURN_AGE_STEP <=
+              PROGRAM_FAT_BURN_MAX_AGE)
+            treadmill->program.p_fat_burn.age += PROGRAM_FAT_BURN_AGE_STEP;
+          break;
+      }
       break;
     case KEY_SPEED_DECREMENT:
+      switch (treadmill->program.param_index) {
+        case 0:
+          if (treadmill->program.p_fat_burn.seconds -
+                  PROGRAM_FAT_BURN_TIME_STEP >=
+              PROGRAM_FAT_BURN_MIN_TIME)
+            treadmill->program.p_fat_burn.seconds -= PROGRAM_FAT_BURN_TIME_STEP;
+          break;
+        case 1:
+          if (treadmill->program.p_fat_burn.age - PROGRAM_FAT_BURN_AGE_STEP >=
+              PROGRAM_FAT_BURN_MIN_AGE)
+            treadmill->program.p_fat_burn.age -= PROGRAM_FAT_BURN_AGE_STEP;
+          break;
+      }
       break;
     case KEY_INCLINE_INCREMENT:
       break;
@@ -158,12 +255,53 @@ static void program_super_cardio_key_press(treadmill_t *treadmill,
                                            const key_t key) {
   switch (key) {
     case KEY_START:
+      switch (treadmill->program.param_index) {
+        case 0:
+          treadmill->program.param_index++;
+          break;
+        case 1:
+          treadmill_start_program(treadmill);
+          break;
+      }
       break;
     case KEY_STOP:
+      treadmill_exit_program(treadmill);
       break;
     case KEY_SPEED_INCREMENT:
+      switch (treadmill->program.param_index) {
+        case 0:
+          if (treadmill->program.p_super_cardio.seconds +
+                  PROGRAM_SUPER_CARDIO_TIME_STEP <=
+              PROGRAM_SUPER_CARDIO_MAX_TIME)
+            treadmill->program.p_super_cardio.seconds +=
+                PROGRAM_SUPER_CARDIO_TIME_STEP;
+          break;
+        case 1:
+          if (treadmill->program.p_super_cardio.age +
+                  PROGRAM_SUPER_CARDIO_AGE_STEP <=
+              PROGRAM_SUPER_CARDIO_MAX_AGE)
+            treadmill->program.p_super_cardio.age +=
+                PROGRAM_SUPER_CARDIO_AGE_STEP;
+          break;
+      }
       break;
     case KEY_SPEED_DECREMENT:
+      switch (treadmill->program.param_index) {
+        case 0:
+          if (treadmill->program.p_super_cardio.seconds -
+                  PROGRAM_SUPER_CARDIO_TIME_STEP >=
+              PROGRAM_SUPER_CARDIO_MIN_TIME)
+            treadmill->program.p_super_cardio.seconds -=
+                PROGRAM_SUPER_CARDIO_TIME_STEP;
+          break;
+        case 1:
+          if (treadmill->program.p_super_cardio.age -
+                  PROGRAM_SUPER_CARDIO_AGE_STEP >=
+              PROGRAM_SUPER_CARDIO_MIN_AGE)
+            treadmill->program.p_super_cardio.age -=
+                PROGRAM_SUPER_CARDIO_AGE_STEP;
+          break;
+      }
       break;
     case KEY_INCLINE_INCREMENT:
       break;
@@ -219,7 +357,8 @@ void program_load_default_value(treadmill_t *treadmill) {
       break;
     }
     case PROGRAM_SUPER_CARDIO: {
-      treadmill->program.p_super_cardio.seconds = PROGRAM_SUPER_CARDIO_DEFAULT_TIME;
+      treadmill->program.p_super_cardio.seconds =
+          PROGRAM_SUPER_CARDIO_DEFAULT_TIME;
       treadmill->program.p_super_cardio.age = PROGRAM_SUPER_CARDIO_DEFAULT_AGE;
       break;
     }

@@ -153,7 +153,10 @@ static void render_training(treadmill_t *treadmill) {
   render_helper_update_distance(display_distance, treadmill->training.meters);
   render_helper_update_time(display_time,treadmill->training.seconds);
   render_helper_update_speed(display_speed, treadmill->training.speed);
+  render_helper_update_time(display_pace, treadmill->training.pace);
   render_helper_update_digits(display_calories, treadmill->training.kcal);
+
+
   // todo: program
 
 }

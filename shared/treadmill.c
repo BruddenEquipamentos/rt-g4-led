@@ -38,3 +38,7 @@ void treadmill_set_scene(treadmill_t *treadmill, treadmill_scene_t scene) {
   treadmill->scene = scene;
   treadmill->scene_tick = treadmill->get_time_ms();
 }
+
+uint32_t treadmill_calculate_pace(treadmill_t *treadmill) {
+  return ((60000000 / treadmill->training.speed) * 6) / 1000;
+}

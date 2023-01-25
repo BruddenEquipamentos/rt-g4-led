@@ -19,14 +19,7 @@ static void treadmill_scene_idle_update(treadmill_t *treadmill) {
   }
 }
 
-static void treadmill_scene_program_update(treadmill_t *treadmill) {
-
-}
-
-static uint16_t treadmill_compute_pace(uint16_t speed) {
-  //
-  return 0;
-}
+static void treadmill_scene_program_update(treadmill_t *treadmill) {}
 
 static void treadmill_scene_countdown_update(treadmill_t *treadmill) {
   if (treadmill->countdown.ms == 0 &&
@@ -52,11 +45,8 @@ static void treadmill_scene_training_update(treadmill_t *treadmill) {
     treadmill->training.seconds++;
     treadmill->training.cm += (treadmill->training.speed * 27778) / 100000;
     treadmill->training.meters = treadmill->training.cm / 100;
-    treadmill->training.pace =
-        treadmill_compute_pace(treadmill->training.speed);
     // compute pace // hide display_programs
   }
-
   // todo programs
 }
 

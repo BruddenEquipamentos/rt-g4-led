@@ -10,10 +10,11 @@ static void treadmill_scene_init_key_press(treadmill_t *treadmill,
   switch (key) { default:; }
 }
 
-static void treadmill_scene_lub_key_press(treadmill_t *treadmill, const key_t key) {
-    if (key != KEY_NONE) {
-      treadmill_set_scene(treadmill, SCENE_IDLE);
-    }
+static void treadmill_scene_lub_key_press(treadmill_t *treadmill,
+                                          const key_t key) {
+  if (key != KEY_NONE) {
+    treadmill_set_scene(treadmill, SCENE_IDLE);
+  }
 }
 
 static void treadmill_scene_idle_key_press(treadmill_t *treadmill,
@@ -32,6 +33,8 @@ static void treadmill_scene_idle_key_press(treadmill_t *treadmill,
 
 static void treadmill_scene_program_key_press(treadmill_t *treadmill,
                                               const key_t key) {
+  if (key == KEY_STOP) treadmill_set_scene(treadmill, SCENE_IDLE);
+
   // delegate
   for (int idx = 0; idx < PROGRAM_TOTALS; ++idx) {
     if (treadmill->program.id == key_press_program_callback[idx].id) {

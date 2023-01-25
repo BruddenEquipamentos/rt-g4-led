@@ -824,8 +824,17 @@ void InverterCommTask(void const * argument)
   /* Infinite loop */
   for(;;)
   {
+    // Speeed
     if (treadmill.training.speed >= treadmill.config.speed.min)
       cmd[2] = (treadmill.training.speed - (treadmill.config.speed.min-10))/10;
+    else
+      cmd[2] = 0;
+
+    // Incline
+
+
+    // Sac
+    // -
 
     HAL_UART_Transmit(&huart1, cmd, 9, 1);
     osDelay(100);
