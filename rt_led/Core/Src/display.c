@@ -10,7 +10,7 @@
 #include <string.h>
 
 #include "digits.h"
-#include "dm.h"
+#include "dm/dm.h"
 #include "main.h"
 #include "render.h"
 

@@ -23,20 +23,20 @@ static void render_program_calories(treadmill_t *treadmill) {
 static void render_program_hiit(treadmill_t *treadmill) {
   switch (treadmill->program.param_index) {
     case 0: {  // TIME
-      render_time(&display_time, treadmill->program.p_hiit.time);
+      render_time(&display_time, treadmill->program.p_hiit.seconds);
       render_blink_field(&display_time, treadmill->get_time_ms(),
                          BLINK_INTERVAL);
       break;
     }
     case 1: {  // SPD1
-      render_time(&display_time, treadmill->program.p_hiit.time);
+      render_time(&display_time, treadmill->program.p_hiit.seconds);
       render_speed(&display_speed, treadmill->program.p_hiit.speed_t1);
       render_blink_field(&display_speed, treadmill->get_time_ms(),
                          BLINK_INTERVAL);
       break;
     }
     case 2: {  // SPD2
-      render_time(&display_time, treadmill->program.p_hiit.time);
+      render_time(&display_time, treadmill->program.p_hiit.seconds);
       render_speed(&display_speed, treadmill->program.p_hiit.speed_t2);
       render_blink_field(&display_speed, treadmill->get_time_ms(),
                          BLINK_INTERVAL);

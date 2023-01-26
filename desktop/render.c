@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#include "../shared/dm.h"
+#include "../shared/dm/dm.h"
 #include "render_program_scene.h"
 
 display_t display_distance;
@@ -41,6 +41,9 @@ void render_display(display_t *display, const uint32_t value) {
 
 static void display_print(void) {
 #define V(D) D.visible ? D.output : ""
+
+  printf("\033[H\033[J");
+  printf("------------------------------------------------------------\n");
   printf("%16s%16s%16s\n", "DISTANCE", "TIME", "SPEED");
   printf("%16s%16s%16s\n\n", V(display_distance), V(display_time),
          V(display_speed));
@@ -49,34 +52,41 @@ static void display_print(void) {
          V(display_pace));
   printf("%16s%16s%16s\n", "INCLINE", "", "BPM");
   printf("%16s%16s%16s\n\n", V(display_incline), "", V(display_bpm));
+  printf("------------------------------------------------------------\n");
+  dm_update();
+  printf("------------------------------------------------------------\n");
 }
 
+// TODO
 static void render_dot_matrix(treadmill_t *treadmill) {
   if (treadmill->scene != treadmill->previous_scene) {
     switch (treadmill->scene) {
       case SCENE_PAUSED: {
-        dm_tick = 0;
-        dm_frame = 0;
+        dm_reset_frame();
         break;
+      }
+      case SCENE_REPORT: {
+        dm_reset_frame();
       }
       default:;
     }
   }
 
-  if (treadmill->get_time_ms() - dm_tick > 100) {
-    dm_tick = treadmill->get_time_ms();
-    dm_frame++;
-  }
-
   switch (treadmill->scene) {
     case SCENE_PAUSED: {
-      int length = dm_compute_length("PAUSED");
-      dm_render_text("PAUSED", dm_frame);
-      if (dm_frame > length + 16) dm_frame = 0;
+      dm_render_text_animated("PAUSED", 100, treadmill->get_time_ms());
       break;
     }
     case SCENE_LUB: {
       dm_render_text("LUB", 15);
+      break;
+    }
+    case SCENE_PROGRAM: {
+      dm_render_text("PROG", 16);
+      break;
+    }
+    case SCENE_REPORT: {
+      dm_render_text_animated("RELATORIO", 100, treadmill->get_time_ms());
       break;
     }
     default: {
@@ -87,8 +97,6 @@ static void render_dot_matrix(treadmill_t *treadmill) {
       }
     };
   }
-
-  dm_render();
 }
 
 static void render_training_data(treadmill_t *treadmill) {
@@ -157,13 +165,61 @@ static void render_training_data(treadmill_t *treadmill) {
     snprintf(display_bpm.output, DISPLAY_FIELD_BUFFER_MAX_LENGTH, "");
 }
 
+static void render_training_data_program(treadmill_t *treadmill) {
+  switch (treadmill->program.id) {
+    case PROGRAM_TIME: {
+      uint32_t remaining =
+          treadmill->program.p_time.seconds - treadmill->training.seconds;
+      render_time(&display_time, remaining);
+      break;
+    }
+    case PROGRAM_DISTANCE: {
+      uint32_t remaining =
+          treadmill->program.p_distance.meters - treadmill->training.meters;
+      render_distance(&display_distance, remaining);
+      break;
+    }
+    case PROGRAM_CALORIES: {
+      uint32_t remaining =
+          treadmill->program.p_calories.kcal - treadmill->training.kcal;
+      render_display(&display_kcal, remaining);
+      break;
+    }
+    case PROGRAM_HIIT: {
+      uint32_t remaining_seconds =
+          treadmill->program.p_hiit.seconds - treadmill->training.seconds;
+      render_time(&display_time, remaining_seconds);
+      break;
+    }
+    case PROGRAM_WALK_30MIN: {
+      uint32_t remaining_seconds = (30 * 60) - treadmill->training.seconds;
+      render_time(&display_time, remaining_seconds);
+      break;
+    }
+    case PROGRAM_FAT_BURN: {
+      uint32_t remaining_seconds =
+          treadmill->program.p_fat_burn.seconds - treadmill->training.seconds;
+      render_time(&display_time, remaining_seconds);
+      break;
+    }
+    case PROGRAM_SUPER_CARDIO: {
+      uint32_t remaining_seconds = treadmill->program.p_super_cardio.seconds -
+                                   treadmill->training.seconds;
+      render_time(&display_time, remaining_seconds);
+      break;
+    }
+    default:
+      render_training_data(treadmill);
+  }
+}
+
 static void render_init(treadmill_t *treadmill) {
   display_program.visible = false;
   render_training_data(treadmill);
 }
 
 static void render_lub(treadmill_t *treadmill) {
-  dm_render_text("LUB", 10);
+  // dm_render_text("LU", 10);
   display_program.visible = false;
 }
 
@@ -181,17 +237,22 @@ static void render_program(treadmill_t *treadmill) {
 }
 
 static void render_countdown(treadmill_t *treadmill) {
+  display_program.visible = false;
   render_training_data(treadmill);
+  render_training_data_program(treadmill);
 }
 
 static void render_training(treadmill_t *treadmill) {
   display_program.visible = false;
   render_training_data(treadmill);
+  render_training_data_program(treadmill);
 }
 
 static void render_paused(treadmill_t *treadmill) {}
 
-static void render_report(treadmill_t *treadmill) {}
+static void render_report(treadmill_t *treadmill) {
+  render_training_data(treadmill);
+}
 
 typedef struct render_scene_callback {
   treadmill_scene_t state;
@@ -244,12 +305,9 @@ void treadmill_render(treadmill_t *treadmill) {
     }
   }
 
-  printf("\033[H\033[J");
-  printf("------------------------------------------------------------\n");
-  display_print();
-  printf("------------------------------------------------------------\n");
   render_dot_matrix(treadmill);
-  printf("------------------------------------------------------------\n");
+
+  display_print();
 
   if (treadmill->debug.print_states) {
     fprintf(stdout, "Treadmill Scene: %s\n", scene_name[treadmill->scene]);

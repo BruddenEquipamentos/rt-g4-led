@@ -1,6 +1,7 @@
 #include "treadmill.h"
 #include <string.h>
 #include <stdbool.h>
+#include "rt_led.h"
 
 char *scene_name[SCENE_TOTALS] = {
   "SCENE_INIT",
@@ -41,4 +42,12 @@ void treadmill_set_scene(treadmill_t *treadmill, treadmill_scene_t scene) {
 
 uint32_t treadmill_calculate_pace(treadmill_t *treadmill) {
   return ((60000000 / treadmill->training.speed) * 6) / 1000;
+}
+
+void treadmill_key_press(treadmill_t *treadmill, const key_t key) {
+  rt_led_key_press(treadmill, key);
+}
+
+void treadmill_update(treadmill_t *treadmill) {
+  rt_led_update(treadmill);
 }

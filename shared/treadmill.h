@@ -100,7 +100,10 @@ typedef struct treadmill {
 } treadmill_t;
 
 void treadmill_setup(treadmill_t *treadmill);
+
 void treadmill_key_press(treadmill_t *treadmill, const key_t key);
+void treadmill_update(treadmill_t *treadmill);
+
 void treadmill_update(treadmill_t *treadmill);
 void treadmill_set_scene(treadmill_t *treadmill, treadmill_scene_t scene);
 

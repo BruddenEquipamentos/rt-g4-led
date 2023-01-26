@@ -40,7 +40,7 @@ typedef enum program_id {
 #define PROGRAM_CALORIES_INC_CALORIES_STEP (50)
 
 // hiit
-#define PROGRAM_HIIT_DEFAULT_TIME (10 * 60)  // 10 min
+#define PROGRAM_HIIT_DEFAULT_SECONDS (10 * 60)  // 10 min
 #define PROGRAM_HIIT_DEFAULT_SPEED_T1 (300)  // 3.0 km/h
 #define PROGRAM_HIIT_DEFAULT_SPEED_T2 (700)  // 7.0 km/h
 #define PROGRAM_HIIT_MAX_TIME (99 * 60)
@@ -83,7 +83,11 @@ struct p_calories {
 };
 
 struct p_hiit {
-  uint32_t time;
+
+  uint32_t seconds_t1;
+  uint32_t seconds_t2;
+
+  uint32_t seconds;
   uint32_t speed_t1;
   uint32_t speed_t2;
 };

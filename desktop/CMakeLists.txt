@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.10)
 project(desktop VERSION 1.0)
 
 file(GLOB source_files
+          "../shared/dm/*.h"
+          "../shared/dm/*.c"
+          "../shared/scene/*.h"
+          "../shared/scene/*.c"
           "../shared/*.h"
           "../shared/*.c"
            "*.h"

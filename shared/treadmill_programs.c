@@ -111,9 +111,9 @@ static void program_hiit_key_press(treadmill_t *treadmill, const key_t key) {
     case KEY_SPEED_INCREMENT:
       switch (treadmill->program.param_index) {
         case 0:
-          if (treadmill->program.p_hiit.time + PROGRAM_HIIT_TIME_STEP <=
+          if (treadmill->program.p_hiit.seconds + PROGRAM_HIIT_TIME_STEP <=
               PROGRAM_HIIT_MAX_TIME)
-            treadmill->program.p_hiit.time += PROGRAM_HIIT_TIME_STEP;
+            treadmill->program.p_hiit.seconds += PROGRAM_HIIT_TIME_STEP;
           break;
         case 1:
           if (treadmill->program.p_hiit.speed_t1 +
@@ -132,9 +132,9 @@ static void program_hiit_key_press(treadmill_t *treadmill, const key_t key) {
     case KEY_SPEED_DECREMENT:
       switch (treadmill->program.param_index) {
         case 0:
-          if (treadmill->program.p_hiit.time - PROGRAM_HIIT_TIME_STEP >=
+          if (treadmill->program.p_hiit.seconds - PROGRAM_HIIT_TIME_STEP >=
               PROGRAM_HIIT_MIN_TIME)
-            treadmill->program.p_hiit.time -= PROGRAM_HIIT_TIME_STEP;
+            treadmill->program.p_hiit.seconds -= PROGRAM_HIIT_TIME_STEP;
           break;
         case 1:
           if (treadmill->program.p_hiit.speed_t1 -
@@ -341,7 +341,9 @@ void program_load_default_value(treadmill_t *treadmill) {
       break;
     }
     case PROGRAM_HIIT: {
-      treadmill->program.p_hiit.time = PROGRAM_HIIT_DEFAULT_TIME;
+      treadmill->program.p_hiit.seconds = PROGRAM_HIIT_DEFAULT_SECONDS;
+      treadmill->program.p_hiit.seconds_t1 = 0;
+      treadmill->program.p_hiit.seconds_t2 = 0;
       treadmill->program.p_hiit.speed_t1 = PROGRAM_HIIT_DEFAULT_SPEED_T1;
       treadmill->program.p_hiit.speed_t2 = PROGRAM_HIIT_DEFAULT_SPEED_T2;
       break;

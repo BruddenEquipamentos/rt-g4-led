@@ -1,6 +1,6 @@
 #include "render.h"
 
-#include "dm.h"
+#include "dm/dm.h"
 
 static display_t display_one = {.on_addr = 0x10, .addr = {0x00, 0x01, 0x02, 0x03, 0x04, 0x5, 0x06, 0x07}, .max_digits = 4, .visible = 1, .blink = {.interval = 0, .time_ms = 0}};
 static display_t display_two = {.on_addr = 0x01, .addr = {0x00, 0x01, 0x02, 0x03, 0x04, 0x5, 0x06, 0x07}, .max_digits = 4, .visible = 1, .blink = {.interval = 0, .time_ms = 0}};

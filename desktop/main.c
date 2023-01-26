@@ -7,8 +7,7 @@
 #include "input.h"
 #include "render.h"
 #include "../shared/treadmill.h"
-#include "../shared/treadmill_update.h"
-#include "../shared/dm.h"
+#include "../shared/dm/dm.h"
 
 static void sigint(int i) {
   (void)i;
@@ -115,7 +114,7 @@ int main(int argc, char *argv[]) {
 
   treadmill_t treadmill;
   treadmill_setup(&treadmill);
-  _dm_render = render_dot_matrix;
+  _dm_update = render_dot_matrix;
   treadmill.get_time_ms = (uint32_t (*)(void)) get_time_ms;
 
   pthread_create(&input_thread, NULL, thread_input, &treadmill);
