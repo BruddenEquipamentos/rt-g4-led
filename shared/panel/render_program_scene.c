@@ -1,0 +1,100 @@
+#include "render_program_scene.h"
+#include "../sd/sd.h"
+#include "../sd/sd_render.h"
+
+#define BLINK_INTERVAL (1000)
+
+static void render_program_time(treadmill_t *treadmill) {
+  sd_set_min_sec(&sd_time, treadmill->program.p_time.seconds);
+  sd_blink(&sd_time, treadmill->get_time_ms(), BLINK_INTERVAL);
+}
+
+static void render_program_distance(treadmill_t *treadmill) {
+  sd_set_km_m(&sd_distance, treadmill->program.p_distance.meters);
+  sd_blink(&sd_distance, treadmill->get_time_ms(), BLINK_INTERVAL);
+}
+
+static void render_program_calories(treadmill_t *treadmill) {
+  sd_set_value(&sd_kcal, treadmill->program.p_calories.kcal);
+  sd_blink(&sd_kcal, treadmill->get_time_ms(), BLINK_INTERVAL);
+}
+
+static void render_program_hiit(treadmill_t *treadmill) {
+  switch (treadmill->program.param_index) {
+    case 0: {  // TIME
+      sd_set_min_sec(&sd_time, treadmill->program.p_hiit.seconds);
+      sd_blink(&sd_time, treadmill->get_time_ms(), BLINK_INTERVAL);
+      break;
+    }
+    case 1: {  // SPD1
+      sd_set_min_sec(&sd_time, treadmill->program.p_hiit.seconds);
+      sd_set_kmh(&sd_speed, treadmill->program.p_hiit.speed_t1);
+      sd_blink(&sd_speed, treadmill->get_time_ms(), BLINK_INTERVAL);
+      break;
+    }
+    case 2: {  // SPD2
+      sd_set_min_sec(&sd_time, treadmill->program.p_hiit.seconds);
+      sd_set_kmh(&sd_speed, treadmill->program.p_hiit.speed_t2);
+      sd_blink(&sd_speed, treadmill->get_time_ms(), BLINK_INTERVAL);
+    }
+  }
+}
+
+static void render_program_walk_30min(treadmill_t *treadmill) {
+  sd_set_min_sec(&sd_time, 30 * 60);
+  sd_set_kmh(&sd_speed, treadmill->program.p_walk_30min.target_speed);
+  sd_blink(&sd_speed, treadmill->get_time_ms(), BLINK_INTERVAL);
+}
+
+static void render_program_fat_burn(treadmill_t *treadmill) {
+  switch (treadmill->program.param_index) {
+    case 0:
+      sd_set_min_sec(&sd_time, treadmill->program.p_fat_burn.seconds);
+      sd_blink(&sd_time, treadmill->get_time_ms(), BLINK_INTERVAL);
+      break;
+    case 1:
+      sd_set_min_sec(&sd_time, treadmill->program.p_fat_burn.seconds);
+      sd_set_value(&sd_bpm, treadmill->program.p_fat_burn.age);
+      sd_blink(&sd_bpm, treadmill->get_time_ms(), BLINK_INTERVAL);
+      break;
+  }
+}
+
+static void render_program_super_cardio(treadmill_t *treadmill) {
+  switch (treadmill->program.param_index) {
+    case 0:
+      sd_set_min_sec(&sd_time, treadmill->program.p_super_cardio.seconds);
+      sd_blink(&sd_time, treadmill->get_time_ms(), BLINK_INTERVAL);
+      break;
+    case 1:
+      sd_set_min_sec(&sd_time, treadmill->program.p_super_cardio.seconds);
+      sd_set_value(&sd_bpm, treadmill->program.p_super_cardio.age);
+      sd_blink(&sd_bpm, treadmill->get_time_ms(), BLINK_INTERVAL);
+      break;
+  }
+}
+
+typedef struct render_program_callback {
+  program_id_t program;
+  void (*render)(treadmill_t *treadmill);
+} render_program_callback_t;
+
+render_program_callback_t render_programs[] = {
+    {.program = PROGRAM_TIME, .render = render_program_time},
+    {.program = PROGRAM_DISTANCE, .render = render_program_distance},
+    {.program = PROGRAM_CALORIES, .render = render_program_calories},
+    {.program = PROGRAM_HIIT, .render = render_program_hiit},
+    {.program = PROGRAM_WALK_30MIN, .render = render_program_walk_30min},
+    {.program = PROGRAM_FAT_BURN, .render = render_program_fat_burn},
+    {.program = PROGRAM_SUPER_CARDIO, .render = render_program_super_cardio},
+};
+
+void render_program_scene(treadmill_t *treadmill) {
+  for (program_id_t i = 0;
+       i < sizeof(render_programs) / sizeof(render_program_callback_t); ++i) {
+    if (render_programs[i].program == treadmill->program.id) {
+      render_programs[i].render(treadmill);
+      return;
+    }
+  }
+}

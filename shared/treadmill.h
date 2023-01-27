@@ -3,9 +3,9 @@
 
 #include <stdint.h>
 
+#include "beep.h"
 #include "treadmill_key.h"
 #include "treadmill_programs.h"
-#include "beep.h"
 
 #define START_TRAINING_COUNTDOWN_VALUE (3)
 #define LUB_NOTIFICATION_SCENE_TIME (5000)
@@ -31,7 +31,7 @@ typedef struct treadmill {
   uint32_t scene_tick;
 
   struct program {
-    program_id_t id; // temp hack - refences
+    program_id_t id;
     struct p_time p_time;
     struct p_distance p_distance;
     struct p_calories p_calories;
@@ -54,18 +54,7 @@ typedef struct treadmill {
     int16_t incline;
 
     uint16_t pace;
-
     uint8_t bpm;
-
-    // struct {
-    //   int32_t incline
-    // } total;
-
-    // struct {
-    //   uint16_t speed;
-    //   int16_t incline;
-    //   uint8_t bpm;
-    // } average;
 
   } training;
 
@@ -80,6 +69,13 @@ typedef struct treadmill {
       int16_t max;
       int16_t step;
     } incline;
+
+    int option;
+    int model;
+    int weight;
+    int lub_distance;
+    int modbus;
+    int test;
   } config;
   struct {
     uint8_t value;
@@ -95,7 +91,6 @@ typedef struct treadmill {
 
   void (*beep)(beep_t beep);
   uint32_t (*get_time_ms)(void);
-
   uint32_t ms;
 
 } treadmill_t;
@@ -109,6 +104,5 @@ void treadmill_update(treadmill_t *treadmill);
 void treadmill_set_scene(treadmill_t *treadmill, treadmill_scene_t scene);
 
 uint32_t treadmill_calculate_pace(treadmill_t *treadmill);
-
 
 #endif

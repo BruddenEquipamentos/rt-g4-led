@@ -1,5 +1,5 @@
-#include "scene.h"
 #include "../treadmill_programs_update.h"
+#include "scene.h"
 
 static void keypress(treadmill_t *treadmill, const key_t key) {
   switch (key) {
@@ -53,15 +53,14 @@ static void update(treadmill_t *treadmill) {
     treadmill->training.seconds++;
     treadmill->training.cm += (treadmill->training.speed * 27778) / 100000;
     treadmill->training.meters = treadmill->training.cm / 100;
+    treadmill->training.pace = treadmill_calculate_pace(treadmill);
     // compute pace // hide display_programs
   }
   // handle program specific things
   treadmill_scene_training_programs_update(treadmill);
 }
 
-scene_t scene_training = {
-    .id = SCENE_TRAINING,
-    .name = "IDLE",
-    .keypress = keypress,
-    .update = update
-};
+scene_t scene_training = {.id = SCENE_TRAINING,
+                          .name = "IDLE",
+                          .keypress = keypress,
+                          .update = update};

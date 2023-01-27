@@ -343,6 +343,17 @@ const digit_t dm_U = {
     }
 };
 
+const digit_t dm_V = {
+    .cols = 5,
+    .data = {
+        0b10001,
+        0b10001,
+        0b01010,
+        0b01010,
+        0b00100,
+    }
+};
+
 const digit_t dm_W = {
     .cols = 5,
     .data = {
@@ -421,6 +432,7 @@ digit_map_t dm_map[] = {
     {.ch='S', .dm=&dm_S},
     {.ch='T', .dm=&dm_T},
     {.ch='U', .dm=&dm_U},
+    {.ch='V', .dm=&dm_V},
     {.ch='W', .dm=&dm_W},
     {.ch='X', .dm=&dm_X},
     {.ch='x', .dm=&dm_x},

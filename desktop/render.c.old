@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include "../shared/dm/dm.h"
+#include "../shared/panel/rt_led.h"
 #include "render_program_scene.h"
 
 display_t display_distance;
@@ -41,7 +42,6 @@ void render_display(display_t *display, const uint32_t value) {
 
 static void display_print(void) {
 #define V(D) D.visible ? D.output : ""
-
   printf("\033[H\033[J");
   printf("------------------------------------------------------------\n");
   printf("%16s%16s%16s\n", "DISTANCE", "TIME", "SPEED");
@@ -79,6 +79,60 @@ static void render_dot_matrix(treadmill_t *treadmill) {
     }
     case SCENE_LUB: {
       dm_render_text("LUB", 15);
+      break;
+    }
+    case SCENE_CONFIG: {
+      switch (treadmill->config.option) {
+        case CONFIG_OPTION_MODEL: {
+          dm_render_text("MDL", 16);
+          break;
+        }  // MDL
+        case CONFIG_OPTION_LANGUAGE: {
+          dm_render_text("LNG", 16);
+          break;
+        }  // LNG
+        case CONFIG_OPTION_UNIT: {
+          dm_render_text("UNT", 16);
+          break;
+        }  // UNT
+        case CONFIG_OPTION_WEIGHT: {
+          dm_render_text("WGT", 16);
+          break;
+        }  // WGT
+        case CONFIG_OPTION_MA: {
+          dm_render_text("MA", 16);
+          break;
+        }  // MA
+        case CONFIG_OPTION_LUB: {
+          dm_render_text("LUB", 16);
+          break;
+        }  // LUB
+        case CONFIG_OPTION_VER: {
+          dm_render_text("VER", 16);
+          break;
+        }  // VER
+        case CONFIG_OPTION_TOTAL_DISTANCE: {
+          dm_render_text("TD", 16);
+          break;
+        }  // TD
+        case CONFIG_OPTION_TOTAL_HOURS: {
+          dm_render_text("THR", 16);
+          break;
+        }  // THR
+        case CONFIG_OPTION_BLE_STATE: {
+          dm_render_text("S/BL", 16);
+          break;
+        }  // S/BL
+        case CONFIG_OPTION_MODBUS: {
+          dm_render_text("MBUS", 16);
+          break;
+        }  // MBUS
+        case CONFIG_OPTION_TEST: {
+          dm_render_text("TEST", 16);
+          break;
+        }  // TEST
+        default:;
+      }
       break;
     }
     case SCENE_PROGRAM: {
@@ -326,6 +380,15 @@ void treadmill_render(treadmill_t *treadmill) {
             treadmill->training.speed);
     fprintf(stdout, "Treadmill Training Incline: %d\n",
             treadmill->training.incline);
+
+    fprintf(stdout, "\n");
+    fprintf(stdout, "Config Option: %d\n", treadmill->config.option);
+    fprintf(stdout, "Config Model: %d\n", treadmill->config.model);
+    fprintf(stdout, "Config Weight: %d\n", treadmill->config.weight);
+    fprintf(stdout, "Config Lub: %d\n", treadmill->config.lub_distance);
+    fprintf(stdout, "Config Modbus: %d\n", treadmill->config.modbus);
+    fprintf(stdout, "Config Test: %d\n", treadmill->config.test);
+    fprintf(stdout, "\n");
   }
 
   treadmill->previous_scene = treadmill->scene;

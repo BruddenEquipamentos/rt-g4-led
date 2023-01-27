@@ -1,0 +1,136 @@
+#include "sd_render.h"
+
+#include "../panel/render_program_scene.h"
+
+sd_t sd_distance = {.flag = SD_FLAG_VISIBLE};
+sd_t sd_time = {.flag = SD_FLAG_VISIBLE};
+sd_t sd_speed = {.flag = SD_FLAG_VISIBLE};
+sd_t sd_kcal = {.flag = SD_FLAG_VISIBLE};
+sd_t sd_program = {.flag = SD_FLAG_VISIBLE};
+sd_t sd_pace = {.flag = SD_FLAG_VISIBLE};
+sd_t sd_incline = {.flag = SD_FLAG_VISIBLE};
+sd_t sd_bpm = {.flag = SD_FLAG_VISIBLE};
+
+static void set_all_sd_visible(bool visible) {
+  sd_set_visible(&sd_distance, visible);
+  sd_set_visible(&sd_time, visible);
+  sd_set_visible(&sd_speed, visible);
+  sd_set_visible(&sd_kcal, visible);
+  sd_set_visible(&sd_program, visible);
+  sd_set_visible(&sd_pace, visible);
+  sd_set_visible(&sd_incline, visible);
+  sd_set_visible(&sd_bpm, visible);
+}
+
+static void render_training_data(treadmill_t *treadmill) {
+  sd_set_km_m(&sd_distance, treadmill->training.meters);
+  sd_set_min_sec(&sd_time, treadmill->training.seconds);
+  sd_set_kmh(&sd_speed, treadmill->training.speed);
+  sd_set_min_sec(&sd_pace, treadmill->training.pace);
+
+  sd_set_value(&sd_kcal, 0);
+  sd_set_value(&sd_program, 0);
+  sd_set_value(&sd_incline, 0);
+  sd_set_value(&sd_bpm, 0);
+}
+
+static void render_training_data_program(treadmill_t *treadmill) {
+  switch (treadmill->program.id) {
+    case PROGRAM_TIME: {
+      uint32_t remaining_seconds =
+          treadmill->program.p_time.seconds - treadmill->training.seconds;
+      sd_set_min_sec(&sd_time, remaining_seconds);
+      break;
+    }
+    case PROGRAM_DISTANCE: {
+      uint32_t remaining_meters =
+          treadmill->program.p_distance.meters - treadmill->training.meters;
+      sd_set_km_m(&sd_distance, remaining_meters);
+      break;
+    }
+    case PROGRAM_CALORIES: {
+      uint32_t remaining_kcal =
+          treadmill->program.p_calories.kcal - treadmill->training.kcal;
+      sd_set_value(&sd_kcal, remaining_kcal);
+      break;
+    }
+    case PROGRAM_HIIT: {
+      uint32_t remaining_seconds =
+          treadmill->program.p_hiit.seconds - treadmill->training.seconds;
+      sd_set_min_sec(&sd_time, remaining_seconds);
+      break;
+    }
+    case PROGRAM_WALK_30MIN: {
+      uint32_t remaining_seconds = (30 * 60) - treadmill->training.seconds;
+      sd_set_min_sec(&sd_time, remaining_seconds);
+      break;
+    }
+    case PROGRAM_FAT_BURN: {
+      uint32_t remaining_seconds =
+          treadmill->program.p_fat_burn.seconds - treadmill->training.seconds;
+      sd_set_min_sec(&sd_time, remaining_seconds);
+      break;
+    }
+    case PROGRAM_SUPER_CARDIO: {
+      uint32_t remaining_seconds = treadmill->program.p_super_cardio.seconds -
+                                   treadmill->training.seconds;
+      sd_set_min_sec(&sd_time, remaining_seconds);
+      break;
+    }
+    default:
+      render_training_data(treadmill);
+  }
+}
+
+void sd_render(treadmill_t *treadmill) {
+  set_all_sd_visible(true);
+  switch (treadmill->scene) {
+    case SCENE_INIT: {
+      sd_set_visible(&sd_program, false);
+      render_training_data(treadmill);
+      break;
+    }
+    case SCENE_IDLE: {
+      sd_set_visible(&sd_program, false);
+      render_training_data(treadmill);
+      break;
+    }
+    case SCENE_LUB: {
+      sd_set_visible(&sd_program, false);
+      render_training_data(treadmill);
+      break;
+    }
+    case SCENE_CONFIG: {
+      sd_set_visible(&sd_program, false);
+      render_training_data(treadmill);
+      break;
+    }
+    case SCENE_PROGRAM: {
+      render_program_scene(treadmill);
+      break;
+    }
+    case SCENE_COUNTDOWN: {
+      sd_set_visible(&sd_program, false);
+      render_training_data(treadmill);
+      render_training_data_program(treadmill);
+      break;
+    }
+    case SCENE_TRAINING: {
+      sd_set_visible(&sd_program, false);
+      render_training_data(treadmill);
+      render_training_data_program(treadmill);
+      break;
+    }
+    case SCENE_PAUSED: {
+      sd_set_visible(&sd_program, false);
+      render_training_data(treadmill);
+      break;
+    }
+    case SCENE_REPORT: {
+      sd_set_visible(&sd_program, false);
+      render_training_data(treadmill);
+      break;
+    }
+    default:;
+  }
+}

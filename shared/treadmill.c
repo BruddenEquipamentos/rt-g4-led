@@ -1,23 +1,17 @@
 #include "treadmill.h"
-#include <string.h>
+
 #include <stdbool.h>
-#include "rt_led.h"
+#include <string.h>
+
+#include "panel/rt_led.h"
 
 char *scene_name[SCENE_TOTALS] = {
-  "SCENE_INIT",
-  "SCENE_IDLE",
-  "SCENE_LUB",
-  "SCENE_PROGRAM",
-  "SCENE_COUNTDOWN",
-  "SCENE_TRAINING",
-  "SCENE_PAUSED",
-  "SCENE_REPORT",
+    "SCENE_INIT",     "SCENE_IDLE",    "SCENE_LUB",
+    "SCENE_CONFIG",   "SCENE_PROGRAM", "SCENE_COUNTDOWN",
+    "SCENE_TRAINING", "SCENE_PAUSED",  "SCENE_REPORT",
 };
 
-
-__attribute__((weak)) void beep(beep_t beep) {
-  (void)beep;
-}
+__attribute__((weak)) void beep(beep_t beep) { (void)beep; }
 
 void treadmill_setup(treadmill_t *treadmill) {
   memset(treadmill, 0x00, sizeof(treadmill_t));
@@ -48,6 +42,4 @@ void treadmill_key_press(treadmill_t *treadmill, const key_t key) {
   rt_led_key_press(treadmill, key);
 }
 
-void treadmill_update(treadmill_t *treadmill) {
-  rt_led_update(treadmill);
-}
+void treadmill_update(treadmill_t *treadmill) { rt_led_update(treadmill); }

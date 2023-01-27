@@ -123,3 +123,9 @@ void treadmill_config(treadmill_t *treadmill) {
 }
 
 
+void treadmill_exit_config(treadmill_t *treadmill) {
+  // todo: place specific actions in specific scene source?
+
+}
+
+

@@ -4,10 +4,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "input.h"
-#include "render.h"
-#include "../shared/treadmill.h"
 #include "../shared/dm/dm.h"
+#include "../shared/panel/rt_led.h"
+#include "../shared/treadmill.h"
+#include "input.h"
 
 static void sigint(int i) {
   (void)i;
@@ -93,6 +93,49 @@ void render_dot_matrix(const uint16_t buffer[5]) {
   }
 }
 
+static void display_update(treadmill_t *treadmill) {
+#define SD_R(SD) SD.visible ? SD.text : ""
+  printf("\033[H\033[J");
+  printf("------------------------------------------------------------\n");
+  printf("%16s%16s%16s\n", "DISTANCE", "TIME", "SPEED");
+  printf("%16s%16s%16s\n\n", SD_R(sd_distance), SD_R(sd_time), SD_R(sd_speed));
+  printf("%16s%16s%16s\n", "CALORIES", "PROGRAM", "PACE");
+  printf("%16s%16s%16s\n\n", SD_R(sd_kcal), SD_R(sd_program), SD_R(sd_pace));
+  printf("%16s%16s%16s\n", "INCLINE", "", "BPM");
+  printf("%16s%16s%16s\n\n", SD_R(sd_incline), "", SD_R(sd_bpm));
+  printf("------------------------------------------------------------\n");
+
+  dm_update();
+
+  printf("------------------------------------------------------------\n");
+
+  if (treadmill->debug.print_states) {
+    fprintf(stdout, "Treadmill Scene: %s\n", scene_name[treadmill->scene]);
+    fprintf(stdout, "Treadmill Program Name: %s\n",
+            programs_name[treadmill->program.id]);
+    fprintf(stdout, "Treadmill Countdown Value: %d\n",
+            treadmill->countdown.value);
+    fprintf(stdout, "Treadmill Training Centimeters: %d\n",
+            treadmill->training.cm);
+    fprintf(stdout, "Treadmill Training Meters: %d\n",
+            treadmill->training.meters);
+    fprintf(stdout, "Treadmill Training Seconds: %d\n",
+            treadmill->training.seconds);
+    fprintf(stdout, "Treadmill Training Speed: %d\n",
+            treadmill->training.speed);
+    fprintf(stdout, "Treadmill Training Incline: %d\n",
+            treadmill->training.incline);
+    fprintf(stdout, "\n");
+    fprintf(stdout, "Config Option: %d\n", treadmill->config.option);
+    fprintf(stdout, "Config Model: %d\n", treadmill->config.model);
+    fprintf(stdout, "Config Weight: %d\n", treadmill->config.weight);
+    fprintf(stdout, "Config Lub: %d\n", treadmill->config.lub_distance);
+    fprintf(stdout, "Config Modbus: %d\n", treadmill->config.modbus);
+    fprintf(stdout, "Config Test: %d\n", treadmill->config.test);
+    fprintf(stdout, "\n");
+  }
+}
+
 static void *thread_main(void *arg) {
   treadmill_t *treadmill = (treadmill_t *)arg;
   treadmill->ms = get_time_ms();
@@ -102,7 +145,11 @@ static void *thread_main(void *arg) {
       treadmill->ms = treadmill->ms + 100;
       treadmill_update(treadmill);
     }
-    treadmill_render(treadmill);
+    // sd_render(treadmill);
+    // dm_render(treadmill);
+    rt_led_render(treadmill);
+    display_update(treadmill);
+    // treadmill_render(treadmill);
     usleep(1000 * 100);
   }
   return NULL;
@@ -118,7 +165,7 @@ int main(int argc, char *argv[]) {
   treadmill_t treadmill;
   treadmill_setup(&treadmill);
   _dm_update = render_dot_matrix;
-  treadmill.get_time_ms = (uint32_t (*)(void)) get_time_ms;
+  treadmill.get_time_ms = (uint32_t(*)(void))get_time_ms;
 
   pthread_create(&input_thread, NULL, thread_input, &treadmill);
   pthread_create(&main_thread, NULL, thread_main, &treadmill);
