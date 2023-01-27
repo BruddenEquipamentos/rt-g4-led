@@ -8,14 +8,9 @@ static void update(treadmill_t *treadmill) {
   treadmill_set_scene(treadmill, SCENE_IDLE);
 }
 
-static void render(treadmill_t *treadmill) {
-  // todo: specific callback to platform?
-}
-
 const scene_t scene_init = {
     .id = SCENE_INIT,
     .name = "INIT",
     .keypress = keypress,
-    .update = update,
-    .render = render,
+    .update = update
 };

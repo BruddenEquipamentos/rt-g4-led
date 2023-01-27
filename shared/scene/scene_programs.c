@@ -15,14 +15,9 @@ static void keypress(treadmill_t *treadmill, const key_t key) {
 
 static void update(treadmill_t *treadmill) {}
 
-static void render(treadmill_t *treadmill) {
-  // todo: specific callback to platform?
-}
-
 scene_t scene_programs = {
     .id = SCENE_PROGRAM,
     .name = "PROGRAMS",
     .keypress = keypress,
-    .update = update,
-    .render = render,
+    .update = update
 };

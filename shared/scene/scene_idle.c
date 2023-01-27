@@ -9,6 +9,10 @@ static void keypress(treadmill_t *treadmill, const key_t key) {
       treadmill_program(treadmill);
       break;
     }
+    case KEY_CONFIG: {
+      treadmill_config(treadmill);
+      break;
+    }
     default:;
   }
 }
@@ -19,10 +23,7 @@ static void update(treadmill_t *treadmill) {
   }
 }
 
-static void render(treadmill_t *treadmill) {}
-
 const scene_t scene_idle = {.id = SCENE_IDLE,
                             .name = "IDLE",
                             .keypress = keypress,
-                            .render = render,
                             .update = update};

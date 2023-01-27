@@ -13,14 +13,9 @@ static void update(treadmill_t *treadmill) {
   }
 }
 
-static void render(treadmill_t *treadmill) {
-  // todo: specific callback to platform?
-}
-
 scene_t scene_lub = {
     .id = SCENE_LUB,
     .name = "LUB",
     .keypress = keypress,
     .update = update,
-    .render = render,
 };

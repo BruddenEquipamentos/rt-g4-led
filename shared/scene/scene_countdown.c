@@ -27,10 +27,7 @@ static void update(treadmill_t *treadmill) {
   }
 }
 
-static void render(treadmill_t *treadmill) {}
-
 const scene_t scene_countdown = {.id = SCENE_COUNTDOWN,
                                  .name = "IDLE",
                                  .keypress = keypress,
-                                 .render = render,
                                  .update = update};

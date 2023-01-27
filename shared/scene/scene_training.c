@@ -59,14 +59,9 @@ static void update(treadmill_t *treadmill) {
   treadmill_scene_training_programs_update(treadmill);
 }
 
-static void render(treadmill_t *treadmill) {
-  // todo: specific callback to platform?
-}
-
 scene_t scene_training = {
     .id = SCENE_TRAINING,
     .name = "IDLE",
     .keypress = keypress,
-    .update = update,
-    .render = render,
+    .update = update
 };
