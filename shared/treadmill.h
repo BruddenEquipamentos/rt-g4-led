@@ -15,6 +15,7 @@ typedef enum treadmill_scene {
   SCENE_INIT = 0,
   SCENE_IDLE,
   SCENE_LUB,
+  SCENE_CONFIG,
   SCENE_PROGRAM,
   SCENE_COUNTDOWN,
   SCENE_TRAINING,

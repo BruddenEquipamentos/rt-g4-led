@@ -117,3 +117,9 @@ void treadmill_exit_program(treadmill_t *treadmill) {
 void treadmill_start_program(treadmill_t *treadmill) {
   treadmill_start_training_countdown(treadmill);
 }
+
+void treadmill_config(treadmill_t *treadmill) {
+  treadmill_set_scene(treadmill, SCENE_CONFIG);
+}
+
+

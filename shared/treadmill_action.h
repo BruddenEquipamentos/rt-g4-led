@@ -24,4 +24,6 @@ void treadmill_next_program(treadmill_t *treadmill);
 void treadmill_exit_program(treadmill_t *treadmill);
 void treadmill_start_program(treadmill_t *treadmill);
 
+void treadmill_config(treadmill_t *treadmill);
+
 #endif
