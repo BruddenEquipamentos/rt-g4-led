@@ -62,6 +62,15 @@ void treadmill_load_config(treadmill_t *treadmill) {
   uint8_t weight_in_kg = 0;
   if (nvm.NVM_ReadVariable8bits(NVM_U8_WEIGHT, &weight_in_kg)) {
     treadmill->config.weight = weight_in_kg;
+  } else {
+    treadmill->config.weight = DEFAULT_WEIGHT_IN_KG;
+  }
+
+  uint32_t lub_distance_in_km = 0;
+  if (nvm.NVM_ReadVariable32bits(NVM_U32_LUB_DISTANCE, &lub_distance_in_km)) {
+    treadmill->config.lub_distance = lub_distance_in_km;
+  } else {
+    treadmill->config.lub_distance = DEFAULT_LUB_DISTANCE;
   }
 }
 
@@ -71,6 +80,11 @@ void treadmill_save_config(treadmill_t *treadmill) {
   }
   if (treadmill->previous_config.weight != treadmill->config.weight) {
     nvm.NVM_WriteVariable8bits(NVM_U8_WEIGHT, treadmill->config.weight);
+  }
+  if (treadmill->previous_config.lub_distance !=
+      treadmill->config.lub_distance) {
+    nvm.NVM_WriteVariable32bits(NVM_U32_LUB_DISTANCE,
+                                treadmill->config.lub_distance);
   }
 }
 
