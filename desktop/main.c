@@ -169,9 +169,6 @@ int main(int argc, char *argv[]) {
   NVM_Setup();
   nvm.NVM_Init();
 
-  // nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_DISTANCE_METERS, 1000);
-  // nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_TIME_MINUTES, 60);
-
   pthread_t input_thread;
   pthread_t main_thread;
 
