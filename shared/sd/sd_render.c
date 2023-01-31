@@ -1,6 +1,7 @@
 #include "sd_render.h"
 
 #include "../panel/render_program_scene.h"
+#include "../panel/rt_led.h"
 
 sd_t sd_distance = {.flag = SD_FLAG_VISIBLE};
 sd_t sd_time = {.flag = SD_FLAG_VISIBLE};
@@ -82,6 +83,75 @@ static void render_training_data_program(treadmill_t *treadmill) {
   }
 }
 
+static void render_config_data(treadmill_t *treadmill) {
+  set_all_sd_visible(false);
+  // options
+  switch (treadmill->config.option) {
+    case CONFIG_OPTION_MODEL: {
+      sd_set_visible(&sd_pace, true);
+      sd_set_value(&sd_pace, treadmill->config.model);
+      break;
+    }
+    case CONFIG_OPTION_LANGUAGE: {
+      sd_set_visible(&sd_pace, false);
+      break;
+    }
+    case CONFIG_OPTION_UNIT: {
+      sd_set_visible(&sd_pace, false);
+      break;
+    }
+
+    case CONFIG_OPTION_WEIGHT: {
+      sd_set_visible(&sd_pace, true);
+      sd_set_value(&sd_pace, treadmill->config.weight);
+      break;
+    }
+
+    case CONFIG_OPTION_MA: {
+      sd_set_visible(&sd_pace, false);
+      break;
+    }
+
+    case CONFIG_OPTION_LUB: {
+      sd_set_visible(&sd_pace, true);
+      sd_set_value(&sd_pace, treadmill->config.lub_distance);
+      break;
+    }
+
+    case CONFIG_OPTION_VER: {
+      sd_set_visible(&sd_pace, true);
+      sd_set_version(&sd_pace, MAJOR, MINOR, REVISION);
+      break;
+    }
+    case CONFIG_OPTION_TOTAL_DISTANCE: {
+      sd_set_visible(&sd_pace, true);
+      sd_set_value(&sd_pace, treadmill->total.distance_in_meters / 1000);
+      break;
+    }
+    case CONFIG_OPTION_TOTAL_HOURS: {
+      sd_set_visible(&sd_pace, true);
+      sd_set_value(&sd_pace, treadmill->total.time_in_seconds / 3600);
+      break;
+    }
+    case CONFIG_OPTION_BLE_STATE: {
+      sd_set_visible(&sd_pace, false);
+      break;
+    }
+    case CONFIG_OPTION_MODBUS: {
+      sd_set_visible(&sd_pace, true);
+      sd_set_value(&sd_pace, treadmill->config.modbus);
+      break;
+    }
+    case CONFIG_OPTION_TEST: {
+      sd_set_visible(&sd_pace, true);
+      sd_set_value(&sd_pace, treadmill->config.test);
+      break;
+    }
+    default:
+      sd_set_visible(&sd_pace, false);
+  }
+}
+
 void sd_render(treadmill_t *treadmill) {
   set_all_sd_visible(true);
   switch (treadmill->scene) {
@@ -102,7 +172,8 @@ void sd_render(treadmill_t *treadmill) {
     }
     case SCENE_CONFIG: {
       sd_set_visible(&sd_program, false);
-      render_training_data(treadmill);
+      // render_training_data(treadmill);
+      render_config_data(treadmill);
       break;
     }
     case SCENE_PROGRAM: {

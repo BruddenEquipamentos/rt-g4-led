@@ -1,4 +1,5 @@
 #include "sd.h"
+
 #include <stdio.h>
 void sd_set_min_sec(sd_t *sd, const uint32_t seconds) {
   uint32_t min = seconds / 60;  // 00:00
@@ -30,8 +31,14 @@ void sd_set_kmh(sd_t *sd, const uint32_t speed) {
   snprintf(sd->text, 8, "%d.%01d", spd_km, spd_m);
 }
 
-void sd_set_incline(sd_t *sd, const int value) {
+void sd_set_incline(sd_t *sd, const int value) {}
 
+void sd_set_version(sd_t *sd, const uint8_t major, const uint8_t minor,
+                    const uint8_t revision) {
+  sd->digit[1] = major;
+  sd->digit[2] = minor;
+  sd->digit[3] = revision;
+  snprintf(sd->text, 8, "%1d.%1d.%1d", major, minor, revision);
 }
 
 void sd_set_value(sd_t *sd, const uint32_t value) {

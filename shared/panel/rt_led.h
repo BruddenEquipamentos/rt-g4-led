@@ -7,6 +7,10 @@
 #include "../dm/dm_render.h"
 #include "../sd/sd_render.h"
 
+#define MAJOR 1
+#define MINOR 0
+#define REVISION 0
+
 typedef enum scene_config_option {
   CONFIG_OPTION_MODEL,           // MDL
   CONFIG_OPTION_LANGUAGE,        // LNG

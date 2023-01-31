@@ -30,4 +30,6 @@ void sd_set_value(sd_t *sd, const uint32_t value);
 void sd_blink(sd_t *sd, const uint32_t update_time_ms,
               const uint32_t blink_interval_ms);
 
+void sd_set_version(sd_t *sd, const uint8_t major, const uint8_t minor,
+                    const uint8_t revision);
 #endif
