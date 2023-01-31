@@ -29,7 +29,7 @@ static void render_training_data(treadmill_t *treadmill) {
   sd_set_kmh(&sd_speed, treadmill->training.speed);
   sd_set_min_sec(&sd_pace, treadmill->training.pace);
 
-  sd_set_value(&sd_kcal, 0);
+  sd_set_value(&sd_kcal, treadmill->training.kcal/1000);
   sd_set_value(&sd_program, 0);
   sd_set_value(&sd_incline, 0);
   sd_set_value(&sd_bpm, 0);

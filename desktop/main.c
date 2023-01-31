@@ -5,11 +5,10 @@
 #include <unistd.h>
 
 #include "../shared/dm/dm.h"
+#include "../shared/nvm/nvm.h"
 #include "../shared/panel/rt_led.h"
 #include "../shared/treadmill.h"
 #include "input.h"
-
-#include "../shared/nvm/nvm.h"
 #include "nvm_desktop.h"
 
 static void sigint(int i) {
@@ -130,10 +129,13 @@ static void display_update(treadmill_t *treadmill) {
             treadmill->training.speed);
     fprintf(stdout, "Treadmill Training Incline: %d\n",
             treadmill->training.incline);
+    fprintf(stdout, "Treadmill Training Calories: %d\n",
+            treadmill->training.kcal);
     fprintf(stdout, "\n");
     fprintf(stdout, "Config Option: %d\n", treadmill->config.option);
     fprintf(stdout, "Config Model: %d\n", treadmill->config.model);
     fprintf(stdout, "Config Weight: %d\n", treadmill->config.weight);
+    fprintf(stdout, "Config Age: %d\n", treadmill->config.age);
     fprintf(stdout, "Config Lub: %d\n", treadmill->config.lub_distance);
     fprintf(stdout, "Config Modbus: %d\n", treadmill->config.modbus);
     fprintf(stdout, "Config Test: %d\n", treadmill->config.test);

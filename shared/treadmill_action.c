@@ -129,3 +129,4 @@ void treadmill_exit_config(treadmill_t *treadmill) {
   treadmill_save_config(treadmill);
   treadmill_set_scene(treadmill, SCENE_IDLE);
 }
+

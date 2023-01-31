@@ -54,6 +54,7 @@ static void update(treadmill_t *treadmill) {
     treadmill->training.cm += (treadmill->training.speed * 27778) / 100000;
     treadmill->training.meters = treadmill->training.cm / 100;
     treadmill->training.pace = treadmill_calculate_pace(treadmill);
+    treadmill->training.kcal += treadmill_calculate_calories(treadmill);
     // compute pace // hide display_programs
   }
   // handle program specific things
