@@ -1,3 +1,13 @@
+## Jan 31, 2023
+
+- NVM Configuration load/save
+
+- Temp Calories Calculation (based on previous panel)
+
+## Jan 30, 2023
+
+- See git log
+
 ## Jan 27, 2023
 
 - See git log
