@@ -12,6 +12,7 @@
 #define NVM_U8_MODEL 0x0001
 #define NVM_U32_TOTAL_DISTANCE_METERS 0x0002
 #define NVM_U32_TOTAL_TIME_MINUTES 0x0003
+#define NVM_U8_WEIGHT 0x0004
 
 #define START_TRAINING_COUNTDOWN_VALUE (3)
 #define LUB_NOTIFICATION_SCENE_TIME (5000)
@@ -118,6 +119,7 @@ void treadmill_set_scene(treadmill_t *treadmill, treadmill_scene_t scene);
 
 uint32_t treadmill_calculate_pace(treadmill_t *treadmill);
 
+void treadmill_load_config(treadmill_t *treadmill);
 void treadmill_save_config(treadmill_t *treadmill);
 
 #endif
