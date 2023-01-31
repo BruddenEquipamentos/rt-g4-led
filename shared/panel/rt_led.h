@@ -59,4 +59,6 @@ void rt_led_update(treadmill_t *treadmill);
 
 void rt_led_render(treadmill_t *treadmill);
 
+void rt_led_load_model_params(treadmill_t *treadmill, rt_led_model_t model);
+
 #endif

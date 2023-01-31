@@ -5,6 +5,8 @@
 
 #include "panel/rt_led.h"
 
+#include "nvm/nvm.h"
+
 char *scene_name[SCENE_TOTALS] = {
     "SCENE_INIT",     "SCENE_IDLE",    "SCENE_LUB",
     "SCENE_CONFIG",   "SCENE_PROGRAM", "SCENE_COUNTDOWN",
@@ -19,12 +21,23 @@ void treadmill_setup(treadmill_t *treadmill) {
   treadmill->scene = SCENE_INIT;
   treadmill->scene_tick = 0;
 
-  treadmill->config.speed.min = 120;
-  treadmill->config.speed.max = 1800;
-  treadmill->config.speed.step = 10;
-  treadmill->config.incline.min = 0;
-  treadmill->config.incline.max = 160;
-  treadmill->config.incline.step = 10;
+  rt_led_model_t model = 0;
+  if (nvm.NVM_ReadVariable8bits(NVM_U8_MODEL, (uint8_t *)&model)) {
+    rt_led_load_model_params(treadmill, model);
+  } else {
+    rt_led_load_model_params(treadmill, RT_LED_MODEL_150_USART);
+    treadmill_save_config(treadmill);
+  }
+
+  uint32_t total_distance_in_meters = 0;
+  if (nvm.NVM_ReadVariable32bits(NVM_U32_TOTAL_DISTANCE_METERS, &total_distance_in_meters)) {
+    treadmill->total.distance_in_meters = total_distance_in_meters;
+  }
+
+  uint32_t total_time_in_seconds = 0;
+  if (nvm.NVM_ReadVariable32bits(NVM_U32_TOTAL_TIME_MINUTES, &total_time_in_seconds)) {
+    treadmill->total.time_in_seconds = total_time_in_seconds;
+  }
 
   treadmill->debug.print_states = true;
 }
@@ -40,6 +53,12 @@ uint32_t treadmill_calculate_pace(treadmill_t *treadmill) {
 
 void treadmill_key_press(treadmill_t *treadmill, const key_t key) {
   rt_led_key_press(treadmill, key);
+}
+
+void treadmill_save_config(treadmill_t *treadmill) {
+  if (treadmill->previous_config.model != treadmill->config.model) {
+    nvm.NVM_WriteVariable8bits(NVM_U8_MODEL, treadmill->config.model);
+  }
 }
 
 void treadmill_update(treadmill_t *treadmill) { rt_led_update(treadmill); }

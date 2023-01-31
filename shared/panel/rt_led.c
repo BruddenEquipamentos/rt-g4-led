@@ -44,3 +44,40 @@ void rt_led_render(treadmill_t *treadmill) {
   sd_render(treadmill);
   dm_render(treadmill);
 }
+
+void rt_led_load_model_params(treadmill_t *treadmill, rt_led_model_t model) {
+  treadmill->config.model = model;
+  switch (model) {
+    case RT_LED_MODEL_150_FREQ: {
+      treadmill->config.incline.min = 0;
+      treadmill->config.incline.max = 0;
+      treadmill->config.incline.step = 0;
+
+      treadmill->config.speed.min = 120;
+      treadmill->config.speed.max = 1800;
+      treadmill->config.speed.step = 10;
+      break;
+    }
+    case RT_LED_MODEL_150_USART: {
+      treadmill->config.incline.min = 0;
+      treadmill->config.incline.max = 0;
+      treadmill->config.incline.step = 0;
+
+      treadmill->config.speed.min = 120;
+      treadmill->config.speed.max = 1800;
+      treadmill->config.speed.step = 10;
+      break;
+    }
+    case RT_LED_MODEL_250_USART: {
+      treadmill->config.incline.min = 0;
+      treadmill->config.incline.max = 160;
+      treadmill->config.incline.step = 10;
+
+      treadmill->config.speed.min = 120;
+      treadmill->config.speed.max = 1800;
+      treadmill->config.speed.step = 10;
+      break;
+    }
+    default:;
+  }
+}

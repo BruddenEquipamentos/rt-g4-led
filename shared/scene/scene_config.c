@@ -11,7 +11,7 @@ static void next_config_option(treadmill_t *treadmill) {
 static void change_config_model(treadmill_t *treadmill, const key_t key) {
   switch (key) {
     case KEY_SPEED_INCREMENT: {
-      if (treadmill->config.model + 1 < RT_LED_MODEL_TOTALS) {
+      if (treadmill->config.model + 1 >= RT_LED_MODEL_TOTALS) {
         treadmill->config.model = 0;
       } else {
         treadmill->config.model++;

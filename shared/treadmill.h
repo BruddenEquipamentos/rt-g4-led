@@ -7,6 +7,12 @@
 #include "treadmill_key.h"
 #include "treadmill_programs.h"
 
+// distance in meters
+
+#define NVM_U8_MODEL 0x0001
+#define NVM_U32_TOTAL_DISTANCE_METERS 0x0002
+#define NVM_U32_TOTAL_TIME_MINUTES 0x0003
+
 #define START_TRAINING_COUNTDOWN_VALUE (3)
 #define LUB_NOTIFICATION_SCENE_TIME (5000)
 #define IDLE_SCENE_TIME (10000)
@@ -58,7 +64,7 @@ typedef struct treadmill {
 
   } training;
 
-  struct {
+  struct config {
     struct {
       uint16_t min;
       uint16_t max;
@@ -77,6 +83,13 @@ typedef struct treadmill {
     int modbus;
     int test;
   } config;
+
+  struct total {
+    uint32_t distance_in_meters;
+    uint32_t time_in_seconds;
+  } total;
+
+  struct config previous_config;
   struct {
     uint8_t value;
     uint16_t speed;
@@ -104,5 +117,7 @@ void treadmill_update(treadmill_t *treadmill);
 void treadmill_set_scene(treadmill_t *treadmill, treadmill_scene_t scene);
 
 uint32_t treadmill_calculate_pace(treadmill_t *treadmill);
+
+void treadmill_save_config(treadmill_t *treadmill);
 
 #endif

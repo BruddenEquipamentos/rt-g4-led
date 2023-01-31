@@ -156,9 +156,7 @@ static void render_training(treadmill_t *treadmill) {
   render_helper_update_time(display_pace, treadmill->training.pace);
   render_helper_update_digits(display_calories, treadmill->training.kcal);
 
-
   // todo: program
-
 }
 
 static void render_paused(treadmill_t *treadmill) {

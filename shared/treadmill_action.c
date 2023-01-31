@@ -2,6 +2,7 @@
 
 #include <string.h>
 
+#include "nvm/nvm.h"
 #include "treadmill_programs.h"
 
 void treadmill_start_training_countdown(treadmill_t *treadmill) {
@@ -119,13 +120,15 @@ void treadmill_start_program(treadmill_t *treadmill) {
 }
 
 void treadmill_config(treadmill_t *treadmill) {
+  memcpy(&treadmill->previous_config, &treadmill->config,
+         sizeof(struct config));
   treadmill_set_scene(treadmill, SCENE_CONFIG);
 }
 
-
 void treadmill_exit_config(treadmill_t *treadmill) {
   // todo: place specific actions in specific scene source?
-
+  // persist config data
+  // model
+  treadmill_save_config(treadmill);
+  treadmill_set_scene(treadmill, SCENE_IDLE);
 }
-
-

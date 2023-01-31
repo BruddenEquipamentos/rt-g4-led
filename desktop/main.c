@@ -9,9 +9,13 @@
 #include "../shared/treadmill.h"
 #include "input.h"
 
+#include "../shared/nvm/nvm.h"
+#include "nvm_desktop.h"
+
 static void sigint(int i) {
   (void)i;
   input_restore();
+  nvm.NVM_Close();
   exit(1);
 }
 
@@ -39,6 +43,7 @@ static void *thread_input(void *arg) {
       }
       case 'c': {
         treadmill_key_press(treadmill, KEY_CONFIG);
+        break;
       }
       case '=': {
         treadmill_key_press(treadmill, KEY_SPEED_INCREMENT);
@@ -159,6 +164,12 @@ int main(int argc, char *argv[]) {
   (void)argc;
   (void)argv;
 
+  NVM_Setup();
+  nvm.NVM_Init();
+
+  // nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_DISTANCE_METERS, 1000);
+  // nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_TIME_MINUTES, 60);
+
   pthread_t input_thread;
   pthread_t main_thread;
 
@@ -172,5 +183,8 @@ int main(int argc, char *argv[]) {
 
   pthread_join(main_thread, NULL);
   pthread_join(input_thread, NULL);
+
+  nvm.NVM_Close();
+
   return 0;
 }

@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 3.10)
 project(desktop VERSION 1.0)
 
+# include_directories(../shared/nvm/ST/EEPROM_Emul/Core)
+
 file(GLOB source_files
+          "../shared/nvm/*.h"
+          "../shared/nvm/*.c"
           "../shared/panel/*.h"
           "../shared/panel/*.c"
           "../shared/sd/*.h"
@@ -12,7 +16,7 @@ file(GLOB source_files
           "../shared/scene/*.c"
           "../shared/*.h"
           "../shared/*.c"
-           "*.h"
+          "*.h"
           "*.c")
 
 add_compile_options(-g -Wall -Wextra -pedantic -Werror -Wno-unused-parameter -Wno-gnu-binary-literal)
