@@ -58,6 +58,11 @@ void treadmill_load_config(treadmill_t *treadmill) {
                                  &total_time_in_seconds)) {
     treadmill->total.time_in_seconds = total_time_in_seconds;
   }
+
+  uint8_t weight_in_kg = 0;
+  if (nvm.NVM_ReadVariable8bits(NVM_U8_WEIGHT, &weight_in_kg)) {
+    treadmill->config.weight = weight_in_kg;
+  }
 }
 
 void treadmill_save_config(treadmill_t *treadmill) {
