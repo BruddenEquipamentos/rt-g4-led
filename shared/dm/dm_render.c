@@ -17,6 +17,8 @@ void dm_render(treadmill_t *treadmill) {
     }
   }
 
+  treadmill->previous_scene = treadmill->scene;
+
   switch (treadmill->scene) {
     case SCENE_PAUSED: {
       dm_render_text_animated("PAUSED", 100, treadmill->get_time_ms());
