@@ -3,9 +3,6 @@
 
 #include <stdint.h>
 
-#define VIRTADDRESS_START 1
-#define VIRTADDRESS_END (0xFFFF-1)
-
 typedef struct NVM {
   int (*NVM_Format)(void);
   int (*NVM_Init)(void);

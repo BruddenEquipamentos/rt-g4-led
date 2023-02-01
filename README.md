@@ -1,3 +1,8 @@
+## Feb 01, 2023
+
+- Embedded NVM
+- Display Bridge (Driver - Dot Matrix / Segment Displays)
+
 ## Jan 31, 2023
 
 - NVM Configuration load/save

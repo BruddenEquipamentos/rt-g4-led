@@ -5,8 +5,8 @@
  *      Author: movement
  */
 
-#ifndef INC_DISPLAY_H_
-#define INC_DISPLAY_H_
+#ifndef INC_DISPLAY_H_BAK_
+#define INC_DISPLAY_H_BAK_
 
 #define DISPLAY_ADDRESS_WRITE 0xD0
 #define DISPLAY_ADDRESS_READ 0xD1
@@ -24,4 +24,4 @@ void display_init();
 void display_update(void);
 //void display_update(xe_elliptical_t *elliptical);
 
-#endif /* INC_DISPLAY_H_ */
+#endif /* INC_DISPLAY_H_BAK_ */

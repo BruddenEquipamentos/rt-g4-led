@@ -1,6 +1,7 @@
 #include "render.h"
 
 #include "dm/dm.h"
+#include "sd/sd.h"
 
 static display_t display_one = {.on_addr = 0x10, .addr = {0x00, 0x01, 0x02, 0x03, 0x04, 0x5, 0x06, 0x07}, .max_digits = 4, .visible = 1, .blink = {.interval = 0, .time_ms = 0}};
 static display_t display_two = {.on_addr = 0x01, .addr = {0x00, 0x01, 0x02, 0x03, 0x04, 0x5, 0x06, 0x07}, .max_digits = 4, .visible = 1, .blink = {.interval = 0, .time_ms = 0}};
@@ -160,24 +161,26 @@ static void render_training(treadmill_t *treadmill) {
 }
 
 static void render_paused(treadmill_t *treadmill) {
-  if (treadmill->get_time_ms() - dm_tick > 100) {
-    dm_tick = treadmill->get_time_ms();
-    int length = dm_compute_length("PAUSA");
-    dm_render_text("PAUSA", dm_frame);
-    dm_frame++;
-    if (dm_frame > length + 16) dm_frame = 0;
-  }
+//  if (treadmill->get_time_ms() - dm_tick > 100) {
+//    dm_tick = treadmill->get_time_ms();
+//    int length = dm_compute_length("PAUSA");
+//    dm_render_text("PAUSA", dm_frame);
+//    dm_frame++;
+//    if (dm_frame > length + 16) dm_frame = 0;
+//  }
 }
 
 static void render_report(treadmill_t *treadmill) {
-  if (treadmill->get_time_ms() - dm_tick > 50) {
-    dm_tick = treadmill->get_time_ms();
-    int length = dm_compute_length("RELATORIO");
-    dm_render_text("RELATORIO", dm_frame);
-    dm_frame++;
-    if (dm_frame > length + 16) dm_frame = 0;
-  }
+//  if (treadmill->get_time_ms() - dm_tick > 50) {
+//    dm_tick = treadmill->get_time_ms();
+//    int length = dm_compute_length("RELATORIO");
+//    dm_render_text("RELATORIO", dm_frame);
+//    dm_frame++;
+//    if (dm_frame > length + 16) dm_frame = 0;
+//  }
 }
+
+// TODO: render to display buffer here
 
 typedef struct render_scene_callback {
   treadmill_scene_t state;
@@ -194,9 +197,11 @@ static render_scene_callback_t render_scene_callback[] = {
     {.state = SCENE_REPORT, .render = render_report},
 };
 
-
 void render(treadmill_t *treadmill) {
   helper_show_all_displays();
+
+  // translate sd_t to display_t
+
 
   render_helper_update_digits(display_distance, 0);
   render_helper_update_digits(display_time, 0);

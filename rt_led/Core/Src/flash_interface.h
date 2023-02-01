@@ -27,22 +27,9 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-
-#ifdef __APPLE__
-#include <stdint.h>
-typedef enum
-{
-  HAL_OK       = 0x00U,
-  HAL_ERROR    = 0x01U,
-  HAL_BUSY     = 0x02U,
-  HAL_TIMEOUT  = 0x03U
-} HAL_StatusTypeDef;
-#define __IO
-#else
 #include "stm32g0xx_hal.h"
 #include "stm32g0xx_ll_crc.h"
 #include "stm32g0xx_ll_bus.h"
-#endif
 
 /** @addtogroup EEPROM_Emulation
   * @{
