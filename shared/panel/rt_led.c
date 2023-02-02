@@ -30,7 +30,12 @@ static const scene_t *rt_led_current_scene(treadmill_scene_t treadmill_scene) {
 void rt_led_key_press(treadmill_t *treadmill, const key_t key) {
   const scene_t *scene = rt_led_current_scene(treadmill->scene);
   if (scene == NULL) return;
-  treadmill->beep(BEEP_KEYPRESS_ACK);
+
+  // prevent beeping on keypress if it is going to start the countdown
+  if (!(treadmill->scene == SCENE_IDLE && key == KEY_START)) {
+    treadmill->beep(BEEP_KEYPRESS_ACK);
+  }
+
   scene->keypress(treadmill, key);
 }
 
@@ -87,5 +92,3 @@ void rt_led_load_model_params(treadmill_t *treadmill, rt_led_model_t model) {
     default:;
   }
 }
-
-
