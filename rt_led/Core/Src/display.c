@@ -1,11 +1,12 @@
 #include "display.h"
 
+#include <string.h>
+
 #include "digits.h"
 #include "dm/dm.h"
 #include "main.h"
 #include "sd/sd.h"
 #include "sd/sd_render.h"
-#include <string.h>
 
 #define DISPLAY_ADDRESS_WRITE 0xD0
 #define DISPLAY_ADDRESS_READ 0xD1
@@ -24,14 +25,15 @@
 extern I2C_HandleTypeDef hi2c1;
 
 typedef enum {
-    DOT_NO_DOT = 0x00,
-    DOT_0 = 0x01,
-    DOT_1 = 0x02,
-    DOT_2 = 0x04,
-    DOT_3 = 0x08,
+  DOT_NO_DOT = 0x00,
+  DOT_0 = 0x01,
+  DOT_1 = 0x02,
+  DOT_2 = 0x04,
+  DOT_3 = 0x08,
+  DOT_HIDDEN_2 = 0x00,
 } dot_position_t;
 
-static dot_position_t dot_value[5] = {DOT_NO_DOT, DOT_0, DOT_1, DOT_2, DOT_3};
+static dot_position_t dot_value[5] = {DOT_NO_DOT, DOT_0, DOT_1, DOT_2, DOT_3, DOT_HIDDEN_2};
 
 typedef struct sdhw {
   uint8_t on_addr;
@@ -126,7 +128,8 @@ static void render_to_display(sdhw_t* sdhw, sdigit_t digit, uint8_t pos,
 static void render_dot(sdhw_t* sdhw, uint8_t* buffer) {
   switch (sdhw->on_addr) {
     case 0x01:
-      buffer[sdhw->addr[7]] = (buffer[sdhw->addr[7]] & 0xF0) | (dot_value[sdhw->sd->dot]);
+      buffer[sdhw->addr[7]] =
+          (buffer[sdhw->addr[7]] & 0xF0) | (dot_value[sdhw->sd->dot]);
       break;
     case 0x10:
       buffer[sdhw->addr[7]] =
@@ -155,83 +158,114 @@ static void render_display_clear(const sdhw_t* sdhw, uint8_t* buffer) {
   }
 }
 
+static void render_display(sdhw_t* sdhw, uint8_t* buffer) {
+  render_display_clear(sdhw, buffer);
+  if (!sdhw->sd->visible) return;
+  if (sdhw->sd->flag & SD_FLAG_PAD_LEADING_ZERO) {
+    if (sdhw->sd->digit[3] > DIGIT_0)
+      render_to_display(sdhw, sdhw->sd->digit[3], 3, buffer);
+
+    if (sdhw->sd->digit[2] > DIGIT_0 || sdhw->sd->dot >= SD_DOT_AT_2 ||
+        sdhw->sd->digit[3] > DIGIT_0)
+      render_to_display(sdhw, sdhw->sd->digit[2], 2, buffer);
+
+    if (sdhw->sd->digit[1] > DIGIT_0 || sdhw->sd->dot >= SD_DOT_AT_1 ||
+        sdhw->sd->digit[2] > DIGIT_0 || sdhw->sd->digit[3] > DIGIT_0)
+      render_to_display(sdhw, sdhw->sd->digit[1], 1, buffer);
+
+    render_to_display(sdhw, sdhw->sd->digit[0], 0, buffer);
+  } else {
+    render_to_display(sdhw, sdhw->sd->digit[3], 3, buffer);
+    render_to_display(sdhw, sdhw->sd->digit[2], 2, buffer);
+    render_to_display(sdhw, sdhw->sd->digit[1], 1, buffer);
+    render_to_display(sdhw, sdhw->sd->digit[0], 0, buffer);
+  }
+  render_dot(sdhw, buffer);
+}
+
 static void render_display_distance(sdhw_t* sdhw, uint8_t* buffer) {
-  render_display_clear(sdhw, buffer);
-  if (!sdhw->sd->visible) return;
-  if (sdhw->sd->digit[3] > DIGIT_0 && sdhw->sd->digit[3])
-    render_to_display(sdhw, sdhw->sd->digit[3], 3, buffer);
-  render_to_display(sdhw, sdhw->sd->digit[2], 2, buffer);
-  render_to_display(sdhw, sdhw->sd->digit[1], 1, buffer);
-  render_to_display(sdhw, sdhw->sd->digit[0], 0, buffer);
-  render_dot(sdhw, buffer);
+  render_display(sdhw, buffer);
+  // render_display_clear(sdhw, buffer);
+  // if (!sdhw->sd->visible) return;
+  // if (sdhw->sd->digit[3] > DIGIT_0 && sdhw->sd->digit[3])
+  //   render_to_display(sdhw, sdhw->sd->digit[3], 3, buffer);
+  // render_to_display(sdhw, sdhw->sd->digit[2], 2, buffer);
+  // render_to_display(sdhw, sdhw->sd->digit[1], 1, buffer);
+  // render_to_display(sdhw, sdhw->sd->digit[0], 0, buffer);
+  // render_dot(sdhw, buffer);
 }
 
-static void render_display_time(sdhw_t *sdhw, uint8_t* buffer) {
-  // 0:00
-  render_display_clear(sdhw, buffer);
-  if (!sdhw->sd->visible) return;
-  if (sdhw->sd->digit[3] > DIGIT_0)
-    render_to_display(sdhw, sdhw->sd->digit[3], 3, buffer);
-  render_to_display(sdhw, sdhw->sd->digit[2], 2, buffer);
-  render_to_display(sdhw, sdhw->sd->digit[1], 1, buffer);
-  render_to_display(sdhw, sdhw->sd->digit[0], 0, buffer);
-  render_dot(sdhw, buffer);
+static void render_display_time(sdhw_t* sdhw, uint8_t* buffer) {
+  render_display(sdhw, buffer);
+  // // 0:00
+  // render_display_clear(sdhw, buffer);
+  // if (!sdhw->sd->visible) return;
+  // if (sdhw->sd->digit[3] > DIGIT_0)
+  //   render_to_display(sdhw, sdhw->sd->digit[3], 3, buffer);
+  // render_to_display(sdhw, sdhw->sd->digit[2], 2, buffer);
+  // render_to_display(sdhw, sdhw->sd->digit[1], 1, buffer);
+  // render_to_display(sdhw, sdhw->sd->digit[0], 0, buffer);
+  // render_dot(sdhw, buffer);
 }
 
-static void render_display_speed(sdhw_t *sdhw, uint8_t* buffer) {
-  // 1.0
-  render_display_clear(sdhw, buffer);
-  if (!sdhw->sd->visible) return;
-  if (sdhw->sd->digit[3] > DIGIT_0)
-    render_to_display(sdhw, sdhw->sd->digit[3], 3, buffer);
-  if (sdhw->sd->digit[2] > DIGIT_0)
-    render_to_display(sdhw, sdhw->sd->digit[2], 2, buffer);
-  render_to_display(sdhw, sdhw->sd->digit[1], 1, buffer);
-  render_to_display(sdhw, sdhw->sd->digit[0], 0, buffer);
-  render_dot(sdhw, buffer);
+static void render_display_speed(sdhw_t* sdhw, uint8_t* buffer) {
+  render_display(sdhw, buffer);
+  // // 1.0
+  // render_display_clear(sdhw, buffer);
+  // if (!sdhw->sd->visible) return;
+  // if (sdhw->sd->digit[3] > DIGIT_0)
+  //   render_to_display(sdhw, sdhw->sd->digit[3], 3, buffer);
+  // if (sdhw->sd->digit[2] > DIGIT_0)
+  //   render_to_display(sdhw, sdhw->sd->digit[2], 2, buffer);
+  // render_to_display(sdhw, sdhw->sd->digit[1], 1, buffer);
+  // render_to_display(sdhw, sdhw->sd->digit[0], 0, buffer);
+  // render_dot(sdhw, buffer);
 }
 
-static void render_display_program(sdhw_t *sdhw, uint8_t* buffer) {
-  // 0, 10, 100, 1000
-  render_display_clear(sdhw, buffer);
-  if (!sdhw->sd->visible) return;
-  if (sdhw->sd->digit[3] > DIGIT_0)
-    render_to_display(sdhw, sdhw->sd->digit[3], 3, buffer);
-  if (sdhw->sd->digit[3] > DIGIT_0 || sdhw->sd->digit[2] > DIGIT_0)
-    render_to_display(sdhw, sdhw->sd->digit[2], 2, buffer);
-  if (sdhw->sd->digit[2] > DIGIT_0 || sdhw->sd->digit[1] > DIGIT_0)
-    render_to_display(sdhw, sdhw->sd->digit[1], 1, buffer);
-  render_to_display(sdhw, sdhw->sd->digit[0], 0, buffer);
-  render_dot(sdhw, buffer);
+static void render_display_program(sdhw_t* sdhw, uint8_t* buffer) {
+  render_display(sdhw, buffer);
+  // // 0, 10, 100, 1000
+  // render_display_clear(sdhw, buffer);
+  // if (!sdhw->sd->visible) return;
+  // if (sdhw->sd->digit[3] > DIGIT_0)
+  //   render_to_display(sdhw, sdhw->sd->digit[3], 3, buffer);
+  // if (sdhw->sd->digit[3] > DIGIT_0 || sdhw->sd->digit[2] > DIGIT_0)
+  //   render_to_display(sdhw, sdhw->sd->digit[2], 2, buffer);
+  // if (sdhw->sd->digit[2] > DIGIT_0 || sdhw->sd->digit[1] > DIGIT_0)
+  //   render_to_display(sdhw, sdhw->sd->digit[1], 1, buffer);
+  // render_to_display(sdhw, sdhw->sd->digit[0], 0, buffer);
+  // render_dot(sdhw, buffer);
 }
 
-static void render_display_calories(sdhw_t *sdhw, uint8_t* buffer) {
-  // 0, 10, 100, 1000
-  render_display_clear(sdhw, buffer);
-  if (!sdhw->sd->visible) return;
-  if (sdhw->sd->digit[3] > DIGIT_0)
-    render_to_display(sdhw, sdhw->sd->digit[3], 3, buffer);
-  if (sdhw->sd->digit[3] > DIGIT_0 || sdhw->sd->digit[2] > DIGIT_0)
-    render_to_display(sdhw, sdhw->sd->digit[2], 2, buffer);
-  if (sdhw->sd->digit[2] > DIGIT_0 || sdhw->sd->digit[1] > DIGIT_0)
-    render_to_display(sdhw, sdhw->sd->digit[1], 1, buffer);
-  render_to_display(sdhw, sdhw->sd->digit[0], 0, buffer);
-  render_dot(sdhw, buffer);
+static void render_display_calories(sdhw_t* sdhw, uint8_t* buffer) {
+  render_display(sdhw, buffer);
+  // // 0, 10, 100, 1000
+  // render_display_clear(sdhw, buffer);
+  // if (!sdhw->sd->visible) return;
+  // if (sdhw->sd->digit[3] > DIGIT_0)
+  //   render_to_display(sdhw, sdhw->sd->digit[3], 3, buffer);
+  // if (sdhw->sd->digit[3] > DIGIT_0 || sdhw->sd->digit[2] > DIGIT_0)
+  //   render_to_display(sdhw, sdhw->sd->digit[2], 2, buffer);
+  // if (sdhw->sd->digit[2] > DIGIT_0 || sdhw->sd->digit[1] > DIGIT_0)
+  //   render_to_display(sdhw, sdhw->sd->digit[1], 1, buffer);
+  // render_to_display(sdhw, sdhw->sd->digit[0], 0, buffer);
+  // render_dot(sdhw, buffer);
 }
 
-static void render_display_pace(sdhw_t *sdhw, uint8_t* buffer) {
-  // 0, 10, 100, 1000
-  render_display_clear(sdhw, buffer);
-  if (!sdhw->sd->visible) return;
-  if (sdhw->sd->digit[3] > DIGIT_0)
-    render_to_display(sdhw, sdhw->sd->digit[3], 3, buffer);
-  render_to_display(sdhw, sdhw->sd->digit[2], 2, buffer);
-  render_to_display(sdhw, sdhw->sd->digit[1], 1, buffer);
-  render_to_display(sdhw, sdhw->sd->digit[0], 0, buffer);
-  render_dot(sdhw, buffer);
+static void render_display_pace(sdhw_t* sdhw, uint8_t* buffer) {
+  render_display(sdhw, buffer);
+  // // 0, 10, 100, 1000
+  // render_display_clear(sdhw, buffer);
+  // if (!sdhw->sd->visible) return;
+  // if (sdhw->sd->digit[3] > DIGIT_0)
+  //   render_to_display(sdhw, sdhw->sd->digit[3], 3, buffer);
+  // render_to_display(sdhw, sdhw->sd->digit[2], 2, buffer);
+  // render_to_display(sdhw, sdhw->sd->digit[1], 1, buffer);
+  // render_to_display(sdhw, sdhw->sd->digit[0], 0, buffer);
+  // render_dot(sdhw, buffer);
 }
 
-static void render_display_incline(sdhw_t *sdhw, uint8_t* buffer) {
+static void render_display_incline(sdhw_t* sdhw, uint8_t* buffer) {
   // 0, 10, 100 -- digit are reversed
   render_display_clear(sdhw, buffer);
   if (!sdhw->sd->visible) return;
@@ -242,7 +276,7 @@ static void render_display_incline(sdhw_t *sdhw, uint8_t* buffer) {
   render_dot(sdhw, buffer);
 }
 
-static void render_display_bpm(sdhw_t *sdhw, uint8_t* buffer) {
+static void render_display_bpm(sdhw_t* sdhw, uint8_t* buffer) {
   // 0, 10, 100 -- digit are reversed
   render_display_clear(sdhw, buffer);
   if (!sdhw->sd->visible) return;
@@ -254,9 +288,7 @@ static void render_display_bpm(sdhw_t *sdhw, uint8_t* buffer) {
   render_dot(sdhw, buffer);
 }
 
-
-static void display_update_dm_buffer(uint8_t* buffer,
-                                             uint16_t dm_buffer[5]) {
+static void display_update_dm_buffer(uint8_t* buffer, uint16_t dm_buffer[5]) {
   static const uint8_t column_address[16] = {0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D,
                                              0x1E, 0x1F, 0x20, 0x21, 0x22, 0x23,
                                              0x24, 0x25, 0x26, 0x27};

@@ -83,7 +83,7 @@ void treadmill_load_config(treadmill_t *treadmill) {
   }
 
   uint32_t total_time_in_seconds = 0;
-  if (nvm.NVM_ReadVariable32bits(NVM_U32_TOTAL_TIME_MINUTES,
+  if (nvm.NVM_ReadVariable32bits(NVM_U32_TOTAL_TIME_SECONDS,
                                  &total_time_in_seconds)) {
     treadmill->total.time_in_seconds = total_time_in_seconds;
   } else {

@@ -19,7 +19,7 @@ static void update(treadmill_t *treadmill) {
     if ((treadmill->ms - treadmill->countdown.ms) >= 1000) {
       treadmill->countdown.ms = treadmill->ms;
       treadmill->countdown.value--;
-      treadmill->beep(BEEP_COUNTDOWN_COUNT);
+      if (treadmill->countdown.value > 0) treadmill->beep(BEEP_COUNTDOWN_COUNT);
     }
   } else {
     treadmill->beep(BEEP_COUNTDOWN_END);

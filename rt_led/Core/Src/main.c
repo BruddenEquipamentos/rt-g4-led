@@ -199,6 +199,9 @@ int main(void)
   while(__HAL_FLASH_GET_FLAG(FLASH_FLAG_OPTVERR) != RESET) ;
   nvm.NVM_Init();
 
+//  nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_DISTANCE_METERS, 10000);
+//  nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_TIME_SECONDS, 3600);
+
   treadmill_setup(&treadmill);
   treadmill.get_time_ms = HAL_GetTick;
   treadmill.beep = beep;
@@ -764,16 +767,22 @@ void KeyboardTask(void const * argument)
     if (key_pressed == KEY_START || key_pressed == KEY_STOP || key_pressed == KEY_CONFIG) {
       if (key_tick == 0) {
         key_tick = HAL_GetTick();
-      } else if (HAL_GetTick() - key_tick >= 100) {
-        if (previous_key == KEY_NONE && previous_key != key_pressed) {
-          treadmill_key_press(&treadmill, key_pressed);
-          previous_key = key_pressed;
+      } else if (HAL_GetTick() - key_tick >= 50) {
+        if (previous_key != KEY_CONFIG && previous_key != key_pressed) {
+          if ((key_pressed == KEY_CONFIG && HAL_GetTick()-key_tick >= 2000)) {
+            treadmill_key_press(&treadmill, key_pressed);
+            previous_key = key_pressed;
+          } else {
+            treadmill_key_press(&treadmill, key_pressed);
+            previous_key = key_pressed;
+          }
         }
       }
     } else if (key_pressed != previous_key) {
       if (key_pressed != KEY_NONE)  {
         treadmill_key_press(&treadmill, key_pressed);
       }
+      key_tick = 0;
       previous_key = key_pressed;
     }
     osDelay(2);

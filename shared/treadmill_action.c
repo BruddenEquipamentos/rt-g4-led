@@ -43,6 +43,7 @@ void treadmill_finish_program(treadmill_t *treadmill) {
 }
 
 void treadmill_close_report(treadmill_t *treadmill) {
+  // todo: SAVE total
   memset(&treadmill->training, 0x00, sizeof(struct training));
   treadmill->program.id = PROGRAM_NONE;
   treadmill_set_scene(treadmill, SCENE_IDLE);

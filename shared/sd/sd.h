@@ -16,6 +16,7 @@ typedef enum sd_dot {
   SD_DOT_AT_1,
   SD_DOT_AT_2,
   SD_DOT_AT_3,
+  SD_DOT_HIDDEN_AT_2,
   SD_DOT_TOTALS,
 } sd_dot_t;
 
@@ -36,6 +37,7 @@ void sd_set_min_sec(sd_t *sd, uint32_t seconds);
 void sd_set_km_m(sd_t *sd, uint32_t meters);
 void sd_set_kmh(sd_t *sd, const uint32_t speed);
 void sd_set_incline(sd_t *sd, int16_t incline);
+void sd_set_kcal(sd_t *sd, const uint32_t kcal);
 void sd_set_value(sd_t *sd, const uint32_t value);
 void sd_blink(sd_t *sd, const uint32_t update_time_ms,
               const uint32_t blink_interval_ms);
