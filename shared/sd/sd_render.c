@@ -31,7 +31,6 @@ static void render_training_data(treadmill_t *treadmill) {
   sd_set_value(&sd_kcal, treadmill->training.kcal / 1000);
   sd_set_incline(&sd_incline, treadmill->training.incline);
   sd_set_value(&sd_bpm, treadmill->training.bpm);
-
   sd_set_value(&sd_program, 0);
 }
 

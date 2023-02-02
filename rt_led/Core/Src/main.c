@@ -800,7 +800,7 @@ void BeepTask(void const * argument)
   {
     if (xQueueReceive(beepEventQueueHandle, &beep, portMAX_DELAY) == pdPASS) {
       HAL_TIM_PWM_Stop(&htim16, TIM_CHANNEL_1);
-      if (beep != BEEP_KEYPRESS_ACK) continue;
+      //
       switch (beep ) {
         case BEEP_KEYPRESS_ACK: {
           TIM16->CNT = 0;

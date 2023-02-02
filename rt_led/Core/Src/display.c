@@ -225,9 +225,7 @@ static void render_display_pace(sdhw_t *sdhw, uint8_t* buffer) {
   if (!sdhw->sd->visible) return;
   if (sdhw->sd->digit[3] > DIGIT_0)
     render_to_display(sdhw, sdhw->sd->digit[3], 3, buffer);
-  // if (sdhw->sd->digit[3] > DIGIT_0 || sdhw->sd->digit[2] > DIGIT_0)
   render_to_display(sdhw, sdhw->sd->digit[2], 2, buffer);
-  // if (sdhw->sd->digit[2] > DIGIT_0 || sdhw->sd->digit[1] > DIGIT_0)
   render_to_display(sdhw, sdhw->sd->digit[1], 1, buffer);
   render_to_display(sdhw, sdhw->sd->digit[0], 0, buffer);
   render_dot(sdhw, buffer);
