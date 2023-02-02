@@ -107,7 +107,7 @@ render_program_callback_t render_programs[] = {
 
 
 void render_program_scene(treadmill_t *treadmill) {
-  set_all_sd_visible(false);
+  sd_render_all_visible(false);
   for (program_id_t i = 0;
        i < sizeof(render_programs) / sizeof(render_program_callback_t); ++i) {
     if (render_programs[i].program == treadmill->program.id) {

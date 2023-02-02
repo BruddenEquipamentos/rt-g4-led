@@ -16,8 +16,10 @@ void sd_set_km_m(sd_t *sd, const uint32_t meters) {
   uint32_t m = (meters % 1000) / 10;
   sd->digit[3] = ((km % 100) / 10);
   sd->digit[2] = ((km % 100) % 10);
+  sd->dot = SD_DOT_AT_2;
   sd->digit[1] = m / 10;
   sd->digit[0] = m % 10;
+
   snprintf(sd->text, 8, "%d.%02d", km, m);
 }
 
@@ -27,12 +29,14 @@ void sd_set_kmh(sd_t *sd, const uint32_t speed) {
   sd->digit[3] = 0;
   sd->digit[2] = ((spd_km % 100) / 10);
   sd->digit[1] = ((spd_km % 100) % 10);
+  sd->dot = SD_DOT_AT_1;
   sd->digit[0] = spd_m / 10;
   snprintf(sd->text, 8, "%d.%01d", spd_km, spd_m);
 }
 
-void sd_set_incline(sd_t *sd, const int value) {
-
+void sd_set_incline(sd_t *sd, const int16_t incline ) {
+  sd_set_value(sd, (uint32_t)incline);
+  sd->dot = SD_DOT_AT_2;
 }
 
 void sd_set_version(sd_t *sd, const uint8_t major, const uint8_t minor,
@@ -44,6 +48,7 @@ void sd_set_version(sd_t *sd, const uint8_t major, const uint8_t minor,
 }
 
 void sd_set_value(sd_t *sd, const uint32_t value) {
+  sd->dot = SD_DOT_NO_DOT;
   sd->digit[3] = (value % 10000) / 1000;
   sd->digit[2] = (value % 1000) / 100;
   sd->digit[1] = (value % 100) / 10;

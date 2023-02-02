@@ -10,10 +10,19 @@ typedef enum sd_flag {
   SD_FLAG_PAD_LEADING_ZERO = 1 << 1,
 } sd_flag_t;
 
+typedef enum sd_dot {
+  SD_DOT_NO_DOT,
+  SD_DOT_AT_0,
+  SD_DOT_AT_1,
+  SD_DOT_AT_2,
+  SD_DOT_AT_3,
+  SD_DOT_TOTALS,
+} sd_dot_t;
+
 typedef struct sd {
   sd_flag_t flag;
+  sd_dot_t dot;
   char text[8];
-  uint8_t dot[4];
   uint8_t digit[4];
   uint8_t visible;
   struct {
@@ -26,6 +35,7 @@ void sd_set_visible(sd_t *sd, const bool visible);
 void sd_set_min_sec(sd_t *sd, uint32_t seconds);
 void sd_set_km_m(sd_t *sd, uint32_t meters);
 void sd_set_kmh(sd_t *sd, const uint32_t speed);
+void sd_set_incline(sd_t *sd, int16_t incline);
 void sd_set_value(sd_t *sd, const uint32_t value);
 void sd_blink(sd_t *sd, const uint32_t update_time_ms,
               const uint32_t blink_interval_ms);

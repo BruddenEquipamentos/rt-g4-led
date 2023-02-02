@@ -27,8 +27,7 @@
 #include "beep.h"
 #include "nvm_emb.h"
 #include "panel/rt_led.h"
-
-#include "render.h.bak"
+#include "display.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/

@@ -12,7 +12,7 @@ sd_t sd_pace = {.flag = SD_FLAG_VISIBLE};
 sd_t sd_incline = {.flag = SD_FLAG_VISIBLE};
 sd_t sd_bpm = {.flag = SD_FLAG_VISIBLE};
 
-void set_all_sd_visible(bool visible) {
+void sd_render_all_visible(bool visible) {
   sd_set_visible(&sd_distance, visible);
   sd_set_visible(&sd_time, visible);
   sd_set_visible(&sd_speed, visible);
@@ -28,9 +28,8 @@ static void render_training_data(treadmill_t *treadmill) {
   sd_set_min_sec(&sd_time, treadmill->training.seconds);
   sd_set_kmh(&sd_speed, treadmill->training.speed);
   sd_set_min_sec(&sd_pace, treadmill->training.pace);
-
   sd_set_value(&sd_kcal, treadmill->training.kcal / 1000);
-  sd_set_value(&sd_incline, treadmill->training.incline);
+  sd_set_incline(&sd_incline, treadmill->training.incline);
   sd_set_value(&sd_bpm, treadmill->training.bpm);
 
   sd_set_value(&sd_program, 0);
@@ -85,7 +84,7 @@ static void render_training_data_program(treadmill_t *treadmill) {
 }
 
 static void render_config_data(treadmill_t *treadmill) {
-  set_all_sd_visible(false);
+  sd_render_all_visible(false);
   // options
   switch (treadmill->config.option) {
     case CONFIG_OPTION_MODEL: {
@@ -154,7 +153,7 @@ static void render_config_data(treadmill_t *treadmill) {
 }
 
 void sd_render(treadmill_t *treadmill) {
-  set_all_sd_visible(true);
+  sd_render_all_visible(true);
   switch (treadmill->scene) {
     case SCENE_INIT: {
       sd_set_visible(&sd_program, false);
@@ -167,13 +166,15 @@ void sd_render(treadmill_t *treadmill) {
       break;
     }
     case SCENE_LUB: {
-      sd_set_visible(&sd_program, false);
-      render_training_data(treadmill);
+      sd_render_all_visible(false);
+      sd_set_visible(&sd_distance, true);
+      // todo: Calculate remaining
+      // distance to show LUB message
+      sd_set_value(&sd_distance, treadmill->config.lub_distance);
       break;
     }
     case SCENE_CONFIG: {
       sd_set_visible(&sd_program, false);
-      // render_training_data(treadmill);
       render_config_data(treadmill);
       break;
     }

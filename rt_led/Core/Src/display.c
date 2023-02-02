@@ -6,7 +6,6 @@
 #include "sd/sd.h"
 #include "sd/sd_render.h"
 #include <string.h>
-#include "render.h.bak"
 
 #define DISPLAY_ADDRESS_WRITE 0xD0
 #define DISPLAY_ADDRESS_READ 0xD1
@@ -24,18 +23,19 @@
 
 extern I2C_HandleTypeDef hi2c1;
 
-// typedef enum {
-//   DOT_POSITION_NONE = 0x00,
-//   DOT_POSITION_0 = 0x01,
-//   DOT_POSITION_1 = 0x02,
-//   DOT_POSITION_2 = 0x04,
-//   DOT_POSITION_3 = 0x08,
-// } dot_position_t;
+typedef enum {
+    DOT_NO_DOT = 0x00,
+    DOT_0 = 0x01,
+    DOT_1 = 0x02,
+    DOT_2 = 0x04,
+    DOT_3 = 0x08,
+} dot_position_t;
+
+static dot_position_t dot_value[5] = {DOT_NO_DOT, DOT_0, DOT_1, DOT_2, DOT_3};
 
 typedef struct sdhw {
   uint8_t on_addr;
   uint8_t addr[8];
-  dot_position_t dot_pos;
   sd_t* sd;
 } sdhw_t;
 
@@ -126,15 +126,15 @@ static void render_to_display(sdhw_t* sdhw, sdigit_t digit, uint8_t pos,
 static void render_dot(sdhw_t* sdhw, uint8_t* buffer) {
   switch (sdhw->on_addr) {
     case 0x01:
-      buffer[sdhw->addr[7]] = (buffer[sdhw->addr[7]] & 0xF0) | (sdhw->dot_pos);
+      buffer[sdhw->addr[7]] = (buffer[sdhw->addr[7]] & 0xF0) | (dot_value[sdhw->sd->dot]);
       break;
     case 0x10:
       buffer[sdhw->addr[7]] =
-          (buffer[sdhw->addr[7]] & 0x0F) | (sdhw->dot_pos << 4);
+          (buffer[sdhw->addr[7]] & 0x0F) | (dot_value[sdhw->sd->dot] << 4);
       break;
     case 0x20:
       buffer[sdhw->addr[7]] =
-          (buffer[sdhw->addr[7]] & 0x1F) | (sdhw->dot_pos << 4);
+          (buffer[sdhw->addr[7]] & 0x1F) | (dot_value[sdhw->sd->dot] << 4);
       break;
   }
 }
@@ -157,7 +157,6 @@ static void render_display_clear(const sdhw_t* sdhw, uint8_t* buffer) {
 
 static void render_display_distance(sdhw_t* sdhw, uint8_t* buffer) {
   render_display_clear(sdhw, buffer);
-  sdhw->dot_pos = DOT_POSITION_2;
   if (!sdhw->sd->visible) return;
   if (sdhw->sd->digit[3] > DIGIT_0 && sdhw->sd->digit[3])
     render_to_display(sdhw, sdhw->sd->digit[3], 3, buffer);
@@ -189,7 +188,6 @@ static void render_display_speed(sdhw_t *sdhw, uint8_t* buffer) {
     render_to_display(sdhw, sdhw->sd->digit[2], 2, buffer);
   render_to_display(sdhw, sdhw->sd->digit[1], 1, buffer);
   render_to_display(sdhw, sdhw->sd->digit[0], 0, buffer);
-  sdhw->dot_pos = DOT_POSITION_1;
   render_dot(sdhw, buffer);
 }
 
@@ -238,11 +236,9 @@ static void render_display_pace(sdhw_t *sdhw, uint8_t* buffer) {
 static void render_display_incline(sdhw_t *sdhw, uint8_t* buffer) {
   // 0, 10, 100 -- digit are reversed
   render_display_clear(sdhw, buffer);
-  sdhw->dot_pos = DOT_POSITION_2;
   if (!sdhw->sd->visible) return;
   if (sdhw->sd->digit[2] > DIGIT_0)
     render_to_display(sdhw, sdhw->sd->digit[2], 0, buffer);
-  // if (sdhw->sd->digit[2] > DIGIT_0 || sdhw->sd->digit[1] > DIGIT_0)
   render_to_display(sdhw, sdhw->sd->digit[1], 1, buffer);
   render_to_display(sdhw, sdhw->sd->digit[0], 2, buffer);
   render_dot(sdhw, buffer);
