@@ -199,10 +199,7 @@ static render_scene_callback_t render_scene_callback[] = {
 
 void render(treadmill_t *treadmill) {
   helper_show_all_displays();
-
-  // translate sd_t to display_t
-
-
+  // translate sd_t to display_
   render_helper_update_digits(display_distance, 0);
   render_helper_update_digits(display_time, 0);
   render_helper_update_digits(display_speed, 0);
@@ -219,5 +216,4 @@ void render(treadmill_t *treadmill) {
   }
 
   treadmill->previous_scene = treadmill->scene;
-
 }

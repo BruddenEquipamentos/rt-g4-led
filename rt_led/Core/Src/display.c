@@ -3,10 +3,10 @@
 #include "digits.h"
 #include "dm/dm.h"
 #include "main.h"
-#include "render.h"
 #include "sd/sd.h"
 #include "sd/sd_render.h"
 #include <string.h>
+#include "render.h.bak"
 
 #define DISPLAY_ADDRESS_WRITE 0xD0
 #define DISPLAY_ADDRESS_READ 0xD1

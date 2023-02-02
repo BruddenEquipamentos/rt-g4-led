@@ -17,17 +17,18 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include <display.h.bak>
 #include "main.h"
 #include "cmsis_os.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "render.h"
 #include "keyboard.h"
 #include "treadmill.h"
 #include "beep.h"
 #include "nvm_emb.h"
+#include "panel/rt_led.h"
+
+#include "render.h.bak"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -176,7 +177,7 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 256);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* definition and creation of keyboardTask */
@@ -734,8 +735,9 @@ void StartDefaultTask(void const * argument)
       treadmill.ms += 100;
       treadmill_update(&treadmill);
     }
-     //display_update();
-    render(&treadmill);
+    // display_update();
+    // render(&treadmill);
+    rt_led_render(&treadmill);
     display_update();
     osDelay(20);
   }
@@ -754,16 +756,27 @@ void KeyboardTask(void const * argument)
   /* USER CODE BEGIN KeyboardTask */
   enum key key_pressed = KEY_NONE;
   enum key previous_key = KEY_NONE;
+  uint32_t key_tick = 0;
   /* Infinite loop */
   for(;;)
   {
     key_pressed = get_key_pressed();
-    if (key_pressed != previous_key) {
-      if (key_pressed != KEY_NONE)  {
+
+    if (key_pressed == KEY_START || key_pressed == KEY_STOP || key_pressed == KEY_CONFIG) {
+      if (key_tick == 0) {
+        key_tick = HAL_GetTick();
+      } else if (HAL_GetTick() - key_tick >= 100) {
+        if (previous_key == KEY_NONE && previous_key != key_pressed) {
           treadmill_key_press(&treadmill, key_pressed);
+          previous_key = key_pressed;
+        }
       }
+    } else if (key_pressed != previous_key) {
+      if (key_pressed != KEY_NONE)  {
+        treadmill_key_press(&treadmill, key_pressed);
+      }
+      previous_key = key_pressed;
     }
-    previous_key = key_pressed;
     osDelay(2);
   }
   /* USER CODE END KeyboardTask */

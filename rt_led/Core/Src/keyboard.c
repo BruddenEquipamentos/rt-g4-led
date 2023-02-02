@@ -35,8 +35,6 @@ static void set_columns_to_high(void) {
     *ptr_keys = (*ptr_keys | key);               \
   set_columns_to_high();                         \
   __asm("nop\n");__asm("nop\n");
-  //osDelay(1);
-  //__asm("nop\n");__asm("nop\n");
 
 #define NUM_READS 4
 enum key  get_key_pressed(void) {

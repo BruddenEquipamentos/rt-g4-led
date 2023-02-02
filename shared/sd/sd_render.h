@@ -14,5 +14,6 @@ extern sd_t sd_incline;
 extern sd_t sd_bpm;
 
 void sd_render(treadmill_t *treadmill);
+void set_all_sd_visible(bool visible);
 
 #endif
