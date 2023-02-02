@@ -1,5 +1,4 @@
 #include "nvm_emb.h"
-#include "nvm/nvm.h"
 #include "eeprom_emul.h"
 #include "eeprom_emul_types.h"
 // eeprom emulator

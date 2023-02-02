@@ -194,6 +194,10 @@ int main(void)
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   NVM_Setup();
+  HAL_FLASH_Unlock();
+  __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_OPTVERR);
+  while(__HAL_FLASH_GET_FLAG(FLASH_FLAG_OPTVERR) != RESET) ;
+  nvm.NVM_Init();
 
   treadmill_setup(&treadmill);
   treadmill.get_time_ms = HAL_GetTick;
