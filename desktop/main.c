@@ -72,7 +72,7 @@ static void *thread_input(void *arg) {
   return NULL;
 }
 
-static uint64_t get_time_ms() {
+static uint32_t get_time_ms() {
   struct timespec ts;
   uint64_t ms = 0;
   if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0) {
@@ -80,7 +80,7 @@ static uint64_t get_time_ms() {
   } else {
     printf("clock_gettime failed\n");
   }
-  return ms;
+  return (uint32_t)ms;
 }
 
 void render_dot_matrix(const uint16_t buffer[5]) {
@@ -140,23 +140,26 @@ static void display_update(treadmill_t *treadmill) {
     fprintf(stdout, "Config Modbus: %d\n", treadmill->config.modbus);
     fprintf(stdout, "Config Test: %d\n", treadmill->config.test);
     fprintf(stdout, "\n");
+
+    fprintf(stdout, "\n");
+    fprintf(stdout, "Total Distance: %u meters\n",
+            treadmill->total.distance_in_meters);
+    fprintf(stdout, "Total Time: %u seconds\n",
+            treadmill->total.time_in_seconds);
+    fprintf(stdout, "\n");
   }
 }
 
 static void *thread_main(void *arg) {
   treadmill_t *treadmill = (treadmill_t *)arg;
   treadmill->ms = get_time_ms();
-
   for (;;) {
     while (treadmill->ms < get_time_ms()) {
       treadmill->ms = treadmill->ms + 100;
       treadmill_update(treadmill);
     }
-    // sd_render(treadmill);
-    // dm_render(treadmill);
     rt_led_render(treadmill);
     display_update(treadmill);
-    // treadmill_render(treadmill);
     usleep(1000 * 100);
   }
   return NULL;
@@ -179,7 +182,6 @@ int main(int argc, char *argv[]) {
 
   pthread_create(&input_thread, NULL, thread_input, &treadmill);
   pthread_create(&main_thread, NULL, thread_main, &treadmill);
-
   pthread_join(main_thread, NULL);
   pthread_join(input_thread, NULL);
 
