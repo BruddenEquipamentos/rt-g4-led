@@ -1,6 +1,69 @@
 #include "sd.h"
 
 #include <stdio.h>
+#include <string.h>
+
+struct digit_map {
+  char ch;
+  enum sd_digit sd_digit;
+};
+
+static struct digit_map digit_map[DIGIT_TOTALS] = {
+    {.ch = '0', .sd_digit = DIGIT_0},
+    {.ch = '1', .sd_digit = DIGIT_1},
+    {.ch = '2', .sd_digit = DIGIT_2},
+    {.ch = '3', .sd_digit = DIGIT_3},
+    {.ch = '4', .sd_digit = DIGIT_4},
+    {.ch = '5', .sd_digit = DIGIT_5},
+    {.ch = '6', .sd_digit = DIGIT_6},
+    {.ch = '7', .sd_digit = DIGIT_7},
+    {.ch = '8', .sd_digit = DIGIT_8},
+    {.ch = '9', .sd_digit = DIGIT_9},
+    {.ch = 'P', .sd_digit = DIGIT_P},
+    {.ch = '_', .sd_digit = DIGIT_UNDERLINE},
+    {.ch = '-', .sd_digit = DIGIT_MIDDLE},
+    {.ch = 'd', .sd_digit = DIGIT_d},
+    {.ch = 'f', .sd_digit = DIGIT_f},
+    {.ch = 'U', .sd_digit = DIGIT_U},
+    {.ch = 'E', .sd_digit = DIGIT_E},
+    {.ch = 'r', .sd_digit = DIGIT_r},
+    {.ch = 't', .sd_digit = DIGIT_t},
+    {.ch = 'b', .sd_digit = DIGIT_b},
+    {.ch = 'L', .sd_digit = DIGIT_L},
+    {.ch = 'A', .sd_digit = DIGIT_A},
+    {.ch = 'o', .sd_digit = DIGIT_o},
+    {.ch = ' ', .sd_digit = DIGIT_EMPTY},
+};
+
+static char get_sd_digit(char ch) {
+  for (int i = 0; i < DIGIT_TOTALS; ++i)
+    if (digit_map[i].ch == ch) return digit_map[i].sd_digit;
+  return DIGIT_EMPTY;  // if not found  return ' '
+}
+
+void sd_set_text(sd_t *sd, const char *text) {
+  size_t length = strlen(text);
+  if (length > 4) return;
+  if (strcmp(sd->text, text) == 0) return;  // optimization
+  sd->digit[3] = get_sd_digit(text[0]);
+  sd->digit[2] = get_sd_digit(text[1]);
+  sd->digit[1] = get_sd_digit(text[2]);
+  sd->digit[0] = get_sd_digit(text[3]);
+  strcpy(sd->text, text);
+}
+
+void sd_set_program_text(sd_t *sd, const int program_number) {
+  char text[5];
+  if (program_number > 1000)
+    sprintf(text, "P---");
+  else if (program_number > 100)
+    sprintf(text, "P%d", program_number);
+  else if (program_number > 10)
+    sprintf(text, " P%d", program_number);
+  else
+    sprintf(text, " P%d ", program_number);
+  sd_set_text(sd, text);
+}
 
 void sd_set_min_sec(sd_t *sd, const uint32_t seconds) {
   uint32_t min = seconds / 60;  // 00:00
