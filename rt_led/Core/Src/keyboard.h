@@ -3,6 +3,6 @@
 #include <stdint.h>
 #include "treadmill_key.h"
 
-key_t get_key_pressed(void);
+kbd_key_t get_key_pressed(void);
 
 #endif
