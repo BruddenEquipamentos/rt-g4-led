@@ -28,6 +28,10 @@
 #include "nvm_emb.h"
 #include "panel/rt_led.h"
 #include "display.h"
+
+#include "modus/mb_master.h"
+#include "modus/mb_operation.h"
+#include "modus/master_operations.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -210,6 +214,7 @@ int main(void)
 
   HAL_ADCEx_Calibration_Start(&hadc1);
   HAL_ADC_Start_DMA(&hadc1, adc_values, ADC_BUFFER_SIZE);
+
   /* USER CODE END RTOS_THREADS */
 
   /* Start scheduler */
