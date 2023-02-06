@@ -1,3 +1,16 @@
+## Feb 06, 2023
+
+- Drafting BLE Interface
+- Drafting Modbus Interface
+
+## Feb 03, 2023
+
+- See git log
+
+## Feb 02, 2023
+
+- See git log
+
 ## Feb 01, 2023
 
 - Embedded NVM
