@@ -33,7 +33,7 @@ typedef enum {
   DOT_HIDDEN_2 = 0x00,
 } dot_position_t;
 
-static dot_position_t dot_value[5] = {DOT_NO_DOT, DOT_0, DOT_1, DOT_2, DOT_3, DOT_HIDDEN_2};
+static dot_position_t dot_value[6] = {DOT_NO_DOT, DOT_0, DOT_1, DOT_2, DOT_3, DOT_HIDDEN_2};
 
 typedef struct sdhw {
   uint8_t on_addr;
@@ -114,7 +114,7 @@ void display_init(void) {
   }
 }
 
-static void render_to_display(sdhw_t* sdhw, sdigit_t digit, uint8_t pos,
+static void render_to_display(sdhw_t* sdhw, enum sd_digit digit, uint8_t pos,
                               uint8_t* buffer) {
   for (uint8_t i = 0; i < 7; ++i) {
     if (segment_digit[digit] & (1 << (7 - i))) {
