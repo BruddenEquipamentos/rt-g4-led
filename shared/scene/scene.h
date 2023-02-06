@@ -8,14 +8,14 @@
 typedef struct scene {
   treadmill_scene_t id;
   char name[16];
-  void (*keypress)(treadmill_t *treadmill, const key_t key);
+  void (*keypress)(treadmill_t *treadmill, const kbd_key_t key);
   void (*update)(treadmill_t *treadmill);
 } scene_t;
 
 /* Tempalte
 #include "scene.h"
 
-static void keypress(treadmill_t *treadmill, const key_t key) {
+static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) { default:; }
 }
 

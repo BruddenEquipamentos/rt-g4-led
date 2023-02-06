@@ -1,7 +1,7 @@
 #include "../treadmill_programs_update.h"
 #include "scene.h"
 
-static void keypress(treadmill_t *treadmill, const key_t key) {
+static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_STOP:
       treadmill_pause_training(treadmill);

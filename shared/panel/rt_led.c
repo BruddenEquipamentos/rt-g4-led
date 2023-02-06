@@ -27,7 +27,7 @@ static const scene_t *rt_led_current_scene(treadmill_scene_t treadmill_scene) {
   return NULL;
 }
 
-void rt_led_key_press(treadmill_t *treadmill, const key_t key) {
+void rt_led_key_press(treadmill_t *treadmill, const kbd_key_t key) {
   const scene_t *scene = rt_led_current_scene(treadmill->scene);
   if (scene == NULL) return;
 

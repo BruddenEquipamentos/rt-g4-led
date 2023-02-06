@@ -1,6 +1,6 @@
 #include "scene.h"
 
-static void keypress(treadmill_t *treadmill, const key_t key) {
+static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_START:
       treadmill_resume_training(treadmill);

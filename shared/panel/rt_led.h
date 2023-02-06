@@ -58,7 +58,7 @@ typedef enum rt_led_config_test_params {
   RT_LED_CONFIG_TEST_TOTALS,
 } rt_led_config_test_params;
 
-void rt_led_key_press(treadmill_t *treadmill, const key_t key);
+void rt_led_key_press(treadmill_t *treadmill, const kbd_key_t key);
 void rt_led_update(treadmill_t *treadmill);
 
 void rt_led_render(treadmill_t *treadmill);

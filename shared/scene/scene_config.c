@@ -8,7 +8,7 @@ static void next_config_option(treadmill_t *treadmill) {
 }
 
 // exit + set scene here?
-static void change_config_model(treadmill_t *treadmill, const key_t key) {
+static void change_config_model(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_SPEED_INCREMENT: {
       if (treadmill->config.model + 1 >= RT_LED_MODEL_TOTALS) {
@@ -30,7 +30,7 @@ static void change_config_model(treadmill_t *treadmill, const key_t key) {
   }
 }
 
-static void change_config_weight(treadmill_t *treadmill, const key_t key) {
+static void change_config_weight(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_SPEED_INCREMENT: {
       if (treadmill->config.weight + 1 <= RT_LED_WEIGHT_MAX)
@@ -50,7 +50,7 @@ static void change_config_weight(treadmill_t *treadmill, const key_t key) {
   }
 }
 
-static void change_config_lub(treadmill_t *treadmill, const key_t key) {
+static void change_config_lub(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_SPEED_INCREMENT: {
       if (treadmill->config.lub_distance + RT_LED_LUB_STEP_DISTANCE <=
@@ -73,7 +73,7 @@ static void change_config_lub(treadmill_t *treadmill, const key_t key) {
   }
 }
 
-static void change_config_modbus(treadmill_t *treadmill, const key_t key) {
+static void change_config_modbus(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_SPEED_INCREMENT:
     case KEY_SPEED_DECREMENT: {
@@ -87,7 +87,7 @@ static void change_config_modbus(treadmill_t *treadmill, const key_t key) {
   }
 }
 
-static void change_config_test(treadmill_t *treadmill, const key_t key) {
+static void change_config_test(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_SPEED_INCREMENT:
     case KEY_SPEED_DECREMENT: {
@@ -101,7 +101,7 @@ static void change_config_test(treadmill_t *treadmill, const key_t key) {
   }
 }
 
-static void keypress(treadmill_t *treadmill, const key_t key) {
+static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_START: {
       next_config_option(treadmill);

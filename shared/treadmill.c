@@ -61,7 +61,7 @@ uint32_t treadmill_calculate_calories(treadmill_t *treadmill) {
   return (uint32_t)((fKcal / 60) * 1000);
 }
 
-void treadmill_key_press(treadmill_t *treadmill, const key_t key) {
+void treadmill_key_press(treadmill_t *treadmill, const kbd_key_t key) {
   rt_led_key_press(treadmill, key);
 }
 

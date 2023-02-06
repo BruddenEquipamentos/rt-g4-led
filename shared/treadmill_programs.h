@@ -108,7 +108,7 @@ struct p_super_cardio {
 
 typedef struct key_press_program_callback {
   program_id_t id;
-  void (*key_press)(treadmill_t *treadmill, const key_t key);
+  void (*key_press)(treadmill_t *treadmill, const kbd_key_t key);
 } key_press_program_callback_t;
 
 extern key_press_program_callback_t key_press_program_callback[PROGRAM_TOTALS];

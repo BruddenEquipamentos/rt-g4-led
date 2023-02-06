@@ -11,7 +11,7 @@ char *programs_name[] = {
     "PROGRAM_FAT_BURN", "PROGRAM_SUPER_CARDIO",
 };
 
-static void program_time_key_press(treadmill_t *treadmill, const key_t key) {
+static void program_time_key_press(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_START:
       treadmill_start_program(treadmill);
@@ -36,7 +36,7 @@ static void program_time_key_press(treadmill_t *treadmill, const key_t key) {
 }
 
 static void program_distance_key_press(treadmill_t *treadmill,
-                                       const key_t key) {
+                                       const kbd_key_t key) {
   switch (key) {
     case KEY_START:
       treadmill_start_program(treadmill);
@@ -64,7 +64,7 @@ static void program_distance_key_press(treadmill_t *treadmill,
 }
 
 static void program_calories_key_press(treadmill_t *treadmill,
-                                       const key_t key) {
+                                       const kbd_key_t key) {
   switch (key) {
     case KEY_START:
       treadmill_start_program(treadmill);
@@ -90,7 +90,7 @@ static void program_calories_key_press(treadmill_t *treadmill,
   }
 }
 
-static void program_hiit_key_press(treadmill_t *treadmill, const key_t key) {
+static void program_hiit_key_press(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_START:
       switch (treadmill->program.param_index) {
@@ -161,7 +161,7 @@ static void program_hiit_key_press(treadmill_t *treadmill, const key_t key) {
   }
 }
 
-void program_walk_30min_key_press(treadmill_t *treadmill, const key_t key) {
+void program_walk_30min_key_press(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_START:
       treadmill_start_program(treadmill);
@@ -195,7 +195,7 @@ void program_walk_30min_key_press(treadmill_t *treadmill, const key_t key) {
 }
 
 static void program_fat_burn_key_press(treadmill_t *treadmill,
-                                       const key_t key) {
+                                       const kbd_key_t key) {
   switch (key) {
     case KEY_START:
       switch (treadmill->program.param_index) {
@@ -252,7 +252,7 @@ static void program_fat_burn_key_press(treadmill_t *treadmill,
 }
 
 static void program_super_cardio_key_press(treadmill_t *treadmill,
-                                           const key_t key) {
+                                           const kbd_key_t key) {
   switch (key) {
     case KEY_START:
       switch (treadmill->program.param_index) {

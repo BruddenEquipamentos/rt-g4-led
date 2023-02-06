@@ -7,8 +7,6 @@
 #include "treadmill_key.h"
 #include "treadmill_programs.h"
 
-// distance in meters
-
 #define NVM_U8_MODEL 0x0001
 #define NVM_U32_TOTAL_DISTANCE_METERS 0x0002
 #define NVM_U32_TOTAL_TIME_SECONDS 0x0003
@@ -109,6 +107,10 @@ typedef struct treadmill {
     uint8_t print_states;
   } debug;
 
+  struct ble {
+    int connected;
+  } ble;
+
   void (*beep)(beep_t beep);
   uint32_t (*get_time_ms)(void);
   uint32_t ms;
@@ -117,7 +119,7 @@ typedef struct treadmill {
 
 void treadmill_setup(treadmill_t *treadmill);
 
-void treadmill_key_press(treadmill_t *treadmill, const key_t key);
+void treadmill_key_press(treadmill_t *treadmill, const kbd_key_t key);
 void treadmill_update(treadmill_t *treadmill);
 
 void treadmill_update(treadmill_t *treadmill);

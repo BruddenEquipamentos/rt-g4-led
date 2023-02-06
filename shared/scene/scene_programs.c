@@ -1,7 +1,7 @@
 #include "../treadmill_programs.h"
 #include "scene.h"
 
-static void keypress(treadmill_t *treadmill, const key_t key) {
+static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
   if (key == KEY_STOP) treadmill_set_scene(treadmill, SCENE_IDLE);
 
   // delegate

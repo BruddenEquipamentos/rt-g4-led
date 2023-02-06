@@ -21,7 +21,7 @@ typedef enum key {
   KEY_SAC = 0x8000,
   KEY_CONFIG = 0x10000,
   KEY_LUB = 0x20000
-} key_t;
+} kbd_key_t ;
 
 
 #endif
