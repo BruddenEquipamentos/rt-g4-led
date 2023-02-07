@@ -45,8 +45,10 @@ void treadmill_finish_program(treadmill_t *treadmill) {
 static void treadmill_save_training(treadmill_t *treadmill) {
   treadmill->total.distance_in_meters += treadmill->training.meters;
   treadmill->total.time_in_seconds += treadmill->training.seconds;
-  nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_DISTANCE_METERS, treadmill->total.distance_in_meters);
-  nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_TIME_SECONDS, treadmill->total.time_in_seconds);
+  nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_DISTANCE_METERS,
+                              treadmill->total.distance_in_meters);
+  nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_TIME_SECONDS,
+                              treadmill->total.time_in_seconds);
 }
 
 void treadmill_close_report(treadmill_t *treadmill) {
@@ -137,4 +139,3 @@ void treadmill_exit_config(treadmill_t *treadmill) {
   treadmill_save_config(treadmill);
   treadmill_set_scene(treadmill, SCENE_IDLE);
 }
-
