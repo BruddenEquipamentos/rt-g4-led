@@ -13,6 +13,9 @@ typedef struct NVM {
   int (*NVM_WriteVariable16bits)(uint16_t VirtAddress, uint16_t Data);
   int (*NVM_ReadVariable8bits)(uint16_t VirtAddress, uint8_t *pData);
   int (*NVM_WriteVariable8bits)(uint16_t VirtAddress, uint8_t Data);
+  int (*NVM_ReadString)(uint16_t VirtAddress, uint8_t *pData, uint32_t length);
+  int (*NVM_WriteString)(uint16_t VirtAddress, char *data, uint32_t length,
+                         uint32_t max_length);
 } NVM_t;
 
 extern NVM_t nvm;
