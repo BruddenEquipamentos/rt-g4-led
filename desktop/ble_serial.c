@@ -43,9 +43,10 @@ static int set_interface_attribs(int speed) {
 }
 
 int ble_serial_write(const uint8_t *data, int length) {
-  printf("out: ");
-  for (int i = 0; i < length; ++i) printf("%02X", data[i]);
-  printf("\n");
+  fprintf(stdout, "Out: ");
+  int i = 0;
+  for (i = 0; i < length; ++i) fprintf(stdout, "%c", data[i]);
+  if (i > 0 && data[i - 1] != '\n') fprintf(stdout, "\n");
 
   int written = write(fd, data, length);
   if (written != length) {
@@ -69,6 +70,5 @@ int ble_serial_open() {
   if (fd >= 0) {
     set_interface_attribs(B115200);
   }
-
   return fd >= 0;
 }

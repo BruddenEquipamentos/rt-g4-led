@@ -4,10 +4,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "../shared/ble/ble.h"
 #include "../shared/dm/dm.h"
 #include "../shared/nvm/nvm.h"
 #include "../shared/panel/rt_led.h"
 #include "../shared/treadmill.h"
+#include "ble_serial.h"
 #include "input.h"
 #include "nvm_desktop.h"
 
@@ -150,6 +152,8 @@ static void display_update(treadmill_t *treadmill) {
   }
 }
 
+char display = 0;
+
 static void *thread_main(void *arg) {
   treadmill_t *treadmill = (treadmill_t *)arg;
   treadmill->ms = get_time_ms();
@@ -158,8 +162,10 @@ static void *thread_main(void *arg) {
       treadmill->ms = treadmill->ms + 100;
       treadmill_update(treadmill);
     }
+
+    ble_process(&treadmill->ble);
     rt_led_render(treadmill);
-    display_update(treadmill);
+    if (display) display_update(treadmill);
     usleep(1000 * 100);
   }
   return NULL;
@@ -169,6 +175,10 @@ int main(int argc, char *argv[]) {
   (void)argc;
   (void)argv;
 
+  if (argc > 1) {
+    display = 0;
+  }
+
   NVM_Setup();
   nvm.NVM_Init();
 
@@ -176,9 +186,24 @@ int main(int argc, char *argv[]) {
   pthread_t main_thread;
 
   treadmill_t treadmill;
+
+  ble_serial_open();
+
+  // //test
+  // treadmill_save_ns(&treadmill, NVM_NSU_START_ADDRESS,
+  // "818790500000007067701"); treadmill_save_ns(&treadmill,
+  // NVM_NSP_START_ADDRESS, "818790500000007067702");
+  // treadmill_save_ns(&treadmill, NVM_NSI_START_ADDRESS,
+  // "818790500000007067703");
+
   treadmill_setup(&treadmill);
   _dm_update = render_dot_matrix;
   treadmill.get_time_ms = (uint32_t(*)(void))get_time_ms;
+
+  ble_reset(&treadmill.ble);
+  treadmill.ble.send_data = ble_serial_write;
+  treadmill.ble.recv_data = ble_serial_read;
+  treadmill.ble.get_tick = get_time_ms;
 
   pthread_create(&input_thread, NULL, thread_input, &treadmill);
   pthread_create(&main_thread, NULL, thread_main, &treadmill);
