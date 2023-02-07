@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include "debug.h"
 #include "nvm/nvm.h"
 #include "panel/rt_led.h"
 
@@ -110,7 +111,23 @@ void treadmill_load_config(treadmill_t *treadmill) {
   } else {
     treadmill->config.age = DEFAULT_AGE;
   }
-  // DEFAULT AGE
+
+  char ns[22];
+  if (nvm.NVM_ReadString(NVM_NSU_START_ADDRESS, (uint8_t *)ns, 22)) {
+    strncpy(treadmill->config.nsu, ns, 22);
+  }
+
+  if (nvm.NVM_ReadString(NVM_NSP_START_ADDRESS, (uint8_t *)ns, 22)) {
+    strncpy(treadmill->config.nsp, ns, 22);
+  }
+
+  if (nvm.NVM_ReadString(NVM_NSI_START_ADDRESS, (uint8_t *)ns, 22)) {
+    strncpy(treadmill->config.nsi, ns, 22);
+  }
+
+  DPRINT("nsu:%s\n", treadmill->config.nsu);
+  DPRINT("nsp:%s\n", treadmill->config.nsp);
+  DPRINT("nsi:%s\n", treadmill->config.nsi);
 }
 
 void treadmill_save_config(treadmill_t *treadmill) {

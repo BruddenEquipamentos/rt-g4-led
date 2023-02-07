@@ -91,6 +91,33 @@ static int NVM_ReadVariable8bits(uint16_t VirtAddress, uint8_t *pData) {
   return 0;
 }
 
+// TODO: Optimize by read/write 32 bits (4 chars per VirtAddress)
+static int NVM_ReadString(uint16_t VirtAddress, uint8_t *pData,
+                          uint32_t length) {
+  uint8_t data;
+  for (uint32_t i = 0; i < length; ++i) {
+    if (nvm.NVM_ReadVariable8bits(VirtAddress + i, &data)) {
+      *pData++ = data;
+    } else {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+// TODO: Optimize by read/write 32 bits (4 chars per VirtAddress)
+static int NVM_WriteString(uint16_t VirtAddress, char *data, uint32_t length,
+                           uint32_t max_length) {
+  if (length > max_length) return 0;
+  for (uint32_t i = 0; i < max_length; ++i) {
+    if (i >= length)
+      nvm.NVM_WriteVariable8bits(VirtAddress + i, 0);
+    else
+      nvm.NVM_WriteVariable8bits(VirtAddress + i, (uint8_t)data[i]);
+  }
+  return 1;
+}
+
 void NVM_Setup(void) {
   nvm.NVM_Format = NVM_Format;
   nvm.NVM_Init = NVM_Init;
@@ -101,4 +128,6 @@ void NVM_Setup(void) {
   nvm.NVM_WriteVariable16bits = NVM_WriteVariable16bits;
   nvm.NVM_ReadVariable8bits = NVM_ReadVariable8bits;
   nvm.NVM_WriteVariable8bits = NVM_WriteVariable8bits;
+  nvm.NVM_ReadString = NVM_ReadString;
+  nvm.NVM_WriteString = NVM_WriteString;
 }

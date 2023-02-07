@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "beep.h"
+#include "ble/ble.h"
 #include "treadmill_key.h"
 #include "treadmill_programs.h"
 
@@ -13,6 +14,12 @@
 #define NVM_U8_WEIGHT 0x0004
 #define NVM_U32_LUB_DISTANCE 0x0005
 #define NVM_U8_AGE 0x0006
+
+#define NVM_NS_MAX_LENGTH (22)
+#define NVM_NSU_START_ADDRESS (100)
+#define NVM_NSP_START_ADDRESS (NVM_NSU_START_ADDRESS + NVM_NS_MAX_LENGTH)
+#define NVM_NSI_START_ADDRESS (NVM_NSP_START_ADDRESS + NVM_NS_MAX_LENGTH)
+#define NVM_NS_END_ADDRESS (NVM_NSI_START_ADDRESS + NVM_NS_MAX_LENGTH)
 
 #define START_TRAINING_COUNTDOWN_VALUE (3)
 #define LUB_NOTIFICATION_SCENE_TIME (5000)
@@ -87,6 +94,10 @@ typedef struct treadmill {
     int lub_distance;
     int modbus;
     int test;
+
+    char nsu[22];
+    char nsp[22];  // legado
+    char nsi[22];  // legado
   } config;
 
   struct total {
@@ -107,9 +118,7 @@ typedef struct treadmill {
     uint8_t print_states;
   } debug;
 
-  struct ble {
-    int connected;
-  } ble;
+  ble_t ble;
 
   void (*beep)(beep_t beep);
   uint32_t (*get_time_ms)(void);
