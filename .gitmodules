@@ -1,0 +1,3 @@
+[submodule "shared/ble/ble_protocol"]
+	path = shared/ble/ble_protocol
+	url = https://github.com/BruddenEquipamentos/ble_protocol.git

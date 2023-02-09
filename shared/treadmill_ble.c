@@ -1,98 +1,86 @@
 #include "treadmill_ble.h"
-#include <string.h>
 
-static void treadmill_ble_set_connected(treadmill_t *treadmill) {
-  treadmill->ble.connected = 1;
-}
+#include "./ble/ble.h"
+#include "./ble/ble_protocol/ble_fmcp.h"
+#include "./ble/ble_protocol/ble_ftms_treadmill.h"
+#include "./ble/ble_protocol/ble_protocol_command.h"
+#include "./ble/ble_protocol/ble_protocol_helper.h"
 
-static void treadmill_ble_set_disconnected(treadmill_t *treadmill) {
-  treadmill->ble.connected = 0;
-}
+void treadmill_ble_process_init(treadmill_t *treadmill) {
+  ble_t *ble = &treadmill->ble;
+  switch (ble->init_state) {
+    case BLE_INIT_STATE_INIT: {
+      char data[32];
+      uint8_t length;
+      ble_clear_commands();
 
-static inline void treadmill_ble_push_byte(treadmill_t *treadmill,
-                                           const uint8_t byte) {
-  #define BUFFER_SIZE (256)
-  static uint8_t buffer[BUFFER_SIZE];
-  static int index;
+      ble_protocol_command_ftms_data((uint8_t *)data, &length, 32,
+                                     FTMS_TREADMILL_DATA_UUID);
+      ble_post_command(data, "\x06", 1000);
 
-  switch (byte) {
-    case 0x0f:
-      treadmill_ble_set_connected(treadmill);
+      ftms_range_command(
+          (uint8_t *)data, &length, 32, BP_FTMS_SUPPORTED_SPEED_RANGE,
+          treadmill->config.speed.min, treadmill->config.speed.max,
+          treadmill->config.speed.step);
+      ble_post_command(data, "\x06", 1000);
+
+      ftms_range_command(
+          (uint8_t *)data, &length, 32, BP_FTMS_SUPPORTED_INCLINATION_RANGE,
+          treadmill->config.incline.min, treadmill->config.incline.max,
+          treadmill->config.incline.step);
+      ble_post_command(data, "\x06", 1000);
+
+      ble_post_command("\x02SID,7\n", "AOK", 1000);
+      ble_post_command("\x02SDN,MovCT\n", "AOK", 1000);
+      ble->init_state = BLE_INIT_STATE_PROCESS;
       break;
-    case 0x19:
-      treadmill_ble_set_disconnected(treadmill);
-      break;
-    case 0x01:
-      index = 0;
-      break;
-    case 0x04:
-      // handle as ble serial
-      break;
-    case 0x02:
-      index = 0;
-      memset(buffer, 0x00, BUFFER_SIZE);
-      break;
-    case 0x03:
-    case 0x0A:
-      // todo: archive responde data
-
-      /*
-      elliptical->ble.command.response.length = (rxindex > 32) ? 32 : rxindex;
-      memcpy(elliptical->ble.command.response.data, rxbuffer,
-             elliptical->ble.command.response.length);
-      */
-
-      index = 0;
-
-      // todo: handle response data
-      /*
-      if (strncmp((char *)rxbuffer, "AOK", rxindex) == 0) {
-        elliptical->ble.command.response.code = BLE_RESPONSE_ACK;
-      } else if (strncmp((char *)rxbuffer, "ERR", rxindex)) {
-        elliptical->ble.command.response.code = BLE_RESPONSE_NAK;
-      } else {
-        elliptical->ble.command.response.code = BLE_RESPONSE_DATA;
+    }
+    case BLE_INIT_STATE_PROCESS: {
+      ble_process_status_t status = ble_process_commands(ble);
+      if (status == BLE_PROCESS_STATUS_ERROR) {
+        ble->init_state = BLE_INIT_STATE_INIT;
+      } else if (status == BLE_PROCESS_STATUS_IDLE) {
+        ble->init_state = BLE_INIT_STATE_READY;
       }
-      */
       break;
-
-    case 0x06:
-      // todo: register response ACK
-
-      // elliptical->ble.command.response.code = BLE_RESPONSE_ACK;
+    }
+    case BLE_INIT_STATE_READY: {
+      ble->state = BLE_STATE_READY;
       break;
-
-    case 0x15:
-      // todo: register response NAK
-
-      // elliptical->ble.command.response.code = BLE_RESPONSE_NAK;
-      break;
-
-    case 0xf0:
-    case 0xf1:
-      index = 0;
-      buffer[index++] = byte;
-      break;
-
-    case 0xf5:
-    case 0xf6:
-      buffer[index] = '\0';
-      // todo: process message routine
-      // xe_ble_process_message(elliptical, rxbuffer, rxindex);
-      index = 0;
-      break;
-
-    default:
-      if (index >= BUFFER_SIZE) index = 0;
-      buffer[index++] = byte;
-      ;
+    }
   }
 }
 
-int treadmill_ble_input_data(treadmill_t *treadmill, const char *data,
-                             const uint32_t length) {
-  for (uint32_t i = 0; i < length; ++i) {
-    treadmill_ble_push_byte(treadmill, data[i]);
+void treadmill_ble_process(treadmill_t *treadmill) {
+  ble_t *ble = &treadmill->ble;
+
+#define RX_MAX_LENGTH (256)
+  static char received[RX_MAX_LENGTH] = {0};
+
+  while (1) {
+    int length = ble->recv_data(
+        (uint8_t *)received, RX_MAX_LENGTH);  // we assume that recv_data will
+                                              // return on parse a command
+    if (length <= 0) break;
+    // handle reponse here
+    ble_process_received(ble, received, length);
   }
-  return 1;
+
+  switch (ble->state) {
+    case BLE_STATE_INIT: {
+      treadmill_ble_process_init(treadmill);
+      break;
+    }
+    case BLE_STATE_READY: {
+      if (ble_process_commands(ble) == BLE_PROCESS_STATUS_ERROR) {
+        ble->state = BLE_STATE_ERROR;
+      }
+      break;
+    }
+    case BLE_STATE_ERROR: {
+      ble->init_state = BLE_INIT_STATE_INIT;
+      ble->state = BLE_STATE_INIT;
+      break;
+    }
+  }
 }

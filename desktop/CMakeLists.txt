@@ -4,6 +4,8 @@ project(desktop VERSION 1.0)
 # include_directories(../shared/nvm/ST/EEPROM_Emul/Core)
 
 file(GLOB source_files
+          "../shared/ble/ble_protocol/*.h"
+          "../shared/ble/ble_protocol/*.c"
           "../shared/ble/*.h"
           "../shared/ble/*.c"
           "../shared/modbus/*.h"

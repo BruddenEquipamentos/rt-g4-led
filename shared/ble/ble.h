@@ -15,6 +15,12 @@ typedef enum ble_init_state {
   BLE_INIT_STATE_READY
 } ble_init_state_t;
 
+typedef enum ble_process_status {
+  BLE_PROCESS_STATUS_ERROR = 0,
+  BLE_PROCESS_STATUS_OK,
+  BLE_PROCESS_STATUS_IDLE
+} ble_process_status_t;
+
 typedef int (*send_data_cb)(const uint8_t *data, int length);
 typedef int (*recv_data_cb)(uint8_t *data, int max_length);
 
@@ -34,6 +40,11 @@ typedef struct ble {
 // extern int (*ble_read_data)(char *data, const int max_length) = NULL;
 
 void ble_reset(ble_t *ble);
-void ble_process(ble_t *ble);
+void ble_clear_commands(void);
+int ble_post_command(const char *data, const char *response,
+                     const uint32_t timeout_tick);
+
+int ble_process_received(ble_t *ble, char *data, int length);
+int ble_process_commands(ble_t *ble);
 
 #endif

@@ -3,6 +3,6 @@
 
 #include "treadmill.h"
 
-int treadmill_ble_input_data(treadmill_t *treadmill, const char *data, const uint32_t length);
+void treadmill_ble_process(treadmill_t *treadmill);
 
 #endif
