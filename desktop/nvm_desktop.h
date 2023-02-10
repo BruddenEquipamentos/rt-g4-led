@@ -4,6 +4,4 @@
 
 void NVM_Setup(void);
 
-extern NVM_t nvm;
-
 #endif
