@@ -3,7 +3,7 @@
 #include "eeprom_emul_types.h"
 // eeprom emulator
 
-NVM_t nvm;
+//NVM_t nvm;
 
 static int NVM_Format(void) {
   return 1;

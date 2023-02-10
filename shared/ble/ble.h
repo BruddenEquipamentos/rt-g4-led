@@ -34,6 +34,21 @@ typedef struct ble {
   recv_data_cb recv_data;
   uint32_t (*get_tick)(void);
 
+  uint8_t ftms_subscribed;
+  uint8_t ftms_cp_allowed;
+
+  struct connection {
+    uint16_t mtu;
+    uint16_t interval;
+    uint16_t latency;
+    uint16_t timeout;
+  } connection;
+
+  struct heartrate {
+    uint8_t connecting;
+    uint8_t bpm;
+  } heartrate;
+
 } ble_t;
 
 // extern int (*ble_send_data)(char *data, int length) = NULL;

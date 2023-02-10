@@ -14,6 +14,9 @@
 #include "input.h"
 #include "nvm_desktop.h"
 
+// TEMP
+treadmill_t *pTreadmill = NULL;
+
 static void sigint(int i) {
   (void)i;
   input_restore();
@@ -187,6 +190,7 @@ int main(int argc, char *argv[]) {
   pthread_t main_thread;
 
   treadmill_t treadmill;
+  pTreadmill = &treadmill;
 
   ble_serial_open();
 

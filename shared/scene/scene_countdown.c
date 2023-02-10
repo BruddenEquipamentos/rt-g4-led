@@ -14,15 +14,15 @@ static void update(treadmill_t *treadmill) {
       treadmill->countdown.value >= START_TRAINING_COUNTDOWN_VALUE) {
     treadmill->countdown.value = START_TRAINING_COUNTDOWN_VALUE;
     treadmill->countdown.ms = treadmill->ms;
-    treadmill->beep(BEEP_COUNTDOWN_COUNT);
+    treadmill->hw.beep(BEEP_COUNTDOWN_COUNT);
   } else if (treadmill->countdown.value > 0) {
     if ((treadmill->ms - treadmill->countdown.ms) >= 1000) {
       treadmill->countdown.ms = treadmill->ms;
       treadmill->countdown.value--;
-      if (treadmill->countdown.value > 0) treadmill->beep(BEEP_COUNTDOWN_COUNT);
+      if (treadmill->countdown.value > 0) treadmill->hw.beep(BEEP_COUNTDOWN_COUNT);
     }
   } else {
-    treadmill->beep(BEEP_COUNTDOWN_END);
+    treadmill->hw.beep(BEEP_COUNTDOWN_END);
     treadmill_start_training(treadmill);
   }
 }

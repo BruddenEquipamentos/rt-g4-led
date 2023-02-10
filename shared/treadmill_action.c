@@ -76,17 +76,19 @@ void treadmill_speed_decrement(treadmill_t *treadmill) {
   }
 }
 
-void treadmill_set_speed(treadmill_t *treadmill, const uint16_t speed) {
-  if (speed > treadmill->config.speed.max) return;
-  if (speed > 0 && speed < treadmill->config.speed.min) return;
+int treadmill_set_speed(treadmill_t *treadmill, const uint16_t speed) {
+  if (speed > treadmill->config.speed.max) return 0;
+  if (speed > 0 && speed < treadmill->config.speed.min) return 0;
   treadmill->training.speed = speed;
   treadmill->training.pace = treadmill_calculate_pace(treadmill);
+  return 1;
 }
 
-void treadmill_set_incline(treadmill_t *treadmill, const int16_t incline) {
-  if (incline > treadmill->config.incline.max) return;
-  if (incline < treadmill->config.incline.min) return;
+int treadmill_set_incline(treadmill_t *treadmill, const int16_t incline) {
+  if (incline > treadmill->config.incline.max) return 0;
+  if (incline < treadmill->config.incline.min) return 0;
   treadmill->training.incline = incline;
+  return 1;
 }
 
 void treadmill_incline_increment(treadmill_t *treadmill) {
@@ -138,4 +140,62 @@ void treadmill_config(treadmill_t *treadmill) {
 void treadmill_exit_config(treadmill_t *treadmill) {
   treadmill_save_config(treadmill);
   treadmill_set_scene(treadmill, SCENE_IDLE);
+}
+
+static int valid_ns(const char *nsu, const int length) { return 1; }
+
+int treadmill_save_nsu(treadmill_t *treadmill, const char *nsu,
+                       const int length) {
+  if (!valid_ns(nsu, length)) return 0;
+  strcpy(treadmill->config.nsu, nsu);
+  nvm.NVM_WriteString(NVM_NSU_START_ADDRESS, nsu, length, NVM_NS_MAX_LENGTH);
+  return 1;
+}
+
+int treadmill_save_nsp(treadmill_t *treadmill, const char *nsp,
+                       const int length) {
+  if (!valid_ns(nsp, length)) return 0;
+  strcpy(treadmill->config.nsp, nsp);
+  nvm.NVM_WriteString(NVM_NSP_START_ADDRESS, nsp, length, NVM_NS_MAX_LENGTH);
+  return 1;
+}
+
+int treadmill_save_nsi(treadmill_t *treadmill, const char *nsi,
+                       const int length) {
+  if (!valid_ns(nsi, length)) return 0;
+  strcpy(treadmill->config.nsp, nsi);
+  nvm.NVM_WriteString(NVM_NSI_START_ADDRESS, nsi, length, NVM_NS_MAX_LENGTH);
+  return 1;
+}
+
+int treadmill_save_total_distance(treadmill_t *treadmill,
+                                  uint32_t total_distance_in_meters) {
+  nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_DISTANCE_METERS,
+                              total_distance_in_meters);
+  return 1;
+}
+
+int treadmill_save_total_time(treadmill_t *treadmill,
+                              uint32_t total_time_in_seconds) {
+  nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_TIME_SECONDS,
+                              total_time_in_seconds);
+  return 1;
+}
+
+int treadmill_start_or_resume(treadmill_t *treadmill) {
+  // todo: implementation
+
+  return 1;
+}
+
+int treadmill_stop_procedure(treadmill_t *treadmill) {
+  // todo: implementation
+
+  return 1;
+}
+
+int treadmill_pause_procedure(treadmill_t *treadmill) {
+  // todo: implementation
+
+  return 1;
 }

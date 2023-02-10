@@ -208,7 +208,7 @@ int main(void)
 
   treadmill_setup(&treadmill);
   treadmill.get_time_ms = HAL_GetTick;
-  treadmill.beep = beep;
+  treadmill.hw.beep = beep;
 
   display_init();
 

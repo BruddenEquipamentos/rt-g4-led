@@ -119,9 +119,13 @@ typedef struct treadmill {
     uint8_t print_states;
   } debug;
 
+  struct hw {
+    void (*beep)(beep_t beep);
+    void (*update_rtc)(const uint32_t ms);
+  } hw;
+
   ble_t ble;
 
-  void (*beep)(beep_t beep);
   uint32_t (*get_time_ms)(void);
   uint32_t ms;
 

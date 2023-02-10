@@ -13,7 +13,6 @@ void treadmill_ble_process_init(treadmill_t *treadmill) {
       char data[32];
       uint8_t length;
       ble_clear_commands();
-
       ble_protocol_command_ftms_data((uint8_t *)data, &length, 32,
                                      FTMS_TREADMILL_DATA_UUID);
       ble_post_command(data, "\x06", 1000);

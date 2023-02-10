@@ -1,6 +1,9 @@
 {
   "files.associations": {
     "digits.h": "c",
-    "sd.h": "c"
+    "sd.h": "c",
+    "ble_protocol_command.h": "c",
+    "treadmill_programs.h": "c",
+    "ble_protocol_helper.h": "c"
   }
 }

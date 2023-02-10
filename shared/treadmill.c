@@ -14,10 +14,12 @@ char *scene_name[SCENE_TOTALS] = {
 };
 
 __attribute__((weak)) void beep(beep_t beep) { (void)beep; }
+__attribute__((weak)) void update_rtc(const uint32_t ms) { (void)ms; }
 
 void treadmill_setup(treadmill_t *treadmill) {
   memset(treadmill, 0x00, sizeof(treadmill_t));
-  treadmill->beep = beep;
+  treadmill->hw.beep = beep;
+  treadmill->hw.update_rtc = update_rtc;
   treadmill->scene = SCENE_INIT;
   treadmill->scene_tick = 0;
 
