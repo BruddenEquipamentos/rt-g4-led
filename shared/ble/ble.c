@@ -90,7 +90,7 @@ static int ble_ftms_control_point(char *ptr) {
   switch (opcode) {
     case FMCP_REQUEST_CONTROL: {
       // todo: rule to allow control point control
-      pTreadmill->ble.ftms_cp_allowed = 1;
+      pTreadmill->hw.ble.ftms_cp_allowed = 1;
       break;
     }
     case FMCP_RESET: {
@@ -110,7 +110,7 @@ static int ble_ftms_control_point(char *ptr) {
       break;
     }
     case FMCP_SET_TARGET_START_OR_RESUME: {
-      if (pTreadmill->ble.ftms_cp_allowed) {
+      if (pTreadmill->hw.ble.ftms_cp_allowed) {
         if (!treadmill_start_or_resume(pTreadmill))
           result = FMCP_RESULT_CODE_OPERATION_FAILED;
       } else {
@@ -153,7 +153,7 @@ static void ble_protocol_process(uint8_t *ptr_data, int length) {
     case BP_SUBSCRIBE: {
       uint16_t uuid = next_u16_le(&ptr);
       if (uuid == FTMS_TREADMILL_DATA_UUID) {
-        pTreadmill->ble.ftms_subscribed = 1;
+        pTreadmill->hw.ble.ftms_subscribed = 1;
       }
       // movble_treadmill_subscribed(ptr);
       break;
@@ -161,7 +161,7 @@ static void ble_protocol_process(uint8_t *ptr_data, int length) {
     case BP_UNSUBSCRIBE: {
       uint16_t uuid = next_u16_le(&ptr);
       if (uuid == FTMS_TREADMILL_DATA_UUID) {
-        pTreadmill->ble.ftms_subscribed = 0;
+        pTreadmill->hw.ble.ftms_subscribed = 0;
       }
       break;
     }
@@ -170,23 +170,23 @@ static void ble_protocol_process(uint8_t *ptr_data, int length) {
       break;
     }
     case BP_LINKINFO: {
-      pTreadmill->ble.connection.interval = next_u16_le(&ptr);
-      pTreadmill->ble.connection.latency = next_u16_le(&ptr);
-      pTreadmill->ble.connection.timeout = next_u16_le(&ptr);
-      pTreadmill->ble.connection.mtu = next_u16_le(&ptr);
+      pTreadmill->hw.ble.connection.interval = next_u16_le(&ptr);
+      pTreadmill->hw.ble.connection.latency = next_u16_le(&ptr);
+      pTreadmill->hw.ble.connection.timeout = next_u16_le(&ptr);
+      pTreadmill->hw.ble.connection.mtu = next_u16_le(&ptr);
       break;
     }
     case BP_BLE_HEARTRATE_CONNECTING: {
-      pTreadmill->ble.heartrate.connecting = 1;
+      pTreadmill->hw.ble.heartrate.connecting = 1;
       break;
     }
     case BP_BLE_HEARTRATE: {
-      pTreadmill->ble.heartrate.connecting = 0;
-      pTreadmill->ble.heartrate.bpm = next_u8(&ptr);
+      pTreadmill->hw.ble.heartrate.connecting = 0;
+      pTreadmill->hw.ble.heartrate.bpm = next_u8(&ptr);
       break;
     }
     case BP_BLE_HEARTRATE_DISCONNECT: {
-      pTreadmill->ble.heartrate.connecting = 0;
+      pTreadmill->hw.ble.heartrate.connecting = 0;
       break;
     }
     default:;

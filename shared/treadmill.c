@@ -16,10 +16,24 @@ char *scene_name[SCENE_TOTALS] = {
 __attribute__((weak)) void beep(beep_t beep) { (void)beep; }
 __attribute__((weak)) void update_rtc(const uint32_t ms) { (void)ms; }
 
+__attribute__((weak)) int motor_send(const uint8_t *data, int length) {
+  (void)data;
+  (void)length;
+  return 1;
+}
+__attribute__((weak)) int motor_recv(uint8_t *data, int max_length) {
+  (void)data;
+  (void)max_length;
+  return 0;
+}
+
 void treadmill_setup(treadmill_t *treadmill) {
   memset(treadmill, 0x00, sizeof(treadmill_t));
   treadmill->hw.beep = beep;
   treadmill->hw.update_rtc = update_rtc;
+  treadmill->hw.motor.send = motor_send;
+  treadmill->hw.motor.recv = motor_recv;
+
   treadmill->scene = SCENE_INIT;
   treadmill->scene_tick = 0;
 

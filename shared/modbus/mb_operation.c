@@ -94,7 +94,7 @@ extern void vDrvDebugSendStr(const char *str);
 #define VDEBUG(str) vDrvDebugSendStr(str);
 
 enum mb_master_process mb_operation_process(mb_operation_t *op) {
-    enum mb_master_process status;
+    enum mb_master_process status = MB_MASTER_OK;
 
     if (!op) return MB_MASTER_NO_OP;
 

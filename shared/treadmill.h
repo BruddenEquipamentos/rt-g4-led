@@ -29,6 +29,19 @@
 #define DEFAULT_LUB_DISTANCE (1500)
 #define DEFAULT_AGE (30)
 
+typedef enum motor_communication_type {
+  MOTOR_COMMUNICATION_TYPE_FREQ = 0,
+  MOTOR_COMMUNICATION_TYPE_UART = 1,
+} motor_communication_type_t;
+
+typedef enum uart_protocol_state {
+  UART_PROTOCOL_INIT_STATE = 0,
+  UART_PROTOCOL_DETECTION_STATE,
+  UART_PROTOCOL_PROCESS_MODBUS_STATE,
+  UART_PROTOCOL_PROCESS_MOVEMENT_STATE,
+  UART_PROTOCOL_PROCESS_UNKNOWN,
+} uart_protocol_state_t;
+
 typedef enum treadmill_scene {
   SCENE_INIT = 0,
   SCENE_IDLE,
@@ -122,9 +135,18 @@ typedef struct treadmill {
   struct hw {
     void (*beep)(beep_t beep);
     void (*update_rtc)(const uint32_t ms);
+    motor_communication_type_t communication_type;
+    uart_protocol_state_t protocol_state;
+
+    ble_t ble;
+
+    struct motor {
+      int (*send)(const uint8_t *data, int length);
+      int (*recv)(uint8_t *data, int max_length);
+    } motor;
   } hw;
 
-  ble_t ble;
+
 
   uint32_t (*get_time_ms)(void);
   uint32_t ms;

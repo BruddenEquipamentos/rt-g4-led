@@ -10,9 +10,12 @@
 #include "../shared/panel/rt_led.h"
 #include "../shared/treadmill.h"
 #include "../shared/treadmill_ble.h"
+#include "../shared/treadmill_motor.h"
 #include "ble_serial.h"
 #include "input.h"
 #include "nvm_desktop.h"
+
+#include "motor_serial.h"
 
 // TEMP
 treadmill_t *pTreadmill = NULL;
@@ -167,9 +170,11 @@ static void *thread_main(void *arg) {
       treadmill_update(treadmill);
     }
     treadmill_ble_process(treadmill);
-    // ble_process(&treadmill->ble);
-    rt_led_render(treadmill);
+    treadmill_motor_process(treadmill);
+
+    rt_led_render(treadmill);  // memory update
     if (display) display_update(treadmill);
+
     usleep(1000 * 100);
   }
   return NULL;
@@ -193,6 +198,7 @@ int main(int argc, char *argv[]) {
   pTreadmill = &treadmill;
 
   ble_serial_open();
+  motor_serial_open();
 
   treadmill_setup(&treadmill);
 
@@ -200,10 +206,13 @@ int main(int argc, char *argv[]) {
 
   treadmill.get_time_ms = (uint32_t(*)(void))get_time_ms;
 
-  ble_reset(&treadmill.ble);
-  treadmill.ble.send_data = ble_serial_write;
-  treadmill.ble.recv_data = ble_serial_read;
-  treadmill.ble.get_tick = get_time_ms;
+  ble_reset(&treadmill.hw.ble);
+  treadmill.hw.ble.send_data = ble_serial_write;
+  treadmill.hw.ble.recv_data = ble_serial_read;
+  treadmill.hw.ble.get_tick = get_time_ms;
+
+  treadmill.hw.motor.send = motor_serial_write;
+  treadmill.hw.motor.recv = motor_serial_read;
 
   pthread_create(&input_thread, NULL, thread_input, &treadmill);
   pthread_create(&main_thread, NULL, thread_main, &treadmill);

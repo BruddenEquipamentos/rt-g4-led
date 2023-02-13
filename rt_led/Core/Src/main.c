@@ -900,7 +900,6 @@ void InverterCommTask(void const * argument)
 
     // Incline
 
-
     // Sac
     // -
 

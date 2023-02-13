@@ -7,7 +7,7 @@
 #include "./ble/ble_protocol/ble_protocol_helper.h"
 
 void treadmill_ble_process_init(treadmill_t *treadmill) {
-  ble_t *ble = &treadmill->ble;
+  ble_t *ble = &treadmill->hw.ble;
   switch (ble->init_state) {
     case BLE_INIT_STATE_INIT: {
       char data[32];
@@ -51,7 +51,7 @@ void treadmill_ble_process_init(treadmill_t *treadmill) {
 }
 
 void treadmill_ble_process(treadmill_t *treadmill) {
-  ble_t *ble = &treadmill->ble;
+  ble_t *ble = &treadmill->hw.ble;
 
 #define RX_MAX_LENGTH (256)
   static char received[RX_MAX_LENGTH] = {0};
