@@ -21,21 +21,28 @@ static int set_interface_attribs(int speed) {
   cfsetispeed(&tty, (speed_t)speed);
 
   tty.c_cflag |= (CLOCAL | CREAD);  // ignore modem controls
+
   tty.c_cflag &= ~CSIZE;
+
   tty.c_cflag |= CS8;      // 8-bit characters
+
+  tty.c_cflag &= ~CSTOPB;   // only need 1 stop bit
+
   tty.c_cflag |= PARENB;   // Parity
   tty.c_cflag &= ~PARODD;  // Even
 
-  tty.c_cflag &= ~CSTOPB;   // only need 1 stop bit
+  tty.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
+
+  tty.c_iflag |= INPCK;
+
   tty.c_cflag &= ~CRTSCTS;  // no hardware flowcontrol
 
-  tty.c_iflag &=
-      ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
-  tty.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
-  tty.c_oflag &= ~OPOST;
+  tty.c_iflag &= ~(IXON | IXOFF | IXANY); // no software flowcontrol
 
-  tty.c_cc[VMIN] = 1;
-  tty.c_cc[VTIME] = 1;
+  tty.c_oflag &= ~OPOST; // raw output
+
+  tty.c_cc[VMIN] = 0;
+  tty.c_cc[VTIME] = 0;
 
   if (tcsetattr(fd, TCSANOW, &tty) != 0) {
     printf("Error from tcsetattr: %s\n", strerror(errno));
@@ -46,11 +53,10 @@ static int set_interface_attribs(int speed) {
 }
 
 int motor_serial_write(const uint8_t *data, int length) {
-  fprintf(stdout, "Out: ");
-  int i = 0;
-  for (i = 0; i < length; ++i) fprintf(stdout, "%02X", data[i]);
-  if (i > 0 && data[i - 1] != '\n') fprintf(stdout, "\n");
-
+  // fprintf(stdout, "Out: ");
+  // int i = 0;
+  // for (i = 0; i < length; ++i) fprintf(stdout, "%02X", data[i]);
+  // if (i > 0 && data[i - 1] != '\n') fprintf(stdout, "\n");
   int written = write(fd, data, length);
   if (written != length) {
     printf("Error from write: %d, %d\n", length, errno);
@@ -62,12 +68,11 @@ int motor_serial_write(const uint8_t *data, int length) {
 
 int motor_serial_read(uint8_t *buffer, int max_length) {
   int length = read(fd, buffer, max_length);
-  fprintf(stdout, "In : ");
-  if (length != -1) {
-    int i = 0;
-    for (i = 0; i < length; ++i) fprintf(stdout, "%02X", buffer[i]);
-  }
-  if (length > 0) fprintf(stdout, "\n");
+  // fprintf(stdout, "In : ");
+  // if (length != -1) {
+  //   for (int i = 0; i < length; ++i) fprintf(stdout, "%02X", buffer[i]);
+  // }
+  // if (length > 0) fprintf(stdout, "\n");
   return length;
 }
 

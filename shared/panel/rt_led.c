@@ -63,6 +63,9 @@ void rt_led_load_model_params(treadmill_t *treadmill, rt_led_model_t model) {
       treadmill->config.speed.step = 10;
 
       treadmill->config.weight = 70;
+
+      // todo: check organization
+      treadmill->hw.communication_type = MOTOR_COMMUNICATION_TYPE_FREQ;
       break;
     }
     case RT_LED_MODEL_150_USART: {
@@ -75,6 +78,8 @@ void rt_led_load_model_params(treadmill_t *treadmill, rt_led_model_t model) {
       treadmill->config.speed.step = 10;
 
       treadmill->config.weight = 70;
+
+      treadmill->hw.communication_type = MOTOR_COMMUNICATION_TYPE_UART;
       break;
     }
     case RT_LED_MODEL_250_USART: {
@@ -87,6 +92,8 @@ void rt_led_load_model_params(treadmill_t *treadmill, rt_led_model_t model) {
       treadmill->config.speed.step = 10;
 
       treadmill->config.weight = 70;
+
+      treadmill->hw.communication_type = MOTOR_COMMUNICATION_TYPE_UART;
       break;
     }
     default:;

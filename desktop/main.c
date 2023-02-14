@@ -13,9 +13,8 @@
 #include "../shared/treadmill_motor.h"
 #include "ble_serial.h"
 #include "input.h"
-#include "nvm_desktop.h"
-
 #include "motor_serial.h"
+#include "nvm_desktop.h"
 
 // TEMP
 treadmill_t *pTreadmill = NULL;
@@ -106,6 +105,23 @@ void render_dot_matrix(const uint16_t buffer[5]) {
   }
 }
 
+static char *treadmill_motor_state_description(
+    uart_protocol_state_t protocol_state) {
+  switch (protocol_state) {
+    case UART_PROTOCOL_INIT_STATE:
+      return "PROTOCOL_INIT_STATE";
+    case UART_PROTOCOL_DETECTION_STATE:
+      return "PROTOCOL_DETECTION_STATE";
+    case UART_PROTOCOL_PROCESS_MODBUS_STATE:
+      return "PROTOCOL_PROCESS_MODBUS_STATE";
+    case UART_PROTOCOL_PROCESS_MOVEMENT_STATE:
+      return "PROTOCOL_PROCESS_MOVEMENT_STATE";
+    case UART_PROTOCOL_PROCESS_UNKNOWN:
+      return "PROTOCOL_PROCESS_UNKNOWN";
+  }
+  return "";
+}
+
 static void display_update(treadmill_t *treadmill) {
 #define SD_R(SD) SD.visible ? SD.text : ""
   printf("\033[H\033[J");
@@ -156,10 +172,15 @@ static void display_update(treadmill_t *treadmill) {
     fprintf(stdout, "Total Time: %u seconds\n",
             treadmill->total.time_in_seconds);
     fprintf(stdout, "\n");
+
+    fprintf(stdout, "\n");
+    fprintf(stdout, "Treadmill Motor State: %s\n",
+            treadmill_motor_state_description(treadmill->hw.protocol_state));
+    fprintf(stdout, "\n");
   }
 }
 
-char display = 0;
+char display = 1;
 
 static void *thread_main(void *arg) {
   treadmill_t *treadmill = (treadmill_t *)arg;
