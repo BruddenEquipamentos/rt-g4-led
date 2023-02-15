@@ -122,21 +122,52 @@ static char *treadmill_motor_state_description(
   return "";
 }
 
+static char *treadmill_ble_init_state_description(
+    ble_init_state_t ble_init_state) {
+  switch (ble_init_state) {
+    case BLE_INIT_STATE_INIT:
+      return "INIT_STATE_INIT";
+    case BLE_INIT_STATE_PROCESS:
+      return "INIT_STATE_PROCESS";
+    case BLE_INIT_STATE_READY:
+      return "INIT_STATE_READY";
+  }
+  return "";
+}
+
+static char *treadmill_ble_state_description(ble_state_t ble_state) {
+  switch (ble_state) {
+    case BLE_STATE_INIT:
+      return "STATE_INIT";
+    case BLE_STATE_READY:
+      return "STATE_READY";
+    case BLE_STATE_ERROR:
+      return "STATE_ERROR";
+  }
+  return "";
+}
+
 static void display_update(treadmill_t *treadmill) {
 #define SD_R(SD) SD.visible ? SD.text : ""
-  printf("\033[H\033[J");
-  printf("------------------------------------------------------------\n");
-  printf("%16s%16s%16s\n", "DISTANCE", "TIME", "SPEED");
-  printf("%16s%16s%16s\n\n", SD_R(sd_distance), SD_R(sd_time), SD_R(sd_speed));
-  printf("%16s%16s%16s\n", "CALORIES", "PROGRAM", "PACE");
-  printf("%16s%16s%16s\n\n", SD_R(sd_kcal), SD_R(sd_program), SD_R(sd_pace));
-  printf("%16s%16s%16s\n", "INCLINE", "", "BPM");
-  printf("%16s%16s%16s\n\n", SD_R(sd_incline), "", SD_R(sd_bpm));
-  printf("------------------------------------------------------------\n");
+  fprintf(stdout, "\033[H\033[J");
+
+  fprintf(stdout,
+          "------------------------------------------------------------\n");
+  fprintf(stdout, "%16s%16s%16s\n", "DISTANCE", "TIME", "SPEED");
+  fprintf(stdout, "%16s%16s%16s\n\n", SD_R(sd_distance), SD_R(sd_time),
+          SD_R(sd_speed));
+  fprintf(stdout, "%16s%16s%16s\n", "CALORIES", "PROGRAM", "PACE");
+  fprintf(stdout, "%16s%16s%16s\n\n", SD_R(sd_kcal), SD_R(sd_program),
+          SD_R(sd_pace));
+  fprintf(stdout, "%16s%16s%16s\n", "INCLINE", "", "BPM");
+  fprintf(stdout, "%16s%16s%16s\n\n", SD_R(sd_incline), "", SD_R(sd_bpm));
+  fprintf(stdout,
+          "------------------------------------------------------------\n");
 
   dm_update();
 
-  printf("------------------------------------------------------------\n");
+  fprintf(stdout,
+          "------------------------------------------------------------\n");
 
   if (treadmill->debug.print_states) {
     fprintf(stdout, "Treadmill Scene: %s\n", scene_name[treadmill->scene]);
@@ -157,13 +188,37 @@ static void display_update(treadmill_t *treadmill) {
     fprintf(stdout, "Treadmill Training Calories: %d\n",
             treadmill->training.kcal);
     fprintf(stdout, "\n");
-    fprintf(stdout, "Config Option: %d\n", treadmill->config.option);
-    fprintf(stdout, "Config Model: %d\n", treadmill->config.model);
-    fprintf(stdout, "Config Weight: %d\n", treadmill->config.weight);
-    fprintf(stdout, "Config Age: %d\n", treadmill->config.age);
-    fprintf(stdout, "Config Lub: %d\n", treadmill->config.lub_distance);
-    fprintf(stdout, "Config Modbus: %d\n", treadmill->config.modbus);
-    fprintf(stdout, "Config Test: %d\n", treadmill->config.test);
+
+    // fprintf(stdout, "Config Option: %d\n", treadmill->config.option);
+    // fprintf(stdout, "Config Model: %d\n", treadmill->config.model);
+    // fprintf(stdout, "Config Weight: %d\n", treadmill->config.weight);
+    // fprintf(stdout, "Config Age: %d\n", treadmill->config.age);
+    // fprintf(stdout, "Config Lub: %d\n", treadmill->config.lub_distance);
+    // fprintf(stdout, "Config Modbus: %d\n", treadmill->config.modbus);
+    // fprintf(stdout, "Config Test: %d\n", treadmill->config.test);
+
+    fprintf(stdout, "Treadmill Speed Range - min: %d, max: %d, step: %d\n",
+            treadmill->config.speed.min, treadmill->config.speed.max,
+            treadmill->config.speed.step);
+
+    fprintf(stdout, "Treadmill Incline Range - min: %d, max: %d, step: %d\n",
+            treadmill->config.incline.min, treadmill->config.incline.max,
+            treadmill->config.incline.step);
+
+    fprintf(stdout, "BLE Connected: %d\n", treadmill->hw.ble.connected);
+    fprintf(stdout, "BLE Connection Interval: %d\n",
+            treadmill->hw.ble.connection.interval);
+    fprintf(stdout, "BLE Connection Latency: %d\n",
+            treadmill->hw.ble.connection.latency);
+    fprintf(stdout, "BLE Connection Timeout: %d\n",
+            treadmill->hw.ble.connection.timeout);
+    fprintf(stdout, "BLE Connection MTU: %d\n",
+            treadmill->hw.ble.connection.mtu);
+    fprintf(stdout, "BLE FTMS Subscribed: %d\n",
+            treadmill->hw.ble.ftms.subscribed);
+    fprintf(stdout, "BLE FTMS Control Point: %d\n",
+            treadmill->hw.ble.ftms.control_point_allowed);
+
     fprintf(stdout, "\n");
 
     fprintf(stdout, "\n");
@@ -174,6 +229,10 @@ static void display_update(treadmill_t *treadmill) {
     fprintf(stdout, "\n");
 
     fprintf(stdout, "\n");
+    // fprintf(stdout, "Treadmill Init BLE State: %s\n",
+    //         treadmill_ble_init_state_description(treadmill->hw.ble.init_state));
+    fprintf(stdout, "Treadmill BLE State: %s\n",
+            treadmill_ble_state_description(treadmill->hw.ble.state));
     fprintf(stdout, "Treadmill Motor State: %s\n",
             treadmill_motor_state_description(treadmill->hw.protocol_state));
     fprintf(stdout, "\n");
@@ -190,7 +249,9 @@ static void *thread_main(void *arg) {
       treadmill->ms = treadmill->ms + 100;
       treadmill_update(treadmill);
     }
+
     treadmill_ble_process(treadmill);
+
     treadmill_motor_process(treadmill);
 
     rt_led_render(treadmill);  // memory update

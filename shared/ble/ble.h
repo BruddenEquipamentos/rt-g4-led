@@ -32,10 +32,14 @@ typedef struct ble {
 
   send_data_cb send_data;
   recv_data_cb recv_data;
+
   uint32_t (*get_tick)(void);
 
-  uint8_t ftms_subscribed;
-  uint8_t ftms_cp_allowed;
+  struct ftms {
+    uint8_t subscribed;
+    uint8_t control_point_allowed;
+    uint32_t tick_data_ms;
+  } ftms;
 
   struct connection {
     uint16_t mtu;
@@ -56,7 +60,7 @@ typedef struct ble {
 
 void ble_reset(ble_t *ble);
 void ble_clear_commands(void);
-int ble_post_command(const char *data, const char *response,
+int ble_post_message(const char *data, const char *response,
                      const uint32_t timeout_tick);
 
 int ble_process_received(ble_t *ble, char *data, int length);

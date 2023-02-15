@@ -40,7 +40,7 @@ void ble_clear_commands(void) {
   tail = 0;
 }
 
-int ble_post_command(const char *data, const char *response,
+int ble_post_message(const char *data, const char *response,
                      const uint32_t timeout_tick) {
   ble_command_t *cmd = &commands[head];
   strncpy(cmd->data, data, 32);
@@ -90,7 +90,7 @@ static int ble_ftms_control_point(char *ptr) {
   switch (opcode) {
     case FMCP_REQUEST_CONTROL: {
       // todo: rule to allow control point control
-      pTreadmill->hw.ble.ftms_cp_allowed = 1;
+      pTreadmill->hw.ble.ftms.control_point_allowed = 1;
       break;
     }
     case FMCP_RESET: {
@@ -110,7 +110,7 @@ static int ble_ftms_control_point(char *ptr) {
       break;
     }
     case FMCP_SET_TARGET_START_OR_RESUME: {
-      if (pTreadmill->hw.ble.ftms_cp_allowed) {
+      if (pTreadmill->hw.ble.ftms.control_point_allowed) {
         if (!treadmill_start_or_resume(pTreadmill))
           result = FMCP_RESULT_CODE_OPERATION_FAILED;
       } else {
@@ -153,7 +153,7 @@ static void ble_protocol_process(uint8_t *ptr_data, int length) {
     case BP_SUBSCRIBE: {
       uint16_t uuid = next_u16_le(&ptr);
       if (uuid == FTMS_TREADMILL_DATA_UUID) {
-        pTreadmill->hw.ble.ftms_subscribed = 1;
+        pTreadmill->hw.ble.ftms.subscribed = 1;
       }
       // movble_treadmill_subscribed(ptr);
       break;
@@ -161,7 +161,7 @@ static void ble_protocol_process(uint8_t *ptr_data, int length) {
     case BP_UNSUBSCRIBE: {
       uint16_t uuid = next_u16_le(&ptr);
       if (uuid == FTMS_TREADMILL_DATA_UUID) {
-        pTreadmill->hw.ble.ftms_subscribed = 0;
+        pTreadmill->hw.ble.ftms.subscribed = 0;
       }
       break;
     }
@@ -197,8 +197,8 @@ static void ble_connected(ble_t *ble) { ble->connected = 1; }
 
 static void ble_disconnected(ble_t *ble) {
   ble->connected = 0;
-  ble->ftms_cp_allowed = 0;
-  ble->ftms_subscribed = 0;
+  ble->ftms.control_point_allowed = 0;
+  ble->ftms.subscribed = 0;
   ble->connection.interval = 0;
   ble->connection.latency = 0;
   ble->connection.timeout = 0;
@@ -206,6 +206,8 @@ static void ble_disconnected(ble_t *ble) {
 }
 
 static void ble_interpret_message_bytes(ble_t *ble, char *data, int length) {
+  // TODO: refactor. It is this way in case recepetion is made up with smaller
+  // messages
   static uint8_t mBuffer[256] = {0};
   static int mBufferIndex = 0;
 

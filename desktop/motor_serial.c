@@ -57,6 +57,7 @@ int motor_serial_write(const uint8_t *data, int length) {
   // int i = 0;
   // for (i = 0; i < length; ++i) fprintf(stdout, "%02X", data[i]);
   // if (i > 0 && data[i - 1] != '\n') fprintf(stdout, "\n");
+  if (fd == -1) return 0;
   int written = write(fd, data, length);
   if (written != length) {
     printf("Error from write: %d, %d\n", length, errno);
@@ -67,6 +68,7 @@ int motor_serial_write(const uint8_t *data, int length) {
 }
 
 int motor_serial_read(uint8_t *buffer, int max_length) {
+  if (fd == -1) return 0;
   int length = read(fd, buffer, max_length);
   // fprintf(stdout, "In : ");
   // if (length != -1) {

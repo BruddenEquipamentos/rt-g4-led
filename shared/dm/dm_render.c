@@ -1,10 +1,10 @@
 #include "dm_render.h"
 
-#include "../panel/rt_led.h"
-#include "dm.h"
-
 #include <string.h>
+
+#include "../panel/rt_led.h"
 #include "../treadmill_motor_modbus.h"
+#include "dm.h"
 
 static void dm_render_mb_param_value(treadmill_t *treadmill) {
   mb_operation_t *op = modbus_get_current_selected_param();
@@ -31,14 +31,17 @@ void dm_render(treadmill_t *treadmill) {
     case SCENE_IDLE: {
       if (treadmill->config.modbus) {
         dm_render_mb_param_value(treadmill);
+      } else {
+        dm_clear_buffer();
       }
       break;
     }
     case SCENE_TRAINING: {
       if (treadmill->config.modbus) {
         dm_render_mb_param_value(treadmill);
+      } else {
+        dm_clear_buffer();
       }
-
       break;
     }
     case SCENE_PAUSED: {
@@ -112,7 +115,8 @@ void dm_render(treadmill_t *treadmill) {
       break;
     }
     default: {
-      if (treadmill->scene == SCENE_COUNTDOWN) {
+      if (treadmill->scene == SCENE_COUNTDOWN &&
+          treadmill->countdown.value != 0) {
         dm_render_number(treadmill->countdown.value);
       } else {
         dm_clear_buffer();

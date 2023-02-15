@@ -42,4 +42,6 @@ int treadmill_start_or_resume(treadmill_t *treadmill);
 int treadmill_pause_procedure(treadmill_t *treadmill);
 int treadmill_stop_procedure(treadmill_t *treadmill);
 
+int treadmill_send_ftms_data(treadmill_t *treadmill);
+
 #endif
