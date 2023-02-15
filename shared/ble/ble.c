@@ -84,6 +84,27 @@ static int is_timedout(ble_t *ble, ble_command_t *cmd) {
   return 0;
 }
 
+static int ble_ftms_control_point_response(uint8_t response_opcode,
+                                           uint8_t opcode,
+                                           fmcp_result_t result) {
+  uint8_t response[40];  // todo: predefine buffer
+  uint8_t index = 0;
+  uint8_t cs = 0;
+
+  response[index++] = BLE_PROTOCOL_MESSAGE_START;
+  flat_bin_to_ascii_8(response, &index, 40, BP_CONTROL_POINT);
+  flat_bin_to_ascii_8(response, &index, 40, response_opcode);
+  flat_bin_to_ascii_8(response, &index, 40, opcode);
+  flat_bin_to_ascii_8(response, &index, 40, result);
+
+  cs = ble_protocol_checksum(response, index);
+  flat_bin_to_ascii_8(response, &index, 40, cs);
+
+  response[index++] = BLE_PROTOCOL_MESSAGE_END;
+
+  return pTreadmill->hw.ble.send_data(response, index);
+}
+
 static int ble_ftms_control_point(char *ptr) {
   fmcp_result_t result = FMCP_RESULT_SUCCESS;
   uint8_t opcode = next_u8(&ptr);
@@ -118,7 +139,6 @@ static int ble_ftms_control_point(char *ptr) {
       }
       break;
     }
-
     case FMCP_SET_TARGET_STOP_OR_PAUSE: {
       uint8_t param = next_u8(&ptr);
       if (param == 1) {
@@ -130,15 +150,12 @@ static int ble_ftms_control_point(char *ptr) {
       }
       break;
     }
-
     default:
       result = FMCP_RESULT_CODE_OPCODE_NOT_SUPPORTED;
       break;
   }
 
-  // return movble_treadmill_ftms_control_point_response(FMCP_RESPONSE_CODE,
-  // opcode, result);
-  return result;
+  return ble_ftms_control_point_response(FMCP_RESPONSE_CODE, opcode, result);
 }
 
 static void ble_protocol_process(uint8_t *ptr_data, int length) {
