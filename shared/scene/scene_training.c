@@ -1,5 +1,6 @@
 #include "../treadmill_programs_update.h"
 #include "scene.h"
+#include "../treadmill_motor_modbus.h"
 
 static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
@@ -42,7 +43,12 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
     case KEY_INCLINE_12:
       treadmill_set_incline(treadmill, 120);
       break;
-
+    case KEY_PROGRAM: {
+      if (treadmill->config.modbus) {
+        treadmill_set_next_mb_parameter(treadmill);
+      }
+      break;
+    }
     default:;
   }
 }

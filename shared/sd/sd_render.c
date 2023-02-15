@@ -3,6 +3,8 @@
 #include "../panel/render_program_scene.h"
 #include "../panel/rt_led.h"
 
+#include "../treadmill_motor_modbus.h"
+
 sd_t sd_distance = {.flag = SD_FLAG_VISIBLE};
 sd_t sd_time = {.flag = SD_FLAG_VISIBLE};
 sd_t sd_speed = {.flag = SD_FLAG_VISIBLE};
@@ -23,6 +25,7 @@ void sd_render_all_visible(bool visible) {
   sd_set_visible(&sd_bpm, visible);
 }
 
+#include <stdio.h> // TODO: refactor
 static void render_training_data(treadmill_t *treadmill) {
   sd_set_km_m(&sd_distance, treadmill->training.meters);
   sd_set_min_sec(&sd_time, treadmill->training.seconds);
@@ -31,7 +34,14 @@ static void render_training_data(treadmill_t *treadmill) {
   sd_set_kcal(&sd_kcal, treadmill->training.kcal / 1000);
   sd_set_incline(&sd_incline, treadmill->training.incline);
   sd_set_value(&sd_bpm, treadmill->training.bpm);
-  sd_set_value(&sd_program, 0);
+
+  // TODO: refactor
+  if (treadmill->config.modbus) {
+    sd_set_visible(&sd_program, true);
+    char text[5];
+    snprintf(text, 5, "P%03d", modbus_current_selected_param_value());
+    sd_set_text(&sd_program, text);
+  }
 }
 
 static void render_training_data_program(treadmill_t *treadmill) {

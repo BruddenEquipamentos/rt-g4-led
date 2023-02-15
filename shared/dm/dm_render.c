@@ -3,6 +3,14 @@
 #include "../panel/rt_led.h"
 #include "dm.h"
 
+#include <string.h>
+#include "../treadmill_motor_modbus.h"
+
+static void dm_render_mb_param_value(treadmill_t *treadmill) {
+  mb_operation_t *op = modbus_get_current_selected_param();
+  dm_render_text(op->rfmtd, 16);
+}
+
 void dm_render(treadmill_t *treadmill) {
   if (treadmill->scene != treadmill->previous_scene) {
     switch (treadmill->scene) {
@@ -20,6 +28,19 @@ void dm_render(treadmill_t *treadmill) {
   treadmill->previous_scene = treadmill->scene;
 
   switch (treadmill->scene) {
+    case SCENE_IDLE: {
+      if (treadmill->config.modbus) {
+        dm_render_mb_param_value(treadmill);
+      }
+      break;
+    }
+    case SCENE_TRAINING: {
+      if (treadmill->config.modbus) {
+        dm_render_mb_param_value(treadmill);
+      }
+
+      break;
+    }
     case SCENE_PAUSED: {
       dm_render_text_animated("PAUSED", 100, treadmill->get_time_ms());
       break;

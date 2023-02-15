@@ -45,6 +45,7 @@ void treadmill_setup(treadmill_t *treadmill) {
 void treadmill_set_scene(treadmill_t *treadmill, treadmill_scene_t scene) {
   treadmill->scene = scene;
   treadmill->scene_tick = treadmill->get_time_ms();
+  treadmill->idle_tick = treadmill->get_time_ms();
 }
 
 uint32_t treadmill_calculate_pace(treadmill_t *treadmill) {

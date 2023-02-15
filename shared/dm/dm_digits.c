@@ -398,6 +398,17 @@ const digit_t dm_B = {
     }
 };
 
+const digit_t dm_dot = {
+    .cols = 2,
+    .data = {
+        0b00,
+        0b00,
+        0b00,
+        0b00,
+        0b10,
+    }
+};
+
 digit_map_t dm_map[] = {
     {.ch=' ', .dm=&dm_space},
     {.ch='%', .dm=&dm_percentage},
@@ -436,6 +447,7 @@ digit_map_t dm_map[] = {
     {.ch='W', .dm=&dm_W},
     {.ch='X', .dm=&dm_X},
     {.ch='x', .dm=&dm_x},
+    {.ch='.', .dm=&dm_dot},
 };
 
 const digit_t *dm_number(const int number) {

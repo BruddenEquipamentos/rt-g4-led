@@ -2,10 +2,11 @@
 
 #include "modbus/master_operations.h"
 #include "modbus/mb_master.h"
-#include "modbus/mb_operation.h"
 
 // TEMP
 extern treadmill_t *pTreadmill;
+
+uint8_t mb_op_index = 0;
 
 static const uint16_t pusVelocidadeModbusPos[] = {
     // 32 -> 0.5km/h, 70 -> 1.2km/h
@@ -170,4 +171,17 @@ treadmill_motor_status_t treadmill_motor_modbus_process(
   }
 
   return TREADMILL_MOTOR_STATUS_OK;
+}
+
+int treadmill_set_next_mb_parameter(treadmill_t *treadmill) {
+  mb_op_index = (mb_op_index + 1) % mb_operations_display_length;
+  return 1;
+}
+
+uint16_t modbus_current_selected_param_value(void) {
+  return mb_ops_display[mb_op_index];
+}
+
+mb_operation_t *modbus_get_current_selected_param(void) {
+  return mb_operation_get(mb_operations, mb_operations_length, modbus_current_selected_param_value());
 }

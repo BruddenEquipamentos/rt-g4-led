@@ -3,7 +3,7 @@
 #include "treadmill_motor_modbus.h"
 #include "treadmill_motor_movement.h"
 
-static void treadmill_motor_update_frequency(treadmill_t *treadmill) {
+static void treadmill_motor_frequency_process(treadmill_t *treadmill) {
   // todo: implement
 }
 
@@ -23,7 +23,7 @@ static int treadmill_motor_uart_protocol_detection(treadmill_t *treadmill) {
   return 0;
 }
 
-static void treadmill_motor_update_uart(treadmill_t *treadmill) {
+static void treadmill_motor_uart_process(treadmill_t *treadmill) {
   static int protocol_detection_error_count = 0;
   static uint32_t init_tick = 0;
 
@@ -58,14 +58,15 @@ static void treadmill_motor_update_uart(treadmill_t *treadmill) {
   }
 }
 
+// TODO: When changing model, reset params
 void treadmill_motor_process(treadmill_t *treadmill) {
   switch (treadmill->hw.communication_type) {
     case MOTOR_COMMUNICATION_TYPE_FREQ: {
-      treadmill_motor_update_frequency(treadmill);
+      treadmill_motor_frequency_process(treadmill);
       break;
     }
     case MOTOR_COMMUNICATION_TYPE_UART: {
-      treadmill_motor_update_uart(treadmill);
+      treadmill_motor_uart_process(treadmill);
       break;
     }
     default:;

@@ -59,7 +59,9 @@ extern char *scene_name[];
 typedef struct treadmill {
   treadmill_scene_t scene;
   treadmill_scene_t previous_scene;
-  uint32_t scene_tick;
+
+  uint32_t scene_tick; // tick since scene started
+  uint32_t idle_tick; // tick since last keypress
 
   struct program {
     program_id_t id;
@@ -144,6 +146,7 @@ typedef struct treadmill {
       int (*send)(const uint8_t *data, int length);
       int (*recv)(uint8_t *data, int max_length);
     } motor;
+
   } hw;
 
 
