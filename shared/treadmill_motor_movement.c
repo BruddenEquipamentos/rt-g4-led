@@ -3,8 +3,8 @@
 int treadmill_motor_protocol_is_movement(treadmill_t *treadmill) {
   uint8_t recv_buffer[8];
   uint8_t cmd[] = {0x02, 0x41, 0x00, 0x02, 0x42, 0x00, 0x02, 0x43, 0x00};
-  treadmill->hw.motor.send(cmd, sizeof(cmd));
-  int length = treadmill->hw.motor.recv(recv_buffer, 8);
+  treadmill->hw.motor.send_data(cmd, sizeof(cmd));
+  int length = treadmill->hw.motor.recv_data(recv_buffer, 8);
   return (length > 0 && recv_buffer[0] == 0x06);
 }
 
@@ -22,9 +22,9 @@ treadmill_motor_status_t treadmill_motor_movement_process(
 
   cmd[8] = treadmill->config.weight;
 
-  treadmill->hw.motor.send(cmd, sizeof(cmd));
+  treadmill->hw.motor.send_data(cmd, sizeof(cmd));
 
-  if (treadmill->hw.motor.recv(recv_buffer, 8) > 0) {
+  if (treadmill->hw.motor.recv_data(recv_buffer, 8) > 0) {
     if (recv_buffer[0] == 0x06) return TREADMILL_MOTOR_STATUS_OK;
   }
   return TREADMILL_MOTOR_STATUS_ERROR;

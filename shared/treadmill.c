@@ -31,8 +31,8 @@ void treadmill_setup(treadmill_t *treadmill) {
   memset(treadmill, 0x00, sizeof(treadmill_t));
   treadmill->hw.beep = beep;
   treadmill->hw.update_rtc = update_rtc;
-  treadmill->hw.motor.send = motor_send;
-  treadmill->hw.motor.recv = motor_recv;
+  treadmill->hw.motor.send_data = motor_send;
+  treadmill->hw.motor.recv_data = motor_recv;
 
   treadmill->scene = SCENE_INIT;
   treadmill->scene_tick = 0;

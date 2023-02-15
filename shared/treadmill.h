@@ -137,14 +137,15 @@ typedef struct treadmill {
   struct hw {
     void (*beep)(beep_t beep);
     void (*update_rtc)(const uint32_t ms);
+    void (*wait_ms)(const int ms);
     motor_communication_type_t communication_type;
     uart_protocol_state_t protocol_state;
 
     ble_t ble;
 
     struct motor {
-      int (*send)(const uint8_t *data, int length);
-      int (*recv)(uint8_t *data, int max_length);
+      int (*send_data)(const uint8_t *data, int length);
+      int (*recv_data)(uint8_t *data, int max_length);
     } motor;
 
   } hw;

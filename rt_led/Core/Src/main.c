@@ -29,9 +29,12 @@
 #include "panel/rt_led.h"
 #include "display.h"
 
-#include "modus/mb_master.h"
-#include "modus/mb_operation.h"
-#include "modus/master_operations.h"
+#include "modbus/mb_master.h"
+#include "modbus/mb_operation.h"
+#include "modbus/master_operations.h"
+
+#include "treadmill_ble.h"
+#include "treadmill_motor.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -70,6 +73,7 @@ osMessageQId beepEventQueueHandle;
 osTimerId beepTimerHandle;
 /* USER CODE BEGIN PV */
 treadmill_t treadmill;
+treadmill_t *pTreadmill = &treadmill;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -107,6 +111,30 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
     for (int i = 0; i < ADC_SAMPLE_SIZE; ++i) sum += adc_values[i];
     adc_hrm = (uint16_t)(sum/ADC_SAMPLE_SIZE);
   }
+}
+
+static void wait_ms(const int ms) {
+  osDelay(ms);
+}
+
+int ble_uart_read(uint8_t *buffer, int max_length) {
+  // TODO: implement
+  return 1;
+}
+
+int ble_uart_write(const uint8_t *data, int length) {
+  // TODO: implement
+  return 1;
+}
+
+int motor_uart_read(uint8_t *buffer, int max_length) {
+  // TODO: implement
+  return 1;
+}
+
+int motor_uart_write(const uint8_t *data, int length) {
+  // TODO: implement
+  return 1;
 }
 
 /* USER CODE END 0 */
@@ -209,6 +237,13 @@ int main(void)
   treadmill_setup(&treadmill);
   treadmill.get_time_ms = HAL_GetTick;
   treadmill.hw.beep = beep;
+
+  treadmill.hw.ble.send_data = ble_uart_write;
+  treadmill.hw.ble.recv_data = ble_uart_read;
+
+  treadmill.hw.motor.send_data = motor_uart_write;
+  treadmill.hw.motor.recv_data = motor_uart_read;
+  treadmill.hw.wait_ms = wait_ms;
 
   display_init();
 
@@ -742,9 +777,13 @@ void StartDefaultTask(void const * argument)
       treadmill.ms += 100;
       treadmill_update(&treadmill);
     }
-    // display_update();
-    // render(&treadmill);
+
+    treadmill_ble_process(&treadmill);
+
+    treadmill_motor_process(&treadmill);
+
     rt_led_render(&treadmill);
+
     display_update();
     osDelay(20);
   }

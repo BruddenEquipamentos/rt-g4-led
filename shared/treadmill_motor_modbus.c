@@ -56,7 +56,7 @@ static int modbus_master_send_message(mb_buffer_t *tx) {
   //   DPRINT("%02X ", tx->data[i]);
   // }
   // DPRINT("\n");
-  pTreadmill->hw.motor.send(tx->data, tx->length);
+  pTreadmill->hw.motor.send_data(tx->data, tx->length);
   modbus_rx_tick = pTreadmill->get_time_ms();
   return 1;
 }
@@ -64,10 +64,10 @@ static int modbus_master_send_message(mb_buffer_t *tx) {
 static int modbus_wait_for_recv_or_timeout(void) {
   if (!modbus_rx_tick) return 1;
   while (pTreadmill->get_time_ms() - modbus_rx_tick < 5) {
-    usleep(1000 * 1);
+    pTreadmill->hw.wait_ms(1);
   }
   modbus_rx_tick = 0;
-  int length = pTreadmill->hw.motor.recv(mb_master_rx.data, 256);
+  int length = pTreadmill->hw.motor.recv_data(mb_master_rx.data, 256);
   if (length > 0)
     mb_master_rx.length = length;
   else
