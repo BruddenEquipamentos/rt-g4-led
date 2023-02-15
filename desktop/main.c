@@ -262,6 +262,10 @@ static void *thread_main(void *arg) {
   return NULL;
 }
 
+static void wait_ms(const int ms) {
+  usleep(1000*ms);
+}
+
 int main(int argc, char *argv[]) {
   (void)argc;
   (void)argv;
@@ -288,13 +292,15 @@ int main(int argc, char *argv[]) {
 
   treadmill.get_time_ms = (uint32_t(*)(void))get_time_ms;
 
+  treadmill.hw.wait_ms = wait_ms;
+
+  treadmill.hw.motor.send_data = motor_serial_write;
+  treadmill.hw.motor.recv_data = motor_serial_read;
+
   ble_reset(&treadmill.hw.ble);
   treadmill.hw.ble.send_data = ble_serial_write;
   treadmill.hw.ble.recv_data = ble_serial_read;
   treadmill.hw.ble.get_tick = get_time_ms;
-
-  treadmill.hw.motor.send = motor_serial_write;
-  treadmill.hw.motor.recv = motor_serial_read;
 
   pthread_create(&input_thread, NULL, thread_input, &treadmill);
   pthread_create(&main_thread, NULL, thread_main, &treadmill);
