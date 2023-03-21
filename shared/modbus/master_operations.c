@@ -67,20 +67,21 @@ mb_operation_t mb_weg_ops[MB_WEG_NUM_OPS] = {
     {.addr = 0x01, .iaddr =  24, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p024_rfmtd, .run_once = 1},
     {.addr = 0x01, .iaddr =  25, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p025_rfmtd, .run_once = 1},
     {.addr = 0x01, .iaddr = 613, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p613_rfmtd, .run_once = 1},
-    {.addr = 0x01, .iaddr =   3, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p003_rfmtd} ,
-    {.addr = 0x01, .iaddr =   4, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p004_rfmtd},
-    {.addr = 0x01, .iaddr =   7, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p007_rfmtd},
-    {.addr = 0x01, .iaddr =  30, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p030_rfmtd},
 
-    {.addr = 0x01, .iaddr =  48, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p048_rfmtd},
-    {.addr = 0x01, .iaddr =  49, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p049_rfmtd},
-    {.addr = 0x01, .iaddr =  50, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p050_rfmtd},
-    {.addr = 0x01, .iaddr =  51, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p051_rfmtd},
-    {.addr = 0x01, .iaddr =  52, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p052_rfmtd},
-    {.addr = 0x01, .iaddr =  53, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p053_rfmtd},
-    {.addr = 0x01, .iaddr =  54, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p054_rfmtd},
-    {.addr = 0x01, .iaddr =  60, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p060_rfmtd},
-    {.addr = 0x01, .iaddr =  61, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p061_rfmtd},
+    {.addr = 0x01, .iaddr =   3, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p003_rfmtd, .run_once = 1} ,
+    {.addr = 0x01, .iaddr =   4, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p004_rfmtd, .run_once = 1},
+    {.addr = 0x01, .iaddr =   7, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p007_rfmtd, .run_once = 1},
+    {.addr = 0x01, .iaddr =  30, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p030_rfmtd, .run_once = 1},
+
+    {.addr = 0x01, .iaddr =  48, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p048_rfmtd, .run_once = 1},
+    {.addr = 0x01, .iaddr =  49, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p049_rfmtd, .run_once = 1},
+    {.addr = 0x01, .iaddr =  50, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p050_rfmtd, .run_once = 1},
+    {.addr = 0x01, .iaddr =  51, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p051_rfmtd, .run_once = 1},
+    {.addr = 0x01, .iaddr =  52, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p052_rfmtd, .run_once = 1},
+    {.addr = 0x01, .iaddr =  53, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p053_rfmtd, .run_once = 1},
+    {.addr = 0x01, .iaddr =  54, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p054_rfmtd, .run_once = 1},
+    {.addr = 0x01, .iaddr =  60, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p060_rfmtd, .run_once = 1},
+    {.addr = 0x01, .iaddr =  61, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p061_rfmtd, .run_once = 1},
 
     {.addr = 0x01, .raddr = 682, .rval = 0, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = 0},
     {.addr = 0x01, .raddr = 683, .rval = 0, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = 0},
@@ -126,7 +127,7 @@ static void mb_res_fmt(mb_operation_t *op, mb_buffer_t *tx, mb_buffer_t *rx) {
     case 48:snprintf(res_fmtd, RES_FMTD_LENGTH, "%d", op->rval); break;
     case 49:snprintf(res_fmtd, RES_FMTD_LENGTH, "%d", op->rval); break;
     case 50:snprintf(res_fmtd, RES_FMTD_LENGTH, "%d", op->rval); break;
-    case 51:snprintf(res_fmtd, RES_FMTD_LENGTH, "%d.%1dA", op->rval/10, op->rval%10); break;
+    case 51:snprintf(res_fmtd                                   , RES_FMTD_LENGTH, "%d.%1dA", op->rval/10, op->rval%10); break;
     case 52:snprintf(res_fmtd, RES_FMTD_LENGTH, "%dV", op->rval); break;
     case 53:snprintf(res_fmtd, RES_FMTD_LENGTH, "%d.%1d", op->rval/10, op->rval%10); break; // todo(fminoru): how to show freq?
     case 54:snprintf(res_fmtd, RES_FMTD_TEMP, "%d.%1dC", op->rval/10, op->rval%10); break;

@@ -136,6 +136,9 @@ int treadmill_motor_protocol_is_modbus(treadmill_t *treadmill) {
   return 0;
 }
 
+uint32_t modbus_start_tick = 0;
+uint32_t modbus_loop_params_delta = 0;
+
 treadmill_motor_status_t treadmill_motor_modbus_process(
     treadmill_t *treadmill) {
   if (pTreadmill->training.speed > pTreadmill->config.speed.min - 10) {
@@ -151,25 +154,31 @@ treadmill_motor_status_t treadmill_motor_modbus_process(
     p683->rval = 0;
   }
 
-  p856->rval = pTreadmill->training.incline/10;
+  p856->rval = pTreadmill->training.incline / 10;
 
   mb_operation_t *op = mb_operation_fetch_next_op();
 
-  // if (op->raddr == 1000) {
-  //   uint32_t secs = DrvRTC_GetSeconds();
-  //   p1000_1001->bytes[0] = (uint8_t)(secs >> 24);
-  //   p1000_1001->bytes[1] = (uint8_t)(secs >> 16);
-  //   p1000_1001->bytes[2] = (uint8_t)(secs >> 8);
-  //   p1000_1001->bytes[3] = (uint8_t)(secs & 0xff);
-  // }
+  if (op->raddr == 682)
+    modbus_start_tick = pTreadmill->get_time_ms();
+  else if (op->raddr == 856)
+    modbus_loop_params_delta = pTreadmill->get_time_ms() - modbus_start_tick;
 
-  enum mb_master_process status = mb_operation_process(op);
-  if (status == MB_MASTER_OK && op->iaddr == 1010) {
-    // if (op->rval > 1) {
-    //   status = modbus_collect_data(op->rval);
-    // }
+  if (op->raddr == 1000) {
+    uint32_t secs = pTreadmill->get_time_ms();
+    p1000_1001->bytes[0] = (uint8_t)(secs >> 24);
+    p1000_1001->bytes[1] = (uint8_t)(secs >> 16);
+    p1000_1001->bytes[2] = (uint8_t)(secs >> 8);
+    p1000_1001->bytes[3] = (uint8_t)(secs & 0xff);
   }
 
+  enum mb_master_process status = mb_operation_process(op);
+
+  if (status == MB_MASTER_OK && op->iaddr == 1010) {
+    if (op->rval > 1) {
+      __asm("nop\n");
+      //   status = modbus_collect_data(op->rval);
+    }
+  }
   return TREADMILL_MOTOR_STATUS_OK;
 }
 
@@ -183,5 +192,6 @@ uint16_t modbus_current_selected_param_value(void) {
 }
 
 mb_operation_t *modbus_get_current_selected_param(void) {
-  return mb_operation_get(mb_operations, mb_operations_length, modbus_current_selected_param_value());
+  return mb_operation_get(mb_operations, mb_operations_length,
+                          modbus_current_selected_param_value());
 }

@@ -1,20 +1,20 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2023 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2023 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -22,23 +22,25 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "keyboard.h"
-#include "treadmill.h"
 #include "beep.h"
-#include "nvm_emb.h"
-#include "panel/rt_led.h"
 #include "display.h"
-
+#include "keyboard.h"
+#include "modbus/master_operations.h"
 #include "modbus/mb_master.h"
 #include "modbus/mb_operation.h"
-#include "modbus/master_operations.h"
-
+#include "nvm_emb.h"
+#include "panel/rt_led.h"
+#include "treadmill.h"
 #include "treadmill_ble.h"
 #include "treadmill_motor.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+uint32_t _tim_delta = 0;
+uint32_t _tim6_count = 0;
+uint32_t _t_tick = 0;
+uint32_t _t_delta = 0;
 
 /* USER CODE END PTD */
 
@@ -48,7 +50,12 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+uint32_t PolarICValue1 = 0;
+uint32_t PolarICValue2 = 0;
+uint32_t PolarICDiff = 0;
+uint32_t ICCapturedLastTick = 0;
+uint32_t ICCapturedFirstTick = 0;
+uint32_t PolarBPM = 0;
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -60,7 +67,10 @@ CRC_HandleTypeDef hcrc;
 I2C_HandleTypeDef hi2c1;
 
 TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim6;
+TIM_HandleTypeDef htim14;
 TIM_HandleTypeDef htim16;
+TIM_HandleTypeDef htim17;
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart3;
@@ -74,6 +84,8 @@ osTimerId beepTimerHandle;
 /* USER CODE BEGIN PV */
 treadmill_t treadmill;
 treadmill_t *pTreadmill = &treadmill;
+
+uint8_t __new_display = 1;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -87,6 +99,9 @@ static void MX_ADC1_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_TIM16_Init(void);
 static void MX_CRC_Init(void);
+static void MX_TIM6_Init(void);
+static void MX_TIM14_Init(void);
+static void MX_TIM17_Init(void);
 void StartDefaultTask(void const * argument);
 void KeyboardTask(void const * argument);
 void BeepTask(void const * argument);
@@ -94,47 +109,118 @@ void InverterCommTask(void const * argument);
 void beepTimerCallback(void const * argument);
 
 /* USER CODE BEGIN PFP */
-static void beep(beep_t beep) {
-  xQueueSend(beepEventQueueHandle, &beep, 0);
-}
+static void beep(beep_t beep) { xQueueSend(beepEventQueueHandle, &beep, 0); }
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-#define ADC_SAMPLE_SIZE 8
+#define ADC_SAMPLE_SIZE 4
 #define ADC_BUFFER_SIZE (ADC_SAMPLE_SIZE * 1)
-static uint32_t adc_values[ADC_BUFFER_SIZE]; // 2 is the number of channels
+static uint32_t adc_values[ADC_BUFFER_SIZE];  // 2 is the number of channels
 uint16_t adc_hrm = 0;
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
-  if(hadc->Instance == ADC1) {
+
+uint32_t _adc_delta_t = 0;
+uint32_t _adc_tick = 0;
+
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
+  _adc_delta_t = HAL_GetTick() - _adc_tick;
+  _adc_tick = HAL_GetTick();
+  if (hadc->Instance == ADC1) {
     int sum = 0;
     for (int i = 0; i < ADC_SAMPLE_SIZE; ++i) sum += adc_values[i];
-    adc_hrm = (uint16_t)(sum/ADC_SAMPLE_SIZE);
+    adc_hrm = (uint16_t)(sum / ADC_SAMPLE_SIZE);
   }
 }
 
-static void wait_ms(const int ms) {
-  osDelay(ms);
+uint32_t adc_average = 0;
+uint32_t adc_average_n = 0;
+const uint32_t ADC_THRESHOLD = 55;
+int adc_below_average = 0;
+uint32_t adc_new_beat = 0;
+uint32_t adc_old_beat = 0;
+#define BPM_BUFFER_READS (16)
+uint16_t bpm_buffer_index = 0;
+uint16_t bpm_buffer_reads[BPM_BUFFER_READS] = {0};
+uint32_t bpm_current_value = 0;
+uint32_t adc_delay_tick_ms = 0;
+
+void bpm_reset_variables(void) {
+  adc_average = 0;
+  adc_average_n = 0;
+  adc_below_average = 0;
+  adc_new_beat = 0;
+  adc_old_beat = 0;
+  bpm_buffer_index = 0;
+  for (int i = 0; i < BPM_BUFFER_READS; ++i) bpm_buffer_reads[i] = 0;
+  bpm_current_value = 0;
+  adc_delay_tick_ms = 0;
+  treadmill_set_bpm_value(&treadmill, 0);
+  treadmill_set_bpm_stop(&treadmill);
 }
 
+static void wait_ms(const int ms) { osDelay(ms); }
+
 int ble_uart_read(uint8_t *buffer, int max_length) {
-  // TODO: implement
-  return 1;
+  uint8_t byte;
+  int i;
+  for (i = 0; i < max_length; ++i) {
+    if (HAL_UART_Receive(&huart3, &byte, 1, 1) != HAL_OK) {
+      break;
+    } else {
+      buffer[i] = byte;
+    }
+  }
+  return i > 0;
 }
 
 int ble_uart_write(const uint8_t *data, int length) {
-  // TODO: implement
-  return 1;
+  return HAL_UART_Transmit(&huart3, data, length, 5) == HAL_OK;
 }
 
 int motor_uart_read(uint8_t *buffer, int max_length) {
-  // TODO: implement
+  uint8_t byte;
+  int i;
+  for (i = 0; i < max_length; ++i) {
+    if (HAL_UART_Receive(&huart1, &byte, 1, 10) != HAL_OK) {
+      break;
+    } else {
+      buffer[i] = byte;
+    }
+  }
+  return i;
+}
+
+int motor_change_frequency(const uint16_t period) {
+  if (period != TIM3->ARR) {
+    TIM3->ARR = period;       // auto reload register
+    TIM3->CCR4 = period / 2;  // pulse
+    if (period != 0)
+      HAL_TIM_OC_Start_IT(&htim3, TIM_CHANNEL_4);
+    else
+      HAL_TIM_OC_Stop_IT(&htim3, TIM_CHANNEL_4);
+  }
   return 1;
 }
 
 int motor_uart_write(const uint8_t *data, int length) {
-  // TODO: implement
-  return 1;
+  return HAL_UART_Transmit(&huart1, data, length, 5) == HAL_OK;
+}
+
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
+  if (htim->Instance == TIM17) {
+    if (ICCapturedLastTick == 0) {
+      PolarICValue1 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
+      ICCapturedLastTick = HAL_GetTick();
+    } else {
+      PolarICValue2 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
+      ICCapturedLastTick = HAL_GetTick();
+      if (PolarICValue2 > PolarICValue1) {
+        PolarICDiff = PolarICValue2 - PolarICValue1;
+        PolarBPM = (PolarBPM * 3 + (60000 / PolarICDiff)) / 4;
+      }
+      PolarICValue1 = PolarICValue2;
+    }
+  }
 }
 
 /* USER CODE END 0 */
@@ -176,11 +262,15 @@ int main(void)
   MX_USART1_UART_Init();
   MX_TIM16_Init();
   MX_CRC_Init();
+  MX_TIM6_Init();
+  MX_TIM14_Init();
+  MX_TIM17_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
+
   /* add mutexes, ... */
   /* USER CODE END RTOS_MUTEX */
 
@@ -208,7 +298,7 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 256);
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityAboveNormal, 0, 640);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* definition and creation of keyboardTask */
@@ -220,7 +310,7 @@ int main(void)
   beepTaskHandle = osThreadCreate(osThread(beepTask), NULL);
 
   /* definition and creation of inverterCommTas */
-  osThreadDef(inverterCommTas, InverterCommTask, osPriorityAboveNormal, 0, 128);
+  osThreadDef(inverterCommTas, InverterCommTask, osPriorityLow, 0, 128);
   inverterCommTasHandle = osThreadCreate(osThread(inverterCommTas), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
@@ -228,16 +318,18 @@ int main(void)
   NVM_Setup();
   HAL_FLASH_Unlock();
   __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_OPTVERR);
-  while(__HAL_FLASH_GET_FLAG(FLASH_FLAG_OPTVERR) != RESET) ;
+  while (__HAL_FLASH_GET_FLAG(FLASH_FLAG_OPTVERR) != RESET)
+    ;
   nvm.NVM_Init();
 
-//  nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_DISTANCE_METERS, 10000);
-//  nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_TIME_SECONDS, 3600);
+  //  nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_DISTANCE_METERS, 10000);
+  //  nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_TIME_SECONDS, 3600);
 
   treadmill_setup(&treadmill);
   treadmill.get_time_ms = HAL_GetTick;
   treadmill.hw.beep = beep;
 
+  treadmill.hw.ble.get_tick = HAL_GetTick;
   treadmill.hw.ble.send_data = ble_uart_write;
   treadmill.hw.ble.recv_data = ble_uart_read;
 
@@ -245,21 +337,21 @@ int main(void)
   treadmill.hw.motor.recv_data = motor_uart_read;
   treadmill.hw.wait_ms = wait_ms;
 
+  treadmill.hw.motor.change_frequency = motor_change_frequency;
+
   display_init();
 
   HAL_ADCEx_Calibration_Start(&hadc1);
-  HAL_ADC_Start_DMA(&hadc1, adc_values, ADC_BUFFER_SIZE);
 
+  HAL_TIM_IC_Start_IT(&htim17, TIM_CHANNEL_1);
   /* USER CODE END RTOS_THREADS */
 
   /* Start scheduler */
   osKernelStart();
-
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
+  while (1) {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -341,7 +433,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc1.Init.DMAContinuousRequests = ENABLE;
   hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
-  hadc1.Init.SamplingTimeCommon1 = ADC_SAMPLETIME_160CYCLES_5;
+  hadc1.Init.SamplingTimeCommon1 = ADC_SAMPLETIME_79CYCLES_5;
   hadc1.Init.SamplingTimeCommon2 = ADC_SAMPLETIME_79CYCLES_5;
   hadc1.Init.OversamplingMode = DISABLE;
   hadc1.Init.TriggerFrequencyMode = ADC_TRIGGER_FREQ_HIGH;
@@ -456,24 +548,29 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 0 */
 
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
-  TIM_IC_InitTypeDef sConfigIC = {0};
   TIM_OC_InitTypeDef sConfigOC = {0};
 
   /* USER CODE BEGIN TIM3_Init 1 */
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 0;
+  htim3.Init.Prescaler = 27;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 65535;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_IC_Init(&htim3) != HAL_OK)
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
   {
     Error_Handler();
   }
-  if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_OC_Init(&htim3) != HAL_OK)
   {
     Error_Handler();
   }
@@ -483,26 +580,101 @@ static void MX_TIM3_Init(void)
   {
     Error_Handler();
   }
-  sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
-  sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
-  sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
-  sConfigIC.ICFilter = 0;
-  if (HAL_TIM_IC_ConfigChannel(&htim3, &sConfigIC, TIM_CHANNEL_2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.OCMode = TIM_OCMODE_TOGGLE;
   sConfigOC.Pulse = 0;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
+  if (HAL_TIM_OC_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
   {
     Error_Handler();
   }
   /* USER CODE BEGIN TIM3_Init 2 */
-
+  // HAL_TIM_OC_Start_IT(&htim3, TIM_CHANNEL_4);
   /* USER CODE END TIM3_Init 2 */
   HAL_TIM_MspPostInit(&htim3);
+
+}
+
+/**
+  * @brief TIM6 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM6_Init(void)
+{
+
+  /* USER CODE BEGIN TIM6_Init 0 */
+
+  /* USER CODE END TIM6_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM6_Init 1 */
+
+  /* USER CODE END TIM6_Init 1 */
+  htim6.Instance = TIM6;
+  htim6.Init.Prescaler = 15;
+  htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim6.Init.Period = 999;
+  htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM6_Init 2 */
+
+  /* USER CODE END TIM6_Init 2 */
+
+}
+
+/**
+  * @brief TIM14 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM14_Init(void)
+{
+
+  /* USER CODE BEGIN TIM14_Init 0 */
+
+  /* USER CODE END TIM14_Init 0 */
+
+  TIM_IC_InitTypeDef sConfigIC = {0};
+
+  /* USER CODE BEGIN TIM14_Init 1 */
+
+  /* USER CODE END TIM14_Init 1 */
+  htim14.Instance = TIM14;
+  htim14.Init.Prescaler = 0;
+  htim14.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim14.Init.Period = 65535;
+  htim14.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim14.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim14) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_IC_Init(&htim14) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
+  sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+  sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+  sConfigIC.ICFilter = 0;
+  if (HAL_TIM_IC_ConfigChannel(&htim14, &sConfigIC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM14_Init 2 */
+
+  /* USER CODE END TIM14_Init 2 */
 
 }
 
@@ -566,6 +738,52 @@ static void MX_TIM16_Init(void)
 
   /* USER CODE END TIM16_Init 2 */
   HAL_TIM_MspPostInit(&htim16);
+
+}
+
+/**
+  * @brief TIM17 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM17_Init(void)
+{
+
+  /* USER CODE BEGIN TIM17_Init 0 */
+
+  /* USER CODE END TIM17_Init 0 */
+
+  TIM_IC_InitTypeDef sConfigIC = {0};
+
+  /* USER CODE BEGIN TIM17_Init 1 */
+
+  /* USER CODE END TIM17_Init 1 */
+  htim17.Instance = TIM17;
+  htim17.Init.Prescaler = 15999;
+  htim17.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim17.Init.Period = 65535;
+  htim17.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim17.Init.RepetitionCounter = 0;
+  htim17.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+  if (HAL_TIM_Base_Init(&htim17) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_IC_Init(&htim17) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
+  sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+  sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+  sConfigIC.ICFilter = 0;
+  if (HAL_TIM_IC_ConfigChannel(&htim17, &sConfigIC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM17_Init 2 */
+
+  /* USER CODE END TIM17_Init 2 */
 
 }
 
@@ -677,6 +895,8 @@ static void MX_DMA_Init(void)
 static void MX_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
+/* USER CODE BEGIN MX_GPIO_Init_1 */
+/* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
@@ -711,9 +931,9 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : INC_MINUS_Pin SP_MINUS_Pin SP_PLUS_Pin INC_PLUS_Pin
-                           BK_RODA_Pin TS05_Pin TS00_Pin */
+                           TS05_Pin TS00_Pin */
   GPIO_InitStruct.Pin = INC_MINUS_Pin|SP_MINUS_Pin|SP_PLUS_Pin|INC_PLUS_Pin
-                          |BK_RODA_Pin|TS05_Pin|TS00_Pin;
+                          |TS05_Pin|TS00_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -753,6 +973,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
+/* USER CODE BEGIN MX_GPIO_Init_2 */
+/* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
@@ -761,18 +983,76 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN Header_StartDefaultTask */
 /**
-  * @brief  Function implementing the defaultTask thread.
-  * @param  argument: Not used
-  * @retval None
-  */
+ * @brief  Function implementing the defaultTask thread.
+ * @param  argument: Not used
+ * @retval None
+ */
+GPIO_PinState _lo_minus = RESET;
+GPIO_PinState _lo_plus = RESET;
+GPIO_PinState _emg = RESET;
+uint32_t _average_loop_time = 0;
+
+static inline void bpm_read_handler(void) {
+  static uint32_t hg_hold_tick = 0;
+  _lo_minus = HAL_GPIO_ReadPin(LO_MINUS_GPIO_Port, LO_MINUS_Pin);
+  _lo_plus = HAL_GPIO_ReadPin(LO_PLUS_GPIO_Port, LO_PLUS_Pin);
+
+  if (HAL_GPIO_ReadPin(LO_MINUS_GPIO_Port, LO_MINUS_Pin) == GPIO_PIN_RESET &&
+      HAL_GPIO_ReadPin(LO_PLUS_GPIO_Port, LO_PLUS_Pin) == GPIO_PIN_RESET) {
+    if (hg_hold_tick == 0) {
+      hg_hold_tick = treadmill.get_time_ms();
+    } else if (HAL_GPIO_ReadPin(CONTR_GPIO_Port, CONTR_Pin) == GPIO_PIN_RESET) {
+      if (treadmill.get_time_ms() - hg_hold_tick >= 2000) {
+        HAL_GPIO_WritePin(CONTR_GPIO_Port, CONTR_Pin, GPIO_PIN_SET);
+        HAL_ADC_Start_DMA(&hadc1, adc_values, ADC_BUFFER_SIZE);
+        HAL_TIM_Base_Start_IT(&htim6);
+        if (PolarBPM == 0) treadmill_set_bpm_read(&treadmill);
+        adc_delay_tick_ms = HAL_GetTick();
+      }
+    } else {
+      hg_hold_tick = treadmill.get_time_ms();
+    }
+  } else {
+    if (hg_hold_tick) {
+      if (treadmill.get_time_ms() - hg_hold_tick >= 5000) {
+        HAL_GPIO_WritePin(CONTR_GPIO_Port, CONTR_Pin, GPIO_PIN_RESET);
+        HAL_ADC_Stop_DMA(&hadc1);
+        HAL_TIM_Base_Stop_IT(&htim6);
+        adc_hrm = 0;
+        hg_hold_tick = 0;
+        bpm_reset_variables();
+        if (PolarBPM == 0) treadmill_set_bpm_stop(&treadmill);
+      }
+    }
+  }
+
+  if (ICCapturedLastTick) {
+    uint32_t t = HAL_GetTick() - ICCapturedLastTick;
+    if (PolarBPM < 40 && PolarBPM > 240) {
+      treadmill_set_bpm_read(&treadmill);
+    } else if (t >= 10000) {
+      PolarICDiff = 0;
+      PolarBPM = 0;
+      ICCapturedLastTick = 0;
+      treadmill_set_bpm_stop(&treadmill);
+    } else {
+      treadmill_set_bpm_value(&treadmill, (uint8_t)PolarBPM);
+    }
+  }
+}
+
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void const * argument)
 {
   /* USER CODE BEGIN 5 */
+  uint32_t start = 0;
   treadmill.ms = HAL_GetTick();
   /* Infinite loop */
-  for(;;)
-  {
+  for (;;) {
+    start = HAL_GetTick();
+
+    bpm_read_handler();
+
     while (treadmill.ms < HAL_GetTick()) {
       treadmill.ms += 100;
       treadmill_update(&treadmill);
@@ -784,18 +1064,91 @@ void StartDefaultTask(void const * argument)
 
     rt_led_render(&treadmill);
 
+    _emg = HAL_GPIO_ReadPin(EMG_GPIO_Port, EMG_Pin);
+    if (_emg) {
+      treadmill_emergency_pressed(&treadmill);
+    }
+
+    // display update time -> check frame rate?
     display_update();
-    osDelay(20);
+
+    uint32_t delta = HAL_GetTick() - start;
+    _average_loop_time = (_average_loop_time + delta) / 2;
+
+    osDelay(10);
   }
   /* USER CODE END 5 */
 }
 
 /* USER CODE BEGIN Header_KeyboardTask */
 /**
-* @brief Function implementing the keyboardTask thread.
-* @param argument: Not used
-* @retval None
-*/
+ * @brief Function implementing the keyboardTask thread.
+ * @param argument: Not used
+ * @retval None
+ */
+static void handle_shortcut_keys(void) {
+  static uint32_t debounce = 0;
+
+  if (treadmill.scene != SCENE_TRAINING) return;
+
+  if (HAL_GPIO_ReadPin(SP_MINUS_GPIO_Port, SP_MINUS_Pin) == GPIO_PIN_RESET) {
+    if (debounce == 0) debounce = HAL_GetTick();
+    if (debounce != 0xffffffff && HAL_GetTick() - debounce > 50) {
+      debounce = 0xffffffff;
+
+      int speed = (int)treadmill.training.speed - 100;
+      if (speed < treadmill.config.speed.min)
+        speed = treadmill.config.speed.min;
+
+      treadmill_set_speed(&treadmill, (uint16_t)speed);
+      treadmill.hw.beep(BEEP_KEYPRESS_ACK);
+    }
+
+  } else if (HAL_GPIO_ReadPin(SP_PLUS_GPIO_Port, SP_PLUS_Pin) ==
+             GPIO_PIN_RESET) {
+    if (debounce == 0) debounce = HAL_GetTick();
+    if (debounce != 0xffffffff && HAL_GetTick() - debounce > 50) {
+      debounce = 0xffffffff;
+
+      int speed = (int)treadmill.training.speed + 100;
+      if (speed > treadmill.config.speed.max)
+        speed = treadmill.config.speed.max;
+      treadmill_set_speed(&treadmill, (uint16_t)speed);
+      treadmill.hw.beep(BEEP_KEYPRESS_ACK);
+    }
+
+  } else if (HAL_GPIO_ReadPin(INC_MINUS_GPIO_Port, INC_MINUS_Pin) ==
+             GPIO_PIN_RESET) {
+    if (debounce == 0) debounce = HAL_GetTick();
+    if (debounce != 0xffffffff && HAL_GetTick() - debounce > 50) {
+      debounce = 0xffffffff;
+
+      int incline =
+          (int)treadmill.training.incline - treadmill.config.incline.step;
+      if (incline < treadmill.config.incline.min)
+        incline = treadmill.config.incline.min;
+      treadmill_set_incline(&treadmill, incline);
+      treadmill.hw.beep(BEEP_KEYPRESS_ACK);
+    }
+
+  } else if (HAL_GPIO_ReadPin(INC_PLUS_GPIO_Port, INC_PLUS_Pin) ==
+             GPIO_PIN_RESET) {
+    if (debounce == 0) debounce = HAL_GetTick();
+    if (debounce != 0xffffffff && HAL_GetTick() - debounce > 50) {
+      debounce = 0xffffffff;
+      int incline =
+          (int)treadmill.training.incline + treadmill.config.incline.step;
+      if (incline > treadmill.config.incline.max)
+        incline = treadmill.config.incline.max;
+      treadmill_set_incline(&treadmill, incline);
+      treadmill.hw.beep(BEEP_KEYPRESS_ACK);
+    }
+
+  } else {
+    debounce = 0;
+  }
+}
+
 /* USER CODE END Header_KeyboardTask */
 void KeyboardTask(void const * argument)
 {
@@ -803,43 +1156,63 @@ void KeyboardTask(void const * argument)
   enum key key_pressed = KEY_NONE;
   enum key previous_key = KEY_NONE;
   uint32_t key_tick = 0;
-  /* Infinite loop */
-  for(;;)
-  {
-    key_pressed = get_key_pressed();
 
-    if (key_pressed == KEY_START || key_pressed == KEY_STOP || key_pressed == KEY_CONFIG) {
+  uint8_t slow_repeat_count = 0;
+  /* Infinite loop */
+  for (;;) {
+    key_pressed = get_key_pressed();
+    if (key_pressed == KEY_START || key_pressed == KEY_STOP ||
+        key_pressed == KEY_CONFIG) {
       if (key_tick == 0) {
         key_tick = HAL_GetTick();
+
       } else if (HAL_GetTick() - key_tick >= 50) {
-        if (previous_key != KEY_CONFIG && previous_key != key_pressed) {
-          if ((key_pressed == KEY_CONFIG && HAL_GetTick()-key_tick >= 2000)) {
-            treadmill_key_press(&treadmill, key_pressed);
-            previous_key = key_pressed;
-          } else {
-            treadmill_key_press(&treadmill, key_pressed);
+        if (key_pressed != KEY_CONFIG && previous_key == KEY_NONE) {
+          treadmill_key_press(&treadmill, key_pressed);
+          previous_key = key_pressed;
+        } else {
+          if (key_pressed == KEY_CONFIG && HAL_GetTick() - key_tick >= 2000) {
+            if (key_pressed != previous_key)
+              treadmill_key_press(&treadmill, key_pressed);
             previous_key = key_pressed;
           }
         }
       }
     } else if (key_pressed != previous_key) {
-      if (key_pressed != KEY_NONE)  {
+      if (key_pressed != KEY_NONE) {
         treadmill_key_press(&treadmill, key_pressed);
       }
       key_tick = 0;
+      slow_repeat_count = 0;
       previous_key = key_pressed;
+    } else if (key_pressed != KEY_NONE) {
+      if (slow_repeat_count <= 10) {
+        osDelay(25);
+      } else if (slow_repeat_count < 21) {
+        osDelay(200);
+      } else {
+        osDelay(75);
+      }
+
+      if (slow_repeat_count < 255) slow_repeat_count++;
+      if (slow_repeat_count <= 10) continue;
+      treadmill_key_press(&treadmill, key_pressed);
+      continue;
     }
-    osDelay(2);
+
+    handle_shortcut_keys();
+
+    osDelay(1);  // 2 ms
   }
   /* USER CODE END KeyboardTask */
 }
 
 /* USER CODE BEGIN Header_BeepTask */
 /**
-* @brief Function implementing the beepTask thread.
-* @param argument: Not used
-* @retval None
-*/
+ * @brief Function implementing the beepTask thread.
+ * @param argument: Not used
+ * @retval None
+ */
 /* USER CODE END Header_BeepTask */
 void BeepTask(void const * argument)
 {
@@ -849,15 +1222,14 @@ void BeepTask(void const * argument)
   beep = BEEP_KEYPRESS_ACK;
   xQueueSend(beepEventQueueHandle, &beep, 0);
   /* Infinite loop */
-  for(;;)
-  {
+  for (;;) {
     if (xQueueReceive(beepEventQueueHandle, &beep, portMAX_DELAY) == pdPASS) {
       HAL_TIM_PWM_Stop(&htim16, TIM_CHANNEL_1);
       //
-      switch (beep ) {
+      switch (beep) {
         case BEEP_KEYPRESS_ACK: {
           TIM16->CNT = 0;
-          TIM16->PSC = 100;
+          TIM16->PSC = 120;
           TIM16->ARR = 40;
           TIM16->CCR2 = 10;
           HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
@@ -875,7 +1247,7 @@ void BeepTask(void const * argument)
         }
         case BEEP_COUNTDOWN_COUNT: {
           TIM16->CNT = 0;
-          TIM16->PSC = 120*2;
+          TIM16->PSC = 120 * 2;
           TIM16->ARR = 40;
           TIM16->CCR2 = 20;
           HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
@@ -884,7 +1256,7 @@ void BeepTask(void const * argument)
         }
         case BEEP_COUNTDOWN_END: {
           TIM16->CNT = 0;
-          TIM16->PSC = 110*2;
+          TIM16->PSC = 110 * 2;
           TIM16->ARR = 40;
           TIM16->CCR2 = 20;
           HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
@@ -907,10 +1279,19 @@ void BeepTask(void const * argument)
           TIM16->CCR2 = 20;
           HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
           osTimerStart(beepTimerHandle, pdMS_TO_TICKS(500));
+          break;
+        }
+        case BEEP_EMERGENCY: {
+          TIM16->CNT = 0;
+          TIM16->PSC = 110;
+          TIM16->ARR = 40;
+          TIM16->CCR2 = 20;
+          HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
+          osTimerStart(beepTimerHandle, pdMS_TO_TICKS(1000));
+          break;
         }
       }
     }
-
     osDelay(1);
   }
   /* USER CODE END BeepTask */
@@ -918,32 +1299,28 @@ void BeepTask(void const * argument)
 
 /* USER CODE BEGIN Header_InverterCommTask */
 /**
-* @brief Function implementing the inverterCommTas thread.
-* @param argument: Not used
-* @retval None
-*/
+ * @brief Function implementing the inverterCommTas thread.
+ * @param argument: Not used
+ * @retval None
+ */
+uint32_t _s_inverter_comm = 0;
+uint32_t _s_inverter_comm_delta = 0;
 /* USER CODE END Header_InverterCommTask */
 void InverterCommTask(void const * argument)
 {
   /* USER CODE BEGIN InverterCommTask */
   uint8_t cmd[] = {0x02, 0x41, 0x00, 0x02, 0x42, 0x00, 0x02, 0x43, 0x00};
+  uint32_t nop = 0;
 
   /* Infinite loop */
-  for(;;)
-  {
-    // Speeed
-    if (treadmill.training.speed >= treadmill.config.speed.min)
-      cmd[2] = (treadmill.training.speed - (treadmill.config.speed.min-10))/10;
-    else
-      cmd[2] = 0;
-
-    // Incline
-
-    // Sac
-    // -
-
-    HAL_UART_Transmit(&huart1, cmd, 9, 1);
-    osDelay(100);
+  for (;;) {
+      nop = 0;
+    _s_inverter_comm = HAL_GetTick();
+      while (nop != 0x100000) {
+	  __asm("nop\n");
+	  nop++;
+      }
+    _s_inverter_comm_delta = HAL_GetTick()-_s_inverter_comm;
   }
   /* USER CODE END InverterCommTask */
 }
@@ -967,13 +1344,58 @@ void beepTimerCallback(void const * argument)
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   /* USER CODE BEGIN Callback 0 */
+  static int tick = 0;
 
   /* USER CODE END Callback 0 */
   if (htim->Instance == TIM1) {
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
+  else if (htim->Instance == TIM6) {
+    _t_delta = HAL_GetTick() - _t_tick;
+    _t_tick = HAL_GetTick();
 
+    adc_average = ((adc_average * 255) + (adc_hrm * 1000)) / 256;
+    adc_average_n = adc_average / 1000;
+
+    // if (!tick) {
+    //   static char data[16];
+    //   int length = sprintf(data, "%d %d %d\n", adc_hrm, adc_average_n,
+    //                        adc_below_average ? 0 : adc_average_n);
+    //   HAL_UART_Transmit_IT(&huart3, data, length);
+    // }
+    // tick = !tick;
+
+    if (adc_hrm > (adc_average_n + ADC_THRESHOLD) && adc_below_average) {
+      adc_new_beat = HAL_GetTick();
+      uint32_t diff = adc_new_beat - adc_old_beat;
+      adc_below_average = 0;
+
+      if (diff < 250) {
+        // BPM > 240 bpm
+      } else {
+        uint32_t current_bpm = 60000 / diff;
+
+        uint32_t bpm_totals = 0;
+        for (int i = 0; i < BPM_BUFFER_READS; ++i) {
+          bpm_totals += bpm_buffer_reads[i];
+        }
+        bpm_current_value = bpm_totals / BPM_BUFFER_READS;
+
+        bpm_buffer_reads[bpm_buffer_index] =
+            ((bpm_current_value * 1) + current_bpm) / 2;
+        bpm_buffer_index = (bpm_buffer_index + 1) % BPM_BUFFER_READS;
+
+        adc_old_beat = adc_new_beat;
+
+        // if not reading PolarBPM, use Handgrip
+        if (PolarBPM == 0 && adc_new_beat - adc_delay_tick_ms > 2000)
+          treadmill_set_bpm_value(&treadmill, (uint8_t)bpm_current_value);
+      }
+    } else if (adc_hrm < adc_average_n) {
+      adc_below_average = 1;
+    }
+  }
   /* USER CODE END Callback 1 */
 }
 
@@ -986,8 +1408,7 @@ void Error_Handler(void)
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
-  while (1)
-  {
+  while (1) {
   }
   /* USER CODE END Error_Handler_Debug */
 }
@@ -1003,8 +1424,9 @@ void Error_Handler(void)
 void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
-  /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+  /* User can add his own implementation to report the file name and line
+     number, ex: printf("Wrong parameters value: file %s on line %d\r\n", file,
+     line) */
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */

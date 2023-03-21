@@ -8,9 +8,9 @@
 #include "panel/rt_led.h"
 
 char *scene_name[SCENE_TOTALS] = {
-    "SCENE_INIT",     "SCENE_IDLE",    "SCENE_LUB",
-    "SCENE_CONFIG",   "SCENE_PROGRAM", "SCENE_COUNTDOWN",
-    "SCENE_TRAINING", "SCENE_PAUSED",  "SCENE_REPORT",
+    "SCENE_INIT",   "SCENE_IDLE",    "SCENE_EMERGENCY", "SCENE_LUB",
+    "SCENE_CONFIG", "SCENE_PROGRAM", "SCENE_COUNTDOWN", "SCENE_TRAINING",
+    "SCENE_PAUSED", "SCENE_REPORT",
 };
 
 __attribute__((weak)) void beep(beep_t beep) { (void)beep; }
@@ -164,4 +164,37 @@ void treadmill_save_config(treadmill_t *treadmill) {
   }
 }
 
-void treadmill_update(treadmill_t *treadmill) { rt_led_update(treadmill); }
+void treadmill_update(treadmill_t *treadmill) {
+  if (treadmill->message.tick &&
+      treadmill->get_time_ms() - treadmill->message.tick >=
+          treadmill->message.duration) {
+    treadmill->message.tick = 0;
+    treadmill->message.duration = 0;
+    //memcpy(treadmill->message.data, 0x00, 32);
+  }
+
+  rt_led_update(treadmill);
+}
+
+void treadmill_emergency_pressed(treadmill_t *treadmill) {
+  if (treadmill->scene != SCENE_EMERGENCY) {
+    treadmill_reset_training(treadmill);
+    treadmill_set_scene(treadmill, SCENE_EMERGENCY);
+    treadmill->hw.beep(BEEP_EMERGENCY);
+  }
+}
+
+#include <string.h>
+void treadmill_set_dm_message(treadmill_t *treadmill, const char *text,
+                           const uint32_t duration_ms,
+                           const uint32_t blink_interval) {
+  strncpy(treadmill->message.data, text, 32);
+  treadmill->message.tick = treadmill->get_time_ms();
+  treadmill->message.duration = duration_ms;
+  treadmill->message.blink_interval = blink_interval;
+}
+
+void treadmill_clear_dm_message(treadmill_t *treadmill) {
+  treadmill->message.blink_interval = 0;
+  treadmill->message.tick = 0;
+}

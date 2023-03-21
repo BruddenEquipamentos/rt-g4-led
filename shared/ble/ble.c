@@ -227,7 +227,6 @@ static void ble_interpret_message_bytes(ble_t *ble, char *data, int length) {
   // messages
   static uint8_t mBuffer[256] = {0};
   static int mBufferIndex = 0;
-
   for (int i = 0; i < length; ++i) {
     uint8_t byte = (uint8_t)data[i];
     switch (byte) {
@@ -266,7 +265,8 @@ static void ble_interpret_message_bytes(ble_t *ble, char *data, int length) {
         break;
 
       default: {
-        mBuffer[mBufferIndex++] = byte;
+        mBuffer[mBufferIndex] = byte;
+        mBufferIndex = (mBufferIndex + 1) % 256;
       }
     }
   }

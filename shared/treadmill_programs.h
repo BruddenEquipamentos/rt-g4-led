@@ -96,14 +96,30 @@ struct p_walk_30min {
   uint32_t target_speed;
 };
 
+typedef enum heart_rate_program_state {
+  HEART_RATE_PROGRAM_STATE_INIT = 0,
+  HEART_RATE_PROGRAM_STATE_WAIT = 1,
+  HEART_RATE_PROGRAM_STATE_ACTION = 2,
+} heart_rate_program_state_t;
+
 struct p_fat_burn {
   uint32_t seconds;
   uint8_t age;
+  uint8_t max_bpm;
+  uint8_t low_bpm;
+  uint8_t high_bpm;
+  uint32_t tick_ms;
+  heart_rate_program_state_t hr_program_state;
 };
 
 struct p_super_cardio {
-  uint8_t age;
   uint32_t seconds;
+  uint8_t age;
+  uint8_t max_bpm;
+  uint8_t low_bpm;
+  uint8_t high_bpm;
+  uint32_t tick_ms;
+  heart_rate_program_state_t hr_program_state;
 };
 
 typedef struct key_press_program_callback {

@@ -4,6 +4,7 @@
 
 extern scene_t scene_init;
 extern scene_t scene_idle;
+extern scene_t scene_emergency;
 extern scene_t scene_lub;
 extern scene_t scene_config;
 extern scene_t scene_paused;
@@ -16,6 +17,7 @@ static const scene_t *rt_led_scenes[] = {
     &scene_init,   &scene_idle,      &scene_config,
     &scene_lub,    &scene_countdown, &scene_training,
     &scene_paused, &scene_report,    &scene_programs,
+    &scene_emergency,
 };
 
 static const scene_t *rt_led_current_scene(treadmill_scene_t treadmill_scene) {

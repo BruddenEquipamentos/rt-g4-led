@@ -18,6 +18,7 @@
 
 // TEMP
 treadmill_t *pTreadmill = NULL;
+uint8_t __new_display = 0;
 
 static void sigint(int i) {
   (void)i;
@@ -72,6 +73,26 @@ static void *thread_input(void *arg) {
         treadmill_key_press(treadmill, KEY_PROGRAM);
         break;
       }
+      case 'e': {
+        treadmill_emergency_pressed(treadmill);
+        break;
+      }
+      case 'n': {
+        treadmill_set_bpm_stop(treadmill);
+        break;
+      }
+      case 'm': {
+        treadmill_set_bpm_read(treadmill);
+        break;
+      }
+      case ',': {
+        treadmill_set_bpm_value(treadmill, treadmill->training.bpm - 20);
+      }
+      case '.': {
+        treadmill_set_bpm_value(treadmill, treadmill->training.bpm + 20);
+        break;
+      }
+
       default: {
       }
     }
@@ -236,14 +257,27 @@ static void display_update(treadmill_t *treadmill) {
     fprintf(stdout, "Treadmill Motor State: %s\n",
             treadmill_motor_state_description(treadmill->hw.protocol_state));
     fprintf(stdout, "\n");
+
+    fprintf(stdout, "BPM low: %d, high: %d, max: %d\n",
+            treadmill->program.p_fat_burn.low_bpm,
+            treadmill->program.p_fat_burn.high_bpm,
+            treadmill->program.p_fat_burn.max_bpm);
   }
 }
 
 char display = 1;
-
+#include <string.h>
 static void *thread_main(void *arg) {
   treadmill_t *treadmill = (treadmill_t *)arg;
   treadmill->ms = get_time_ms();
+  // static const char *nsu = "818790500000007067701";
+  // static const char *nsp = "818790500000007067702";
+  // static const char *nsi = "818790500000007067703";
+
+  // treadmill_save_nsu(treadmill, nsu, strlen(nsu));
+  // treadmill_save_nsp(treadmill, nsp, strlen(nsp));
+  // treadmill_save_nsi(treadmill, nsi, strlen(nsi));
+
   for (;;) {
     while (treadmill->ms < get_time_ms()) {
       treadmill->ms = treadmill->ms + 100;
@@ -262,9 +296,7 @@ static void *thread_main(void *arg) {
   return NULL;
 }
 
-static void wait_ms(const int ms) {
-  usleep(1000*ms);
-}
+static void wait_ms(const int ms) { usleep(1000 * ms); }
 
 int main(int argc, char *argv[]) {
   (void)argc;

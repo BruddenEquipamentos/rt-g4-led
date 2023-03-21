@@ -45,6 +45,7 @@ typedef enum uart_protocol_state {
 typedef enum treadmill_scene {
   SCENE_INIT = 0,
   SCENE_IDLE,
+  SCENE_EMERGENCY,
   SCENE_LUB,
   SCENE_CONFIG,
   SCENE_PROGRAM,
@@ -55,13 +56,19 @@ typedef enum treadmill_scene {
   SCENE_TOTALS,
 } treadmill_scene_t;
 
+enum heartrate_hg_state {
+  HEARTRATE_HG_DISABLED = 0,
+  HEARTRATE_HG_INITING,
+  HEARTRATE_HG_READING,
+};
+
 extern char *scene_name[];
 typedef struct treadmill {
   treadmill_scene_t scene;
   treadmill_scene_t previous_scene;
 
-  uint32_t scene_tick; // tick since scene started
-  uint32_t idle_tick; // tick since last keypress
+  uint32_t scene_tick;  // tick since scene started
+  uint32_t idle_tick;   // tick since last keypress
 
   struct program {
     program_id_t id;
@@ -89,6 +96,7 @@ typedef struct treadmill {
     uint16_t pace;
     uint8_t bpm;
 
+    uint32_t incline_changed_time_ms;
   } training;
 
   struct config {
@@ -146,11 +154,21 @@ typedef struct treadmill {
     struct motor {
       int (*send_data)(const uint8_t *data, int length);
       int (*recv_data)(uint8_t *data, int max_length);
+      int (*change_frequency)(uint16_t period);
     } motor;
+
+    struct {
+      enum heartrate_hg_state hg_state;
+    } heartrate;
 
   } hw;
 
-
+  struct {
+    char data[32];
+    uint32_t tick;
+    uint32_t duration;
+    uint32_t blink_interval;
+  } message;
 
   uint32_t (*get_time_ms)(void);
   uint32_t ms;
@@ -170,5 +188,13 @@ uint32_t treadmill_calculate_calories(treadmill_t *treadmill);
 
 void treadmill_load_config(treadmill_t *treadmill);
 void treadmill_save_config(treadmill_t *treadmill);
+
+void treadmill_emergency_pressed(treadmill_t *treadmill);
+
+void treadmill_set_dm_message(treadmill_t *treadmill, const char *text,
+                           const uint32_t duration_ms,
+                           const uint32_t blink_interval);
+
+void treadmill_clear_dm_message(treadmill_t *treadmill);
 
 #endif

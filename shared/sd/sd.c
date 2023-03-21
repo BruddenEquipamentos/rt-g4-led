@@ -130,6 +130,11 @@ void sd_set_value(sd_t *sd, const uint32_t value) {
   snprintf(sd->text, 8, "%d", value);
 }
 
+void sd_set_bpm(sd_t *sd, const uint8_t bpm) {
+  sd_set_pad_leading_zero(sd, true);
+  sd_set_value(sd, bpm);
+}
+
 inline void sd_set_visible(sd_t *sd, const bool visible) {
   if (visible)
     sd->flag |= SD_FLAG_VISIBLE;
@@ -137,6 +142,13 @@ inline void sd_set_visible(sd_t *sd, const bool visible) {
     sd->flag &= ~SD_FLAG_VISIBLE;
 
   sd->visible = visible;
+}
+
+inline void sd_set_pad_leading_zero(sd_t *sd, const bool pad) {
+  if (pad)
+    sd->flag |= SD_FLAG_PAD_LEADING_ZERO;
+  else
+    sd->flag &= ~SD_FLAG_PAD_LEADING_ZERO;
 }
 
 void sd_blink(sd_t *sd, const uint32_t update_time_ms,

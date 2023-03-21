@@ -4,6 +4,14 @@
     "sd.h": "c",
     "ble_protocol_command.h": "c",
     "treadmill_programs.h": "c",
-    "ble_protocol_helper.h": "c"
+    "ble_protocol_helper.h": "c",
+    "treadmill_motor_modbus.h": "c",
+    "treadmill_motor_movement.h": "c",
+    "treadmill.h": "c",
+    "ble.h": "c",
+    "treadmill_action.h": "c",
+    "string.h": "c",
+    "scene.h": "c",
+    "mb_operation.h": "c"
   }
 }

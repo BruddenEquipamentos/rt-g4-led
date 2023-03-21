@@ -61,6 +61,8 @@ enum sd_digit {
 };
 
 void sd_set_visible(sd_t *sd, const bool visible);
+void sd_set_pad_leading_zero(sd_t *sd, const bool pad);
+
 void sd_set_min_sec(sd_t *sd, uint32_t seconds);
 void sd_set_km_m(sd_t *sd, uint32_t meters);
 void sd_set_kmh(sd_t *sd, const uint32_t speed);
@@ -76,5 +78,7 @@ void sd_set_version(sd_t *sd, const uint8_t major, const uint8_t minor,
 void sd_set_text(sd_t *sd, const char *text);
 
 void sd_set_program_text(sd_t *sd, const int program_number);
+
+void sd_set_bpm(sd_t *sd, const uint8_t bpm);
 
 #endif

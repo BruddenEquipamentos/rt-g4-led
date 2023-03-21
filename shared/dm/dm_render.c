@@ -11,7 +11,29 @@ static void dm_render_mb_param_value(treadmill_t *treadmill) {
   dm_render_text(op->rfmtd, 16);
 }
 
+static uint32_t dm_blink_time_ms = 0;
+static int dm_blink(const uint32_t update_time_ms,
+                    const uint32_t blink_interval_ms) {
+  if (blink_interval_ms == 0) return 1;
+  if (update_time_ms - dm_blink_time_ms > blink_interval_ms) {
+    dm_blink_time_ms = update_time_ms;
+    return 1;
+  } else if (update_time_ms - dm_blink_time_ms > blink_interval_ms / 2) {
+    return 0;
+  }
+  return 1;
+}
+
 void dm_render(treadmill_t *treadmill) {
+  if (treadmill->message.tick) {
+    dm_clear_buffer();
+    if (!dm_blink(treadmill->get_time_ms(),
+                  treadmill->message.blink_interval)) {
+      dm_render_text(treadmill->message.data, 16);
+    }
+    return;
+  }
+
   if (treadmill->scene != treadmill->previous_scene) {
     switch (treadmill->scene) {
       case SCENE_PAUSED: {
@@ -41,7 +63,34 @@ void dm_render(treadmill_t *treadmill) {
         dm_render_mb_param_value(treadmill);
       } else {
         dm_clear_buffer();
+
+        extern uint8_t __new_display;
+        if (__new_display) {
+          // if incline has been pressed, show incline for specific time
+          if (treadmill->training.incline_changed_time_ms &&
+              treadmill->get_time_ms() -
+                      treadmill->training.incline_changed_time_ms <=
+                  2000) {
+            char text[16];
+            sprintf(text, "%1d.%1d%%", treadmill->training.incline / 10,
+                    treadmill->training.incline % 10);
+            dm_render_text(text, 16);
+          }
+        }
+
+        if (treadmill->program.id == PROGRAM_FAT_BURN ||
+            treadmill->program.id == PROGRAM_SUPER_CARDIO) {
+          if (treadmill->training.bpm == 0) {
+            if (!dm_blink(treadmill->get_time_ms(), 1000)) {
+              dm_render_text("@;", 12);
+            }
+          }
+        }
       }
+      break;
+    }
+    case SCENE_EMERGENCY: {
+      dm_render_text_animated("EMERGENCIA", 100, treadmill->get_time_ms());
       break;
     }
     case SCENE_PAUSED: {
@@ -49,7 +98,7 @@ void dm_render(treadmill_t *treadmill) {
       break;
     }
     case SCENE_LUB: {
-      dm_render_text("LUB", 15);
+      dm_render_text("LUB", 13);
       break;
     }
     case SCENE_CONFIG: {
@@ -123,4 +172,13 @@ void dm_render(treadmill_t *treadmill) {
       }
     };
   }
+
+  // static int col = 0;
+  // static uint32_t t = 0;
+  // if (treadmill->get_time_ms() - t >= 250) {
+  //   col = (col + 1) % 16;
+  //   t = treadmill->get_time_ms();
+  // }
+  // dm_clear_buffer();
+  // for (int i = 0; i < col + 1; ++i) dm_render_column_line(i);
 }

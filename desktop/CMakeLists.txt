@@ -25,6 +25,6 @@ file(GLOB source_files
           "*.h"
           "*.c")
 
-add_compile_options(-g -Wall -Wextra -pedantic -Werror -Wno-unused-parameter -Wno-gnu-binary-literal)
+add_compile_options(-g -Wall -Wextra -pedantic -Werror -Wno-unused-parameter -Wno-unused-function -Wno-gnu-binary-literal)
 
 add_executable(main ${source_files})

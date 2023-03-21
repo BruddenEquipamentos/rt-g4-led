@@ -68,11 +68,13 @@ static void dprint_exception(u8 exception) {
 
 mb_operation_t *mb_operation_fetch_next_op() {
     static size_t index = 0;
+    extern uint8_t mb_op_index;
     mb_operation_t *op;
     size_t current_index = index;
     do {
-        op = &mb_operations[index++];
-        if (index >= mb_operations_length) index = 0;
+        op = &mb_operations[index];
+        index = (index + 1) % mb_operations_length;
+        if (op->run_once && !op->enable && op == &mb_operations[mb_op_index]) op->enable = 1;
     } while (!op->enable && index != current_index);
 
     return op;

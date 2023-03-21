@@ -23,8 +23,13 @@ void treadmill_abort_countdown(treadmill_t *treadmill) {
 }
 
 void treadmill_pause_training(treadmill_t *treadmill) {
+  treadmill_clear_dm_message(treadmill);
   treadmill_set_speed(treadmill, 0);
   treadmill_set_scene(treadmill, SCENE_PAUSED);
+}
+
+void treadmill_reset_training(treadmill_t *treadmill) {
+  memset(&treadmill->training, 0x00, sizeof(struct training));
 }
 
 void treadmill_resume_training(treadmill_t *treadmill) {
@@ -34,6 +39,7 @@ void treadmill_resume_training(treadmill_t *treadmill) {
 }
 
 void treadmill_finish_training(treadmill_t *treadmill) {
+  treadmill_clear_dm_message(treadmill);
   treadmill_set_speed(treadmill, 0);
   treadmill_set_scene(treadmill, SCENE_REPORT);
 }
@@ -81,13 +87,28 @@ int treadmill_set_speed(treadmill_t *treadmill, const uint16_t speed) {
   if (speed > 0 && speed < treadmill->config.speed.min) return 0;
   treadmill->training.speed = speed;
   treadmill->training.pace = treadmill_calculate_pace(treadmill);
+
+  // todo: refactor
+  if (treadmill->training.seconds > 0) {
+    if (treadmill->program.id == PROGRAM_HIIT) {
+      if ((treadmill->training.seconds / 60) & 1) {
+        treadmill->program.p_hiit.speed_t2 = speed;
+      } else {
+        treadmill->program.p_hiit.speed_t1 = speed;
+      }
+    }
+  }
+
   return 1;
 }
 
 int treadmill_set_incline(treadmill_t *treadmill, const int16_t incline) {
   if (incline > treadmill->config.incline.max) return 0;
   if (incline < treadmill->config.incline.min) return 0;
-  treadmill->training.incline = incline;
+  if (treadmill->training.incline != incline) {
+    treadmill->training.incline_changed_time_ms = treadmill->get_time_ms();
+    treadmill->training.incline = incline;
+  }
   return 1;
 }
 
@@ -95,7 +116,8 @@ void treadmill_incline_increment(treadmill_t *treadmill) {
   if (treadmill->training.incline >= treadmill->config.incline.min &&
       treadmill->training.incline + treadmill->config.incline.step <=
           treadmill->config.incline.max) {
-    treadmill->training.incline += treadmill->config.incline.step;
+    treadmill_set_incline(treadmill, treadmill->training.incline +
+                                         treadmill->config.incline.step);
   }
 }
 
@@ -103,7 +125,8 @@ void treadmill_incline_decrement(treadmill_t *treadmill) {
   if (treadmill->training.incline >= treadmill->config.incline.min &&
       treadmill->training.incline - treadmill->config.incline.step >=
           treadmill->config.incline.min) {
-    treadmill->training.incline -= treadmill->config.incline.step;
+    treadmill_set_incline(treadmill, treadmill->training.incline -
+                                         treadmill->config.incline.step);
   }
 }
 
@@ -142,7 +165,10 @@ void treadmill_exit_config(treadmill_t *treadmill) {
   treadmill_set_scene(treadmill, SCENE_IDLE);
 }
 
-static int valid_ns(const char *nsu, const int length) { return 1; }
+static int valid_ns(const char *nsu, const int length) {
+  if (length > 22) return 0;
+  return 1;
+}
 
 int treadmill_save_nsu(treadmill_t *treadmill, const char *nsu,
                        const int length) {
@@ -163,7 +189,7 @@ int treadmill_save_nsp(treadmill_t *treadmill, const char *nsp,
 int treadmill_save_nsi(treadmill_t *treadmill, const char *nsi,
                        const int length) {
   if (!valid_ns(nsi, length)) return 0;
-  strcpy(treadmill->config.nsp, nsi);
+  strcpy(treadmill->config.nsi, nsi);
   nvm.NVM_WriteString(NVM_NSI_START_ADDRESS, nsi, length, NVM_NS_MAX_LENGTH);
   return 1;
 }
@@ -264,3 +290,18 @@ int treadmill_send_ftms_data(treadmill_t *treadmill) {
 
   return treadmill->hw.ble.send_data(buffer, bindex);
 }
+
+void treadmill_set_bpm_read(treadmill_t *treadmill) {
+  treadmill->hw.heartrate.hg_state = HEARTRATE_HG_INITING;
+}
+
+void treadmill_set_bpm_value(treadmill_t *treadmill, uint8_t bpm) {
+  treadmill->hw.heartrate.hg_state = HEARTRATE_HG_READING;
+  treadmill->training.bpm = bpm;
+}
+
+void treadmill_set_bpm_stop(treadmill_t *treadmill) {
+  treadmill->hw.heartrate.hg_state = HEARTRATE_HG_DISABLED;
+  treadmill->training.bpm = 0;
+}
+

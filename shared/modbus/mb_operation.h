@@ -56,7 +56,6 @@ extern "C" {
 
     int mb_operation_reenable_run_once(void);
 
-
 #ifdef __cplusplus
 }
 #endif

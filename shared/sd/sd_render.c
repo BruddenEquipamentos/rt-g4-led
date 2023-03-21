@@ -2,8 +2,17 @@
 
 #include "../panel/render_program_scene.h"
 #include "../panel/rt_led.h"
-
 #include "../treadmill_motor_modbus.h"
+/*
+// display (iLed)
+distance time speed
+calories program pace
+incline ... bpm
+
+// display (led)
+distance time speed
+calories pace bpm
+*/
 
 sd_t sd_distance = {.flag = SD_FLAG_VISIBLE};
 sd_t sd_time = {.flag = SD_FLAG_VISIBLE};
@@ -25,7 +34,29 @@ void sd_render_all_visible(bool visible) {
   sd_set_visible(&sd_bpm, visible);
 }
 
-#include <stdio.h> // TODO: refactor
+static void sd_render_all_no_pad(void) {
+  sd_set_pad_leading_zero(&sd_distance, false);
+  sd_set_pad_leading_zero(&sd_time, false);
+  sd_set_pad_leading_zero(&sd_speed, false);
+  sd_set_pad_leading_zero(&sd_kcal, false);
+  sd_set_pad_leading_zero(&sd_program, false);
+  sd_set_pad_leading_zero(&sd_pace, false);
+  sd_set_pad_leading_zero(&sd_incline, false);
+  sd_set_pad_leading_zero(&sd_bpm, false);
+}
+
+static void sd_set_value_to_all(const uint32_t value) {
+  sd_set_value(&sd_distance, value);
+  sd_set_value(&sd_time, value);
+  sd_set_value(&sd_speed, value);
+  sd_set_value(&sd_kcal, value);
+  sd_set_value(&sd_program, value);
+  sd_set_value(&sd_pace, value);
+  sd_set_value(&sd_incline, value);
+  sd_set_value(&sd_bpm, value);
+}
+
+#include <stdio.h>  // TODO: refactor
 static void render_training_data(treadmill_t *treadmill) {
   sd_set_km_m(&sd_distance, treadmill->training.meters);
   sd_set_min_sec(&sd_time, treadmill->training.seconds);
@@ -33,7 +64,8 @@ static void render_training_data(treadmill_t *treadmill) {
   sd_set_min_sec(&sd_pace, treadmill->training.pace);
   sd_set_kcal(&sd_kcal, treadmill->training.kcal / 1000);
   sd_set_incline(&sd_incline, treadmill->training.incline);
-  sd_set_value(&sd_bpm, treadmill->training.bpm);
+  // sd_set_value(&sd_bpm, treadmill->training.bpm);
+  sd_set_bpm(&sd_bpm, treadmill->training.bpm);
 
   // TODO: refactor
   if (treadmill->config.modbus) {
@@ -41,6 +73,10 @@ static void render_training_data(treadmill_t *treadmill) {
     char text[5];
     snprintf(text, 5, "P%03d", modbus_current_selected_param_value());
     sd_set_text(&sd_program, text);
+  }
+
+  if (treadmill->hw.heartrate.hg_state == HEARTRATE_HG_INITING) {
+    sd_blink(&sd_bpm, treadmill->get_time_ms(), 1000);
   }
 }
 
@@ -60,7 +96,7 @@ static void render_training_data_program(treadmill_t *treadmill) {
     }
     case PROGRAM_CALORIES: {
       uint32_t remaining_kcal =
-          treadmill->program.p_calories.kcal - treadmill->training.kcal;
+          treadmill->program.p_calories.kcal - treadmill->training.kcal / 1000;
       sd_set_value(&sd_kcal, remaining_kcal);
       break;
     }
@@ -174,12 +210,16 @@ void sd_render(treadmill_t *treadmill) {
       render_training_data(treadmill);
       break;
     }
+    case SCENE_EMERGENCY: {
+      sd_render_all_visible(false);
+      break;
+    }
     case SCENE_LUB: {
       sd_render_all_visible(false);
       sd_set_visible(&sd_distance, true);
-      // todo: Calculate remaining
-      // distance to show LUB message
-      sd_set_value(&sd_distance, treadmill->config.lub_distance);
+      sd_set_value(&sd_distance, ((treadmill->config.lub_distance * 1000) -
+                                  (treadmill->total.distance_in_meters)) /
+                                     1000);  // in km
       break;
     }
     case SCENE_CONFIG: {
@@ -215,4 +255,16 @@ void sd_render(treadmill_t *treadmill) {
     }
     default:;
   }
+
+  // static uint32_t t = 0;
+  // static uint32_t seconds = 0;
+  // static uint32_t value = 0;
+  // if (treadmill->get_time_ms() - t >= 1000) {
+  //   seconds = (seconds + 1) % 10;
+  //   value = seconds * 1000 + seconds * 100 + seconds * 10 + seconds;
+  //   t = treadmill->get_time_ms();
+  // }
+  // sd_set_value_to_all(value);
+  // sd_render_all_visible(true);
+  // sd_render_all_no_pad();
 }

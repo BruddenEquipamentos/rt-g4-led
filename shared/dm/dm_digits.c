@@ -399,13 +399,24 @@ const digit_t dm_B = {
 };
 
 const digit_t dm_dot = {
-    .cols = 2,
+    .cols = 1,
     .data = {
-        0b00,
-        0b00,
-        0b00,
-        0b00,
-        0b10,
+        0b0,
+        0b0,
+        0b0,
+        0b0,
+        0b1,
+    }
+};
+
+const digit_t dm_bpm_pointer = {
+    .cols = 4,
+    .data = {
+        0b0111,
+        0b0011,
+        0b0101,
+        0b0000,
+        0b0000,
     }
 };
 
@@ -448,6 +459,7 @@ digit_map_t dm_map[] = {
     {.ch='X', .dm=&dm_X},
     {.ch='x', .dm=&dm_x},
     {.ch='.', .dm=&dm_dot},
+    {.ch=';', .dm=&dm_bpm_pointer},
 };
 
 const digit_t *dm_number(const int number) {

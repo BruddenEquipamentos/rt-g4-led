@@ -7,6 +7,7 @@ void treadmill_start_training_countdown(treadmill_t *treadmill);
 void treadmill_start_training(treadmill_t *treadmill);
 void treadmill_abort_countdown(treadmill_t *treadmill);
 void treadmill_pause_training(treadmill_t *treadmill);
+void treadmill_reset_training(treadmill_t *treadmill);
 void treadmill_resume_training(treadmill_t *treadmill);
 void treadmill_finish_training(treadmill_t *treadmill);
 void treadmill_finish_program(treadmill_t *treadmill);
@@ -43,5 +44,9 @@ int treadmill_pause_procedure(treadmill_t *treadmill);
 int treadmill_stop_procedure(treadmill_t *treadmill);
 
 int treadmill_send_ftms_data(treadmill_t *treadmill);
+
+void treadmill_set_bpm_read(treadmill_t *treadmill);
+void treadmill_set_bpm_value(treadmill_t *treadmill, uint8_t bpm);
+void treadmill_set_bpm_stop(treadmill_t *treadmill);
 
 #endif

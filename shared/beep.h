@@ -15,6 +15,7 @@ typedef enum beep {
     BEEP_COUNTDOWN_END,
     BEEP_REST,
     BEEP_PROGRAM_FINISHED,
+    BEEP_EMERGENCY,
 } beep_t;
 
 #endif /* SRC_BEEP_H_ */

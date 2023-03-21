@@ -203,6 +203,9 @@ static void program_fat_burn_key_press(treadmill_t *treadmill,
           treadmill->program.param_index++;
           break;
         case 1:
+          treadmill->program.p_fat_burn.max_bpm = 220 - treadmill->program.p_fat_burn.age;
+          treadmill->program.p_fat_burn.low_bpm = (treadmill->program.p_fat_burn.max_bpm * 60)/100;
+          treadmill->program.p_fat_burn.high_bpm = (treadmill->program.p_fat_burn.max_bpm * 75)/100;
           treadmill_start_program(treadmill);
           break;
       }
@@ -260,6 +263,9 @@ static void program_super_cardio_key_press(treadmill_t *treadmill,
           treadmill->program.param_index++;
           break;
         case 1:
+          treadmill->program.p_fat_burn.max_bpm = 220 - treadmill->program.p_fat_burn.age;
+          treadmill->program.p_fat_burn.low_bpm = (treadmill->program.p_fat_burn.max_bpm * 50)/100;
+          treadmill->program.p_fat_burn.high_bpm = (treadmill->program.p_fat_burn.max_bpm * 60)/100;
           treadmill_start_program(treadmill);
           break;
       }

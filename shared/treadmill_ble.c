@@ -28,8 +28,7 @@ void treadmill_ble_process_init(treadmill_t *treadmill) {
           treadmill->config.incline.min, treadmill->config.incline.max,
           treadmill->config.incline.step);
       ble_post_message(data, "\x06", 1000);
-
-      ble_post_message("\x02SID,7\n", "AOK", 1000);
+      ble_post_message("\x02SID,2\n", "AOK", 1000);
       ble_post_message("\x02SDN,MovCT\n", "AOK", 1000);
       ble->init_state = BLE_INIT_STATE_PROCESS;
       break;

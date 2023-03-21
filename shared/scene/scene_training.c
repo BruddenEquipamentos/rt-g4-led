@@ -1,6 +1,6 @@
+#include "../treadmill_motor_modbus.h"
 #include "../treadmill_programs_update.h"
 #include "scene.h"
-#include "../treadmill_motor_modbus.h"
 
 static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
@@ -8,10 +8,28 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
       treadmill_pause_training(treadmill);
       break;
     case KEY_SPEED_INCREMENT:
-      treadmill_speed_increment(treadmill);
+      if (treadmill->program.id == PROGRAM_WALK_30MIN) {
+        if (treadmill->program.p_walk_30min.target_speed +
+                treadmill->config.speed.step <=
+            treadmill->config.speed.max) {
+          treadmill->program.p_walk_30min.target_speed +=
+              treadmill->config.speed.step;
+        }
+      } else {
+        treadmill_speed_increment(treadmill);
+      }
       break;
     case KEY_SPEED_DECREMENT:
-      treadmill_speed_decrement(treadmill);
+      if (treadmill->program.id == PROGRAM_WALK_30MIN) {
+        if ((int)treadmill->program.p_walk_30min.target_speed -
+                treadmill->config.speed.step >=
+            treadmill->config.speed.min) {
+          treadmill->program.p_walk_30min.target_speed -=
+              treadmill->config.speed.step;
+        }
+      } else {
+        treadmill_speed_decrement(treadmill);
+      }
       break;
     case KEY_INCLINE_INCREMENT:
       treadmill_incline_increment(treadmill);
