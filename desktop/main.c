@@ -148,6 +148,10 @@ static char *treadmill_ble_init_state_description(
   switch (ble_init_state) {
     case BLE_INIT_STATE_INIT:
       return "INIT_STATE_INIT";
+    case BLE_INIT_STATE_WAIT:
+      return "INIT_STATE_WAIT";
+    case BLE_INIT_POST_COMMANDS:
+      return "INIT_POST_COMMANDS";
     case BLE_INIT_STATE_PROCESS:
       return "INIT_STATE_PROCESS";
     case BLE_INIT_STATE_READY:
@@ -286,9 +290,10 @@ static void *thread_main(void *arg) {
 
     treadmill_ble_process(treadmill);
 
-    treadmill_motor_process(treadmill);
+    // treadmill_motor_process(treadmill);
 
     rt_led_render(treadmill);  // memory update
+
     if (display) display_update(treadmill);
 
     usleep(1000 * 100);

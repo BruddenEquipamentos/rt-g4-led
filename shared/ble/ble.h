@@ -11,6 +11,8 @@ typedef enum ble_state {
 
 typedef enum ble_init_state {
   BLE_INIT_STATE_INIT = 0,
+  BLE_INIT_STATE_WAIT,
+  BLE_INIT_POST_COMMANDS,
   BLE_INIT_STATE_PROCESS,
   BLE_INIT_STATE_READY
 } ble_init_state_t;
@@ -34,6 +36,7 @@ typedef struct ble {
   recv_data_cb recv_data;
 
   uint32_t (*get_tick)(void);
+  void (*reset)(void);
 
   struct ftms {
     uint8_t subscribed;
@@ -65,5 +68,7 @@ int ble_post_message(const char *data, const char *response,
 
 int ble_process_received(ble_t *ble, char *data, int length);
 int ble_process_commands(ble_t *ble);
+
+void ble_protocol_process(uint8_t *ptr_data, int length);
 
 #endif

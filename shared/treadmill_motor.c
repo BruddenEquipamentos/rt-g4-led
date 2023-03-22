@@ -3,7 +3,8 @@
 #include "treadmill_motor_modbus.h"
 #include "treadmill_motor_movement.h"
 
-static void treadmill_motor_frequency_process(treadmill_t *treadmill) {
+static void treadmill_motor_frequency_process(treadmill_t *treadmill,
+                                              const uint16_t speed) {
   static const uint16_t speed_freq[] = {
       0,     20402, 18916, 17631, 16510, 15523, 14648, 13865, 13102, 12473,
       11901, 11380, 10902, 10463, 10057, 9682,  9334,  9010,  8708,  8426,
@@ -24,15 +25,15 @@ static void treadmill_motor_frequency_process(treadmill_t *treadmill) {
       1503,  1495,  1485,  1477,  1469,  1460,  1452,  1444,  1436,  1428,
   };
 
-  if (treadmill->training.speed >= treadmill->config.speed.min) {
+  if (speed >= treadmill->config.speed.min) {
     uint16_t index =
-        (treadmill->training.speed - (treadmill->config.speed.min - 10)) / 10;
+        (speed - (treadmill->config.speed.min - 10)) / 10;
     treadmill->hw.motor.change_frequency(speed_freq[index]);
+  } else {
+    if (speed == 0) {
+      treadmill->hw.motor.change_frequency(speed_freq[0]);
+    }
   }
-
-  // based on speed
-  // change pwm frequency
-  // callback to update frequency
 }
 
 static void treadmill_motor_uart_protocol_init(treadmill_t *treadmill) {
@@ -90,12 +91,14 @@ static void treadmill_motor_uart_process(treadmill_t *treadmill) {
 void treadmill_motor_process(treadmill_t *treadmill) {
   switch (treadmill->hw.communication_type) {
     case MOTOR_COMMUNICATION_TYPE_FREQ: {
-      treadmill_motor_frequency_process(treadmill);
+      treadmill_motor_frequency_process(treadmill, treadmill->training.speed);
       break;
     }
     case MOTOR_COMMUNICATION_TYPE_UART: {
       treadmill_motor_uart_process(treadmill);
-      treadmill_motor_frequency_process(treadmill);
+      treadmill_motor_frequency_process(
+          treadmill,
+          treadmill->training.speed > 0 ? treadmill->config.speed.min : 0);
       break;
     }
     default:;

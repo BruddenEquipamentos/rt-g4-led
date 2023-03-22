@@ -1,38 +1,54 @@
 #include "treadmill_ble.h"
 
+#include <string.h>
+
 #include "./ble/ble.h"
+#include "./ble/ble_legacy.h"
 #include "./ble/ble_protocol/ble_fmcp.h"
 #include "./ble/ble_protocol/ble_ftms_treadmill.h"
 #include "./ble/ble_protocol/ble_protocol_command.h"
 #include "./ble/ble_protocol/ble_protocol_helper.h"
 
 void treadmill_ble_process_init(treadmill_t *treadmill) {
+  static uint32_t init_wait = 0;
   ble_t *ble = &treadmill->hw.ble;
   switch (ble->init_state) {
     case BLE_INIT_STATE_INIT: {
+      if (ble->reset) ble->reset();
+      ble->init_state = BLE_INIT_STATE_WAIT;
+      init_wait = treadmill->get_time_ms();
+      break;
+    }
+    case BLE_INIT_STATE_WAIT: {
+      if (treadmill->get_time_ms() - init_wait >= 2000) {
+        init_wait = 0;
+        ble->init_state = BLE_INIT_POST_COMMANDS;
+      }
+      break;
+    }
+    case BLE_INIT_POST_COMMANDS: {
       char data[32];
       uint8_t length;
       ble_clear_commands();
-      ble_protocol_command_ftms_data((uint8_t *)data, &length, 32,
-                                     FTMS_TREADMILL_DATA_UUID);
+      ble_protocol_command_ftms_data((uint8_t *)data, &length, 32, FTMS_TREADMILL_DATA_UUID);
       ble_post_message(data, "\x06", 1000);
 
-      ftms_range_command(
-          (uint8_t *)data, &length, 32, BP_FTMS_SUPPORTED_SPEED_RANGE,
-          treadmill->config.speed.min, treadmill->config.speed.max,
-          treadmill->config.speed.step);
+      ftms_range_command((uint8_t *)data, &length, 32, BP_FTMS_SUPPORTED_SPEED_RANGE, treadmill->config.speed.min,
+                         treadmill->config.speed.max, treadmill->config.speed.step);
       ble_post_message(data, "\x06", 1000);
 
-      ftms_range_command(
-          (uint8_t *)data, &length, 32, BP_FTMS_SUPPORTED_INCLINATION_RANGE,
-          treadmill->config.incline.min, treadmill->config.incline.max,
-          treadmill->config.incline.step);
+      ftms_range_command((uint8_t *)data, &length, 32, BP_FTMS_SUPPORTED_INCLINATION_RANGE,
+                         treadmill->config.incline.min, treadmill->config.incline.max, treadmill->config.incline.step);
       ble_post_message(data, "\x06", 1000);
       ble_post_message("\x02SID,2\n", "AOK", 1000);
+
+      // name by model
+
       ble_post_message("\x02SDN,MovCT\n", "AOK", 1000);
       ble->init_state = BLE_INIT_STATE_PROCESS;
       break;
     }
+
     case BLE_INIT_STATE_PROCESS: {
       ble_process_status_t status = ble_process_commands(ble);
       if (status == BLE_PROCESS_STATUS_ERROR) {
@@ -49,25 +65,66 @@ void treadmill_ble_process_init(treadmill_t *treadmill) {
   }
 }
 
+static int _tail = 0;
+static int _head = 0;
+
+enum ble_rx_event {
+  BLE_RX_EVENT_NONE = 0,
+  BLE_RX_EVENT_03_04_0A,
+  BLE_RX_EVENT_F5_F6,
+  BLE_RX_EVENT_CONNECTED,
+  BLE_RX_EVENT_DISCONNECTED
+};
+
+struct ble_data {
+  enum ble_rx_event event;
+  uint8_t length;
+  uint8_t data[64];
+};
+
+#define BLE_DATA_QUEUE_LENGTH (5)
+struct ble_data ble_data[BLE_DATA_QUEUE_LENGTH];
+
 void treadmill_ble_process(treadmill_t *treadmill) {
-  // MACRO VIEW OF THE BLE PROCESS
-
-  // READ MESSAGES -> CHECK POSTED MESSAGE RESPONSE | INTERPRET MESSAGES
-  // POST MESSAGE -> SEND MESSAGE
-
   ble_t *ble = &treadmill->hw.ble;
 
-#define RX_MAX_LENGTH (256)
-  static char received[RX_MAX_LENGTH] = {0};
-
+#ifdef __APPLE__
   // receive message process
+  uint8_t buffer[256];
   while (1) {
-    int length = ble->recv_data(
-        (uint8_t *)received, RX_MAX_LENGTH);  // we assume that recv_data will
-                                              // return on parse a command
+    volatile int length = ble->recv_data(buffer, 256);
     if (length <= 0) break;
-    // handle reponse here
-    ble_process_received(ble, received, length);
+    // ble_process_received(ble, received, length);
+    for (int i = 0; i < length; ++i) {
+      treadmill_ble_push_byte(treadmill, buffer[i]);
+    }
+  }
+#endif
+
+  while (_head != _tail) {
+    struct ble_data *ble_data_msg = &ble_data[_tail];
+    switch (ble_data_msg->event) {
+      case BLE_RX_EVENT_03_04_0A: {
+        if (!ble_legacy_commands_handler((char *)ble_data_msg->data)) {
+          ble_process_received(&treadmill->hw.ble, (char *)ble_data_msg->data, ble_data_msg->length);
+        }
+        break;
+      }
+      case BLE_RX_EVENT_F5_F6: {
+        ble_protocol_process(ble_data_msg->data, ble_data_msg->length);
+        break;
+      }
+      case BLE_RX_EVENT_CONNECTED: {
+        treadmill->hw.ble.connected = 1;
+        break;
+      }
+      case BLE_RX_EVENT_DISCONNECTED: {
+        treadmill->hw.ble.connected = 0;
+        break;
+      }
+      default:;
+    }
+    _tail = (_tail + 1) % BLE_DATA_QUEUE_LENGTH;
   }
 
   switch (ble->state) {
@@ -76,6 +133,14 @@ void treadmill_ble_process(treadmill_t *treadmill) {
       break;
     }
     case BLE_STATE_READY: {
+      if (treadmill->hw.ble.ftms.subscribed) {
+        if (treadmill->get_time_ms() - treadmill->hw.ble.ftms.tick_data_ms >=
+            (treadmill->hw.ble.connection.interval * 125) / 100) {
+          treadmill->hw.ble.ftms.tick_data_ms = treadmill->get_time_ms();
+          treadmill_send_ftms_data(treadmill);
+        }
+      }
+
       if (ble_process_commands(ble) == BLE_PROCESS_STATUS_ERROR) {
         ble->state = BLE_STATE_ERROR;
       }
@@ -85,6 +150,73 @@ void treadmill_ble_process(treadmill_t *treadmill) {
       ble->init_state = BLE_INIT_STATE_INIT;
       ble->state = BLE_STATE_INIT;
       break;
+    }
+  }
+}
+
+void treadmill_ble_clear_messages(treadmill_t *treadmill) {
+  memset(ble_data, 0x00, sizeof(struct ble_data));
+  _head = 0;
+  _tail = 0;
+}
+void treadmill_ble_post_message(enum ble_rx_event event, uint8_t *data, uint8_t length) {
+  struct ble_data *ble_data_msg = &ble_data[_head];
+  ble_data_msg->event = event;
+  ble_data_msg->length = length;
+  memset(ble_data_msg->data, 0x00, 64);
+  memcpy(ble_data_msg->data, data, length);
+  _head = (_head + 1) % BLE_DATA_QUEUE_LENGTH;
+}
+
+void treadmill_ble_push_byte(treadmill_t *treadmill, const uint8_t byte) {
+#define RX_BUFFER_LENGTH (256)
+  static uint8_t buffer[RX_BUFFER_LENGTH] = {0};
+  static int length = 0;
+  switch (byte) {
+    case 0x01:
+    case 0x02:
+      length = 0;
+      break;
+
+    case 0x03:
+    case 0x04:
+    case 0x0A: {
+      buffer[length] = 0;
+      treadmill_ble_post_message(BLE_RX_EVENT_03_04_0A, buffer, length);
+      break;
+    }
+
+    case 0xF0:
+    case 0xF1:
+      length = 0;
+      buffer[length++] = byte;
+      break;
+
+    case 0xF5:
+    case 0xF6:
+      buffer[length] = '\0';
+      treadmill_ble_post_message(BLE_RX_EVENT_F5_F6, buffer, length);
+      break;
+
+    case 0x0F:
+      treadmill_ble_post_message(BLE_RX_EVENT_CONNECTED, 0, 0);
+      break;
+
+    case 0x19:
+    case 0x0E:
+      treadmill_ble_post_message(BLE_RX_EVENT_DISCONNECTED, 0, 0);
+      break;
+
+    // temp solution
+    case 0x06:
+    case 0x15:
+      buffer[length++] = byte;
+      treadmill_ble_post_message(BLE_RX_EVENT_03_04_0A, buffer, length);
+      break;
+
+    default: {
+      buffer[length] = byte;
+      length = (length + 1) % RX_BUFFER_LENGTH;
     }
   }
 }

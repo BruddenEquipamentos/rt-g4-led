@@ -44,15 +44,6 @@ void rt_led_key_press(treadmill_t *treadmill, const kbd_key_t key) {
 void rt_led_update(treadmill_t *treadmill) {
   const scene_t *scene = rt_led_current_scene(treadmill->scene);
 
-  if (treadmill->hw.ble.ftms.subscribed) {
-    if (treadmill->get_time_ms() - treadmill->hw.ble.ftms.tick_data_ms >=
-        (treadmill->hw.ble.connection.interval * 125) / 100) {
-      treadmill->hw.ble.ftms.tick_data_ms = treadmill->get_time_ms();
-      // tx data
-      treadmill_send_ftms_data(treadmill);
-    }
-  }
-
   if (scene == NULL) return;
   scene->update(treadmill);
 }

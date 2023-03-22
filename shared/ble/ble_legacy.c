@@ -19,6 +19,7 @@ static int set_position_after(char **ptr, const char *word) {
 }
 
 int ble_legacy_commands_handler(char *ptr) {
+  int is_legacy_command = 1;
   if (set_position_after(&ptr, "set,")) {
     if (set_position_after(&ptr, "nsu=")) {
       treadmill_save_nsu(pTreadmill, ptr, strlen(ptr));
@@ -62,7 +63,9 @@ int ble_legacy_commands_handler(char *ptr) {
   } else if (set_position_after(&ptr, "reset")) {
     // todo: clear NSU, NSP, NSI
     // todo: reset total_distance and total_time
+  } else {
+    is_legacy_command = 0;
   }
 
-  return 1;
+  return is_legacy_command;
 }
