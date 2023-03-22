@@ -75,7 +75,7 @@ static void render_training_data(treadmill_t *treadmill) {
     sd_set_text(&sd_program, text);
   }
 
-  if (treadmill->hw.heartrate.hg_state == HEARTRATE_HG_INITING) {
+  if (treadmill->hw.handgrip.state == HEARTRATE_HG_INITING) {
     sd_blink(&sd_bpm, treadmill->get_time_ms(), 1000);
   }
 }

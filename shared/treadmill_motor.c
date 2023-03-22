@@ -28,25 +28,25 @@ static void treadmill_motor_frequency_process(treadmill_t *treadmill,
   if (speed >= treadmill->config.speed.min) {
     uint16_t index =
         (speed - (treadmill->config.speed.min - 10)) / 10;
-    treadmill->hw.motor.change_frequency(speed_freq[index]);
+    treadmill->hw.inverter.change_frequency(speed_freq[index]);
   } else {
     if (speed == 0) {
-      treadmill->hw.motor.change_frequency(speed_freq[0]);
+      treadmill->hw.inverter.change_frequency(speed_freq[0]);
     }
   }
 }
 
 static void treadmill_motor_uart_protocol_init(treadmill_t *treadmill) {
   treadmill_motor_modbus_init();
-  treadmill->hw.protocol_state = UART_PROTOCOL_DETECTION_STATE;
+  treadmill->hw.inverter.protocol = UART_PROTOCOL_DETECTION_STATE;
 }
 
 static int treadmill_motor_uart_protocol_detection(treadmill_t *treadmill) {
   if (treadmill_motor_protocol_is_modbus(treadmill)) {
-    treadmill->hw.protocol_state = UART_PROTOCOL_PROCESS_MODBUS_STATE;
+    treadmill->hw.inverter.protocol = UART_PROTOCOL_PROCESS_MODBUS_STATE;
     return 1;
   } else if (treadmill_motor_protocol_is_movement(treadmill)) {
-    treadmill->hw.protocol_state = UART_PROTOCOL_PROCESS_MOVEMENT_STATE;
+    treadmill->hw.inverter.protocol = UART_PROTOCOL_PROCESS_MOVEMENT_STATE;
     return 1;
   }
   return 0;
@@ -56,7 +56,7 @@ static void treadmill_motor_uart_process(treadmill_t *treadmill) {
   static int protocol_detection_error_count = 0;
   static uint32_t init_tick = 0;
 
-  switch (treadmill->hw.protocol_state) {
+  switch (treadmill->hw.inverter.protocol) {
     case UART_PROTOCOL_INIT_STATE: {
       if (init_tick == 0) {
         init_tick = treadmill->get_time_ms();
@@ -70,7 +70,7 @@ static void treadmill_motor_uart_process(treadmill_t *treadmill) {
       if (!treadmill_motor_uart_protocol_detection(treadmill)) {
         protocol_detection_error_count++;
         if (protocol_detection_error_count > 3) {
-          treadmill->hw.protocol_state = UART_PROTOCOL_PROCESS_UNKNOWN;
+          treadmill->hw.inverter.protocol = UART_PROTOCOL_PROCESS_UNKNOWN;
         }
       }
       break;
@@ -89,7 +89,7 @@ static void treadmill_motor_uart_process(treadmill_t *treadmill) {
 
 // TODO: When changing model, reset params
 void treadmill_motor_process(treadmill_t *treadmill) {
-  switch (treadmill->hw.communication_type) {
+  switch (treadmill->hw.inverter.comm_type) {
     case MOTOR_COMMUNICATION_TYPE_FREQ: {
       treadmill_motor_frequency_process(treadmill, treadmill->training.speed);
       break;

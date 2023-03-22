@@ -292,16 +292,16 @@ int treadmill_send_ftms_data(treadmill_t *treadmill) {
 }
 
 void treadmill_set_bpm_read(treadmill_t *treadmill) {
-  treadmill->hw.heartrate.hg_state = HEARTRATE_HG_INITING;
+  treadmill->hw.handgrip.state = HEARTRATE_HG_INITING;
 }
 
 void treadmill_set_bpm_value(treadmill_t *treadmill, uint8_t bpm) {
-  treadmill->hw.heartrate.hg_state = HEARTRATE_HG_READING;
+  treadmill->hw.handgrip.state = HEARTRATE_HG_READING;
   treadmill->training.bpm = bpm;
 }
 
 void treadmill_set_bpm_stop(treadmill_t *treadmill) {
-  treadmill->hw.heartrate.hg_state = HEARTRATE_HG_DISABLED;
+  treadmill->hw.handgrip.state = HEARTRATE_HG_DISABLED;
   treadmill->training.bpm = 0;
 }
 

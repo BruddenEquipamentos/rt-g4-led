@@ -18,7 +18,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-
 #include "cmsis_os.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -34,19 +33,31 @@
 #include "treadmill.h"
 #include "treadmill_ble.h"
 #include "treadmill_motor.h"
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 uint32_t _tim_delta = 0;
 uint32_t _tim6_count = 0;
-uint32_t _t_tick = 0;
-uint32_t _t_delta = 0;
 
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+struct stats_time {
+  uint32_t start;
+  uint32_t end;
+  uint32_t delta;
+  uint32_t average;
+  uint32_t peak;
+};
+
+struct stats {
+  struct stats_time mainloop;
+};
+
+struct stats stats;
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -80,7 +91,6 @@ DMA_HandleTypeDef hdma_usart3_rx;
 osThreadId defaultTaskHandle;
 osThreadId keyboardTaskHandle;
 osThreadId beepTaskHandle;
-osThreadId inverterCommTasHandle;
 osMessageQId beepEventQueueHandle;
 osTimerId beepTimerHandle;
 /* USER CODE BEGIN PV */
@@ -106,11 +116,10 @@ static void MX_CRC_Init(void);
 static void MX_TIM6_Init(void);
 static void MX_TIM14_Init(void);
 static void MX_TIM17_Init(void);
-void StartDefaultTask(void const *argument);
-void KeyboardTask(void const *argument);
-void BeepTask(void const *argument);
-void InverterCommTask(void const *argument);
-void beepTimerCallback(void const *argument);
+void StartDefaultTask(void const * argument);
+void KeyboardTask(void const * argument);
+void BeepTask(void const * argument);
+void beepTimerCallback(void const * argument);
 
 /* USER CODE BEGIN PFP */
 static void beep(beep_t beep) { xQueueSend(beepEventQueueHandle, &beep, 0); }
@@ -122,13 +131,7 @@ static void beep(beep_t beep) { xQueueSend(beepEventQueueHandle, &beep, 0); }
 #define ADC_BUFFER_SIZE (ADC_SAMPLE_SIZE * 1)
 static uint32_t adc_values[ADC_BUFFER_SIZE];  // 2 is the number of channels
 uint16_t adc_hrm = 0;
-
-uint32_t _adc_delta_t = 0;
-uint32_t _adc_tick = 0;
-
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
-  _adc_delta_t = HAL_GetTick() - _adc_tick;
-  _adc_tick = HAL_GetTick();
   if (hadc->Instance == ADC1) {
     int sum = 0;
     for (int i = 0; i < ADC_SAMPLE_SIZE; ++i) sum += adc_values[i];
@@ -177,9 +180,7 @@ int ble_uart_read(uint8_t *buffer, int max_length) {
   return i;
 }
 
-int ble_uart_write(const uint8_t *data, int length) {
-  return HAL_UART_Transmit(&huart3, data, length, 100) == HAL_OK;
-}
+int ble_uart_write(const uint8_t *data, int length) { return HAL_UART_Transmit(&huart3, data, length, 100) == HAL_OK; }
 
 void ble_hw_reset(void) {
   HAL_GPIO_WritePin(CMD_GPIO_Port, CMD_Pin, GPIO_PIN_RESET);
@@ -203,9 +204,7 @@ int motor_uart_read(uint8_t *buffer, int max_length) {
   return i;
 }
 
-int motor_uart_write(const uint8_t *data, int length) {
-  return HAL_UART_Transmit(&huart1, data, length, 5) == HAL_OK;
-}
+int motor_uart_write(const uint8_t *data, int length) { return HAL_UART_Transmit(&huart1, data, length, 5) == HAL_OK; }
 
 int motor_change_frequency(const uint16_t period) {
   if (period != TIM3->ARR) {
@@ -257,18 +256,18 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
 /* USER CODE END 0 */
 
 /**
- * @brief  The application entry point.
- * @retval int
- */
-int main(void) {
+  * @brief  The application entry point.
+  * @retval int
+  */
+int main(void)
+{
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick.
-   */
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
   /* USER CODE BEGIN Init */
@@ -340,10 +339,6 @@ int main(void) {
   osThreadDef(beepTask, BeepTask, osPriorityLow, 0, 128);
   beepTaskHandle = osThreadCreate(osThread(beepTask), NULL);
 
-  /* definition and creation of inverterCommTas */
-  osThreadDef(inverterCommTas, InverterCommTask, osPriorityAboveNormal, 0, 128);
-  inverterCommTasHandle = osThreadCreate(osThread(inverterCommTas), NULL);
-
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   NVM_Setup();
@@ -365,11 +360,11 @@ int main(void) {
   treadmill.hw.ble.recv_data = ble_uart_read;
   treadmill.hw.ble.reset = ble_hw_reset;
 
-  treadmill.hw.motor.send_data = motor_uart_write;
-  // treadmill.hw.motor.recv_data = motor_uart_read;
+  treadmill.hw.inverter.send_data = motor_uart_write;
+  // treadmill.hw.inverter.recv_data = motor_uart_read;
   treadmill.hw.wait_ms = wait_ms;
 
-  treadmill.hw.motor.change_frequency = motor_change_frequency;
+  treadmill.hw.inverter.change_frequency = motor_change_frequency;
 
   display_init();
 
@@ -395,48 +390,53 @@ int main(void) {
 }
 
 /**
- * @brief System Clock Configuration
- * @retval None
- */
-void SystemClock_Config(void) {
+  * @brief System Clock Configuration
+  * @retval None
+  */
+void SystemClock_Config(void)
+{
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
   /** Configure the main internal regulator output voltage
-   */
+  */
   HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1);
 
   /** Initializes the RCC Oscillators according to the specified parameters
-   * in the RCC_OscInitTypeDef structure.
-   */
+  * in the RCC_OscInitTypeDef structure.
+  */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSIDiv = RCC_HSI_DIV1;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
     Error_Handler();
   }
 
   /** Initializes the CPU, AHB and APB buses clocks
-   */
-  RCC_ClkInitStruct.ClockType =
-      RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1;
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK) {
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  {
     Error_Handler();
   }
 }
 
 /**
- * @brief ADC1 Initialization Function
- * @param None
- * @retval None
- */
-static void MX_ADC1_Init(void) {
+  * @brief ADC1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_ADC1_Init(void)
+{
+
   /* USER CODE BEGIN ADC1_Init 0 */
 
   /* USER CODE END ADC1_Init 0 */
@@ -447,9 +447,8 @@ static void MX_ADC1_Init(void) {
 
   /* USER CODE END ADC1_Init 1 */
 
-  /** Configure the global features of the ADC (Clock, Resolution, Data
-   * Alignment and number of conversion)
-   */
+  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
+  */
   hadc1.Instance = ADC1;
   hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
@@ -468,29 +467,34 @@ static void MX_ADC1_Init(void) {
   hadc1.Init.SamplingTimeCommon2 = ADC_SAMPLETIME_79CYCLES_5;
   hadc1.Init.OversamplingMode = DISABLE;
   hadc1.Init.TriggerFrequencyMode = ADC_TRIGGER_FREQ_HIGH;
-  if (HAL_ADC_Init(&hadc1) != HAL_OK) {
+  if (HAL_ADC_Init(&hadc1) != HAL_OK)
+  {
     Error_Handler();
   }
 
   /** Configure Regular Channel
-   */
+  */
   sConfig.Channel = ADC_CHANNEL_5;
   sConfig.Rank = ADC_REGULAR_RANK_1;
   sConfig.SamplingTime = ADC_SAMPLINGTIME_COMMON_1;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
     Error_Handler();
   }
   /* USER CODE BEGIN ADC1_Init 2 */
 
   /* USER CODE END ADC1_Init 2 */
+
 }
 
 /**
- * @brief CRC Initialization Function
- * @param None
- * @retval None
- */
-static void MX_CRC_Init(void) {
+  * @brief CRC Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_CRC_Init(void)
+{
+
   /* USER CODE BEGIN CRC_Init 0 */
 
   /* USER CODE END CRC_Init 0 */
@@ -504,20 +508,24 @@ static void MX_CRC_Init(void) {
   hcrc.Init.InputDataInversionMode = CRC_INPUTDATA_INVERSION_NONE;
   hcrc.Init.OutputDataInversionMode = CRC_OUTPUTDATA_INVERSION_DISABLE;
   hcrc.InputDataFormat = CRC_INPUTDATA_FORMAT_BYTES;
-  if (HAL_CRC_Init(&hcrc) != HAL_OK) {
+  if (HAL_CRC_Init(&hcrc) != HAL_OK)
+  {
     Error_Handler();
   }
   /* USER CODE BEGIN CRC_Init 2 */
 
   /* USER CODE END CRC_Init 2 */
+
 }
 
 /**
- * @brief I2C1 Initialization Function
- * @param None
- * @retval None
- */
-static void MX_I2C1_Init(void) {
+  * @brief I2C1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C1_Init(void)
+{
+
   /* USER CODE BEGIN I2C1_Init 0 */
 
   /* USER CODE END I2C1_Init 0 */
@@ -534,32 +542,38 @@ static void MX_I2C1_Init(void) {
   hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
   hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
   hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-  if (HAL_I2C_Init(&hi2c1) != HAL_OK) {
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+  {
     Error_Handler();
   }
 
   /** Configure Analogue filter
-   */
-  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK) {
+  */
+  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
+  {
     Error_Handler();
   }
 
   /** Configure Digital filter
-   */
-  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK) {
+  */
+  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
+  {
     Error_Handler();
   }
   /* USER CODE BEGIN I2C1_Init 2 */
 
   /* USER CODE END I2C1_Init 2 */
+
 }
 
 /**
- * @brief TIM3 Initialization Function
- * @param None
- * @retval None
- */
-static void MX_TIM3_Init(void) {
+  * @brief TIM3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM3_Init(void)
+{
+
   /* USER CODE BEGIN TIM3_Init 0 */
 
   /* USER CODE END TIM3_Init 0 */
@@ -577,40 +591,48 @@ static void MX_TIM3_Init(void) {
   htim3.Init.Period = 65535;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
-  if (HAL_TIM_Base_Init(&htim3) != HAL_OK) {
+  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
+  {
     Error_Handler();
   }
   sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK) {
+  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
+  {
     Error_Handler();
   }
-  if (HAL_TIM_OC_Init(&htim3) != HAL_OK) {
+  if (HAL_TIM_OC_Init(&htim3) != HAL_OK)
+  {
     Error_Handler();
   }
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK) {
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_TOGGLE;
   sConfigOC.Pulse = 0;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  if (HAL_TIM_OC_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_4) != HAL_OK) {
+  if (HAL_TIM_OC_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
+  {
     Error_Handler();
   }
   /* USER CODE BEGIN TIM3_Init 2 */
   // HAL_TIM_OC_Start_IT(&htim3, TIM_CHANNEL_4);
   /* USER CODE END TIM3_Init 2 */
   HAL_TIM_MspPostInit(&htim3);
+
 }
 
 /**
- * @brief TIM6 Initialization Function
- * @param None
- * @retval None
- */
-static void MX_TIM6_Init(void) {
+  * @brief TIM6 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM6_Init(void)
+{
+
   /* USER CODE BEGIN TIM6_Init 0 */
 
   /* USER CODE END TIM6_Init 0 */
@@ -625,25 +647,30 @@ static void MX_TIM6_Init(void) {
   htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim6.Init.Period = 999;
   htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_Base_Init(&htim6) != HAL_OK) {
+  if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+  {
     Error_Handler();
   }
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK) {
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
+  {
     Error_Handler();
   }
   /* USER CODE BEGIN TIM6_Init 2 */
 
   /* USER CODE END TIM6_Init 2 */
+
 }
 
 /**
- * @brief TIM14 Initialization Function
- * @param None
- * @retval None
- */
-static void MX_TIM14_Init(void) {
+  * @brief TIM14 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM14_Init(void)
+{
+
   /* USER CODE BEGIN TIM14_Init 0 */
 
   /* USER CODE END TIM14_Init 0 */
@@ -659,30 +686,36 @@ static void MX_TIM14_Init(void) {
   htim14.Init.Period = 65535;
   htim14.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim14.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_Base_Init(&htim14) != HAL_OK) {
+  if (HAL_TIM_Base_Init(&htim14) != HAL_OK)
+  {
     Error_Handler();
   }
-  if (HAL_TIM_IC_Init(&htim14) != HAL_OK) {
+  if (HAL_TIM_IC_Init(&htim14) != HAL_OK)
+  {
     Error_Handler();
   }
   sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
   sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
   sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
   sConfigIC.ICFilter = 0;
-  if (HAL_TIM_IC_ConfigChannel(&htim14, &sConfigIC, TIM_CHANNEL_1) != HAL_OK) {
+  if (HAL_TIM_IC_ConfigChannel(&htim14, &sConfigIC, TIM_CHANNEL_1) != HAL_OK)
+  {
     Error_Handler();
   }
   /* USER CODE BEGIN TIM14_Init 2 */
 
   /* USER CODE END TIM14_Init 2 */
+
 }
 
 /**
- * @brief TIM16 Initialization Function
- * @param None
- * @retval None
- */
-static void MX_TIM16_Init(void) {
+  * @brief TIM16 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM16_Init(void)
+{
+
   /* USER CODE BEGIN TIM16_Init 0 */
 
   /* USER CODE END TIM16_Init 0 */
@@ -700,10 +733,12 @@ static void MX_TIM16_Init(void) {
   htim16.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim16.Init.RepetitionCounter = 0;
   htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_Base_Init(&htim16) != HAL_OK) {
+  if (HAL_TIM_Base_Init(&htim16) != HAL_OK)
+  {
     Error_Handler();
   }
-  if (HAL_TIM_PWM_Init(&htim16) != HAL_OK) {
+  if (HAL_TIM_PWM_Init(&htim16) != HAL_OK)
+  {
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
@@ -713,7 +748,8 @@ static void MX_TIM16_Init(void) {
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
   sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
-  if (HAL_TIM_PWM_ConfigChannel(&htim16, &sConfigOC, TIM_CHANNEL_1) != HAL_OK) {
+  if (HAL_TIM_PWM_ConfigChannel(&htim16, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
     Error_Handler();
   }
   sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
@@ -724,21 +760,25 @@ static void MX_TIM16_Init(void) {
   sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
   sBreakDeadTimeConfig.BreakFilter = 0;
   sBreakDeadTimeConfig.AutomaticOutput = TIM_AUTOMATICOUTPUT_DISABLE;
-  if (HAL_TIMEx_ConfigBreakDeadTime(&htim16, &sBreakDeadTimeConfig) != HAL_OK) {
+  if (HAL_TIMEx_ConfigBreakDeadTime(&htim16, &sBreakDeadTimeConfig) != HAL_OK)
+  {
     Error_Handler();
   }
   /* USER CODE BEGIN TIM16_Init 2 */
 
   /* USER CODE END TIM16_Init 2 */
   HAL_TIM_MspPostInit(&htim16);
+
 }
 
 /**
- * @brief TIM17 Initialization Function
- * @param None
- * @retval None
- */
-static void MX_TIM17_Init(void) {
+  * @brief TIM17 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM17_Init(void)
+{
+
   /* USER CODE BEGIN TIM17_Init 0 */
 
   /* USER CODE END TIM17_Init 0 */
@@ -755,30 +795,36 @@ static void MX_TIM17_Init(void) {
   htim17.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim17.Init.RepetitionCounter = 0;
   htim17.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
-  if (HAL_TIM_Base_Init(&htim17) != HAL_OK) {
+  if (HAL_TIM_Base_Init(&htim17) != HAL_OK)
+  {
     Error_Handler();
   }
-  if (HAL_TIM_IC_Init(&htim17) != HAL_OK) {
+  if (HAL_TIM_IC_Init(&htim17) != HAL_OK)
+  {
     Error_Handler();
   }
   sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
   sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
   sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
   sConfigIC.ICFilter = 0;
-  if (HAL_TIM_IC_ConfigChannel(&htim17, &sConfigIC, TIM_CHANNEL_1) != HAL_OK) {
+  if (HAL_TIM_IC_ConfigChannel(&htim17, &sConfigIC, TIM_CHANNEL_1) != HAL_OK)
+  {
     Error_Handler();
   }
   /* USER CODE BEGIN TIM17_Init 2 */
 
   /* USER CODE END TIM17_Init 2 */
+
 }
 
 /**
- * @brief USART1 Initialization Function
- * @param None
- * @retval None
- */
-static void MX_USART1_UART_Init(void) {
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
   /* USER CODE BEGIN USART1_Init 0 */
 
   /* USER CODE END USART1_Init 0 */
@@ -797,31 +843,36 @@ static void MX_USART1_UART_Init(void) {
   huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
   huart1.Init.ClockPrescaler = UART_PRESCALER_DIV1;
   huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_UART_Init(&huart1) != HAL_OK) {
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
     Error_Handler();
   }
-  if (HAL_UARTEx_SetTxFifoThreshold(&huart1, UART_TXFIFO_THRESHOLD_1_8) !=
-      HAL_OK) {
+  if (HAL_UARTEx_SetTxFifoThreshold(&huart1, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
     Error_Handler();
   }
-  if (HAL_UARTEx_SetRxFifoThreshold(&huart1, UART_RXFIFO_THRESHOLD_1_8) !=
-      HAL_OK) {
+  if (HAL_UARTEx_SetRxFifoThreshold(&huart1, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
     Error_Handler();
   }
-  if (HAL_UARTEx_EnableFifoMode(&huart1) != HAL_OK) {
+  if (HAL_UARTEx_EnableFifoMode(&huart1) != HAL_OK)
+  {
     Error_Handler();
   }
   /* USER CODE BEGIN USART1_Init 2 */
 
   /* USER CODE END USART1_Init 2 */
+
 }
 
 /**
- * @brief USART3 Initialization Function
- * @param None
- * @retval None
- */
-static void MX_USART3_UART_Init(void) {
+  * @brief USART3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART3_UART_Init(void)
+{
+
   /* USER CODE BEGIN USART3_Init 0 */
 
   /* USER CODE END USART3_Init 0 */
@@ -840,18 +891,22 @@ static void MX_USART3_UART_Init(void) {
   huart3.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
   huart3.Init.ClockPrescaler = UART_PRESCALER_DIV1;
   huart3.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_UART_Init(&huart3) != HAL_OK) {
+  if (HAL_UART_Init(&huart3) != HAL_OK)
+  {
     Error_Handler();
   }
   /* USER CODE BEGIN USART3_Init 2 */
 
   /* USER CODE END USART3_Init 2 */
+
 }
 
 /**
- * Enable DMA controller clock
- */
-static void MX_DMA_Init(void) {
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
   /* DMA controller clock enable */
   __HAL_RCC_DMA1_CLK_ENABLE();
 
@@ -862,17 +917,19 @@ static void MX_DMA_Init(void) {
   /* DMA1_Channel2_3_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Channel2_3_IRQn, 3, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel2_3_IRQn);
+
 }
 
 /**
- * @brief GPIO Initialization Function
- * @param None
- * @retval None
- */
-static void MX_GPIO_Init(void) {
+  * @brief GPIO Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_GPIO_Init(void)
+{
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-  /* USER CODE BEGIN MX_GPIO_Init_1 */
-  /* USER CODE END MX_GPIO_Init_1 */
+/* USER CODE BEGIN MX_GPIO_Init_1 */
+/* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
@@ -882,25 +939,25 @@ static void MX_GPIO_Init(void) {
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, LED_Pin | TS10_Pin | TS11_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOC, LED_Pin|TS10_Pin|TS11_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, CMD_Pin | W_HW_Pin | TS08_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOB, CMD_Pin|W_HW_Pin|TS08_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(TS09_GPIO_Port, TS09_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, TP1_Pin | TP2_Pin | TP3_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, TP1_Pin|TP2_Pin|TP3_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, TS06_Pin | TS07_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOD, TS06_Pin|TS07_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(CONTR_GPIO_Port, CONTR_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : LED_Pin TS10_Pin TS11_Pin */
-  GPIO_InitStruct.Pin = LED_Pin | TS10_Pin | TS11_Pin;
+  GPIO_InitStruct.Pin = LED_Pin|TS10_Pin|TS11_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -908,14 +965,14 @@ static void MX_GPIO_Init(void) {
 
   /*Configure GPIO pins : INC_MINUS_Pin SP_MINUS_Pin SP_PLUS_Pin INC_PLUS_Pin
                            TS05_Pin TS00_Pin */
-  GPIO_InitStruct.Pin = INC_MINUS_Pin | SP_MINUS_Pin | SP_PLUS_Pin |
-                        INC_PLUS_Pin | TS05_Pin | TS00_Pin;
+  GPIO_InitStruct.Pin = INC_MINUS_Pin|SP_MINUS_Pin|SP_PLUS_Pin|INC_PLUS_Pin
+                          |TS05_Pin|TS00_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : CMD_Pin W_HW_Pin TS08_Pin CONTR_Pin */
-  GPIO_InitStruct.Pin = CMD_Pin | W_HW_Pin | TS08_Pin | CONTR_Pin;
+  GPIO_InitStruct.Pin = CMD_Pin|W_HW_Pin|TS08_Pin|CONTR_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -923,34 +980,34 @@ static void MX_GPIO_Init(void) {
 
   /*Configure GPIO pins : LO_PLUS_Pin LO_MINUS_Pin TS03_Pin TS04_Pin
                            EMG_Pin */
-  GPIO_InitStruct.Pin =
-      LO_PLUS_Pin | LO_MINUS_Pin | TS03_Pin | TS04_Pin | EMG_Pin;
+  GPIO_InitStruct.Pin = LO_PLUS_Pin|LO_MINUS_Pin|TS03_Pin|TS04_Pin
+                          |EMG_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pins : TS09_Pin TP1_Pin TP2_Pin TP3_Pin */
-  GPIO_InitStruct.Pin = TS09_Pin | TP1_Pin | TP2_Pin | TP3_Pin;
+  GPIO_InitStruct.Pin = TS09_Pin|TP1_Pin|TP2_Pin|TP3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : TS01_Pin TS02_Pin */
-  GPIO_InitStruct.Pin = TS01_Pin | TS02_Pin;
+  GPIO_InitStruct.Pin = TS01_Pin|TS02_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
   /*Configure GPIO pins : TS06_Pin TS07_Pin */
-  GPIO_InitStruct.Pin = TS06_Pin | TS07_Pin;
+  GPIO_InitStruct.Pin = TS06_Pin|TS07_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
-  /* USER CODE BEGIN MX_GPIO_Init_2 */
-  /* USER CODE END MX_GPIO_Init_2 */
+/* USER CODE BEGIN MX_GPIO_Init_2 */
+/* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
@@ -966,7 +1023,6 @@ static void MX_GPIO_Init(void) {
 GPIO_PinState _lo_minus = RESET;
 GPIO_PinState _lo_plus = RESET;
 GPIO_PinState _emg = RESET;
-uint32_t _average_loop_time = 0;
 
 static inline void bpm_read_handler(void) {
   static uint32_t hg_hold_tick = 0;
@@ -1018,19 +1074,19 @@ static inline void bpm_read_handler(void) {
 }
 
 /* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void const *argument) {
+void StartDefaultTask(void const * argument)
+{
   /* USER CODE BEGIN 5 */
-  uint32_t start = 0;
-  treadmill.ms = HAL_GetTick();
   /* Infinite loop */
   for (;;) {
-    start = HAL_GetTick();
+    stats.mainloop.start = HAL_GetTick();
 
     bpm_read_handler();
 
     while (treadmill.ms < HAL_GetTick()) {
       treadmill.ms += 100;
       treadmill_update(&treadmill);
+      display_update();
     }
 
     treadmill_ble_process(&treadmill);
@@ -1039,11 +1095,15 @@ void StartDefaultTask(void const *argument) {
 
     rt_led_render(&treadmill);
 
-    // display update time -> check frame rate?
-    display_update();
+    // display_update();
 
-    uint32_t delta = HAL_GetTick() - start;
-    _average_loop_time = (_average_loop_time + delta) / 2;
+    stats.mainloop.end = HAL_GetTick();
+    stats.mainloop.delta = (stats.mainloop.end - stats.mainloop.start);
+    stats.mainloop.average = (stats.mainloop.average + stats.mainloop.delta) / 2;
+
+    if (stats.mainloop.peak < stats.mainloop.delta) {
+      stats.mainloop.peak = stats.mainloop.delta;
+    }
 
     osDelay(10);
   }
@@ -1067,49 +1127,40 @@ static void handle_shortcut_keys(void) {
       debounce = SHORTCUT_ACKED;
 
       int speed = (int)treadmill.training.speed - 100;
-      if (speed < treadmill.config.speed.min)
-        speed = treadmill.config.speed.min;
+      if (speed < treadmill.config.speed.min) speed = treadmill.config.speed.min;
 
       treadmill_set_speed(&treadmill, (uint16_t)speed);
       treadmill.hw.beep(BEEP_KEYPRESS_ACK);
     }
 
-  } else if (HAL_GPIO_ReadPin(SP_PLUS_GPIO_Port, SP_PLUS_Pin) ==
-             GPIO_PIN_RESET) {
+  } else if (HAL_GPIO_ReadPin(SP_PLUS_GPIO_Port, SP_PLUS_Pin) == GPIO_PIN_RESET) {
     if (debounce == 0) debounce = HAL_GetTick();
     if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
       debounce = SHORTCUT_ACKED;
 
       int speed = (int)treadmill.training.speed + 100;
-      if (speed > treadmill.config.speed.max)
-        speed = treadmill.config.speed.max;
+      if (speed > treadmill.config.speed.max) speed = treadmill.config.speed.max;
       treadmill_set_speed(&treadmill, (uint16_t)speed);
       treadmill.hw.beep(BEEP_KEYPRESS_ACK);
     }
 
-  } else if (HAL_GPIO_ReadPin(INC_MINUS_GPIO_Port, INC_MINUS_Pin) ==
-             GPIO_PIN_RESET) {
+  } else if (HAL_GPIO_ReadPin(INC_MINUS_GPIO_Port, INC_MINUS_Pin) == GPIO_PIN_RESET) {
     if (debounce == 0) debounce = HAL_GetTick();
     if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
       debounce = SHORTCUT_ACKED;
 
-      int incline =
-          (int)treadmill.training.incline - treadmill.config.incline.step;
-      if (incline < treadmill.config.incline.min)
-        incline = treadmill.config.incline.min;
+      int incline = (int)treadmill.training.incline - treadmill.config.incline.step;
+      if (incline < treadmill.config.incline.min) incline = treadmill.config.incline.min;
       treadmill_set_incline(&treadmill, incline);
       treadmill.hw.beep(BEEP_KEYPRESS_ACK);
     }
 
-  } else if (HAL_GPIO_ReadPin(INC_PLUS_GPIO_Port, INC_PLUS_Pin) ==
-             GPIO_PIN_RESET) {
+  } else if (HAL_GPIO_ReadPin(INC_PLUS_GPIO_Port, INC_PLUS_Pin) == GPIO_PIN_RESET) {
     if (debounce == 0) debounce = HAL_GetTick();
     if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
       debounce = SHORTCUT_ACKED;
-      int incline =
-          (int)treadmill.training.incline + treadmill.config.incline.step;
-      if (incline > treadmill.config.incline.max)
-        incline = treadmill.config.incline.max;
+      int incline = (int)treadmill.training.incline + treadmill.config.incline.step;
+      if (incline > treadmill.config.incline.max) incline = treadmill.config.incline.max;
       treadmill_set_incline(&treadmill, incline);
       treadmill.hw.beep(BEEP_KEYPRESS_ACK);
     }
@@ -1121,7 +1172,7 @@ static void handle_shortcut_keys(void) {
 
 static void handle_emergency(void) {
   static uint32_t debounce = 0;
-  #define EMG_ACKED (0xffffffff)
+#define EMG_ACKED (0xffffffff)
   _emg = HAL_GPIO_ReadPin(EMG_GPIO_Port, EMG_Pin);
   if (_emg) {
     if (debounce == 0) debounce = HAL_GetTick();
@@ -1135,7 +1186,8 @@ static void handle_emergency(void) {
 }
 
 /* USER CODE END Header_KeyboardTask */
-void KeyboardTask(void const *argument) {
+void KeyboardTask(void const * argument)
+{
   /* USER CODE BEGIN KeyboardTask */
   enum key key_pressed = KEY_NONE;
   enum key previous_key = KEY_NONE;
@@ -1147,8 +1199,7 @@ void KeyboardTask(void const *argument) {
     handle_emergency();
 
     key_pressed = get_key_pressed();
-    if (key_pressed == KEY_START || key_pressed == KEY_STOP ||
-        key_pressed == KEY_CONFIG) {
+    if (key_pressed == KEY_START || key_pressed == KEY_STOP || key_pressed == KEY_CONFIG) {
       if (key_tick == 0) {
         key_tick = HAL_GetTick();
 
@@ -1158,8 +1209,7 @@ void KeyboardTask(void const *argument) {
           previous_key = key_pressed;
         } else {
           if (key_pressed == KEY_CONFIG && HAL_GetTick() - key_tick >= 2000) {
-            if (key_pressed != previous_key)
-              treadmill_key_press(&treadmill, key_pressed);
+            if (key_pressed != previous_key) treadmill_key_press(&treadmill, key_pressed);
             previous_key = key_pressed;
           }
         }
@@ -1200,7 +1250,8 @@ void KeyboardTask(void const *argument) {
  * @retval None
  */
 /* USER CODE END Header_BeepTask */
-void BeepTask(void const *argument) {
+void BeepTask(void const * argument)
+{
   /* USER CODE BEGIN BeepTask */
   beep_t beep;
 
@@ -1282,52 +1333,25 @@ void BeepTask(void const *argument) {
   /* USER CODE END BeepTask */
 }
 
-/* USER CODE BEGIN Header_InverterCommTask */
-/**
- * @brief Function implementing the inverterCommTas thread.
- * @param argument: Not used
- * @retval None
- */
-uint32_t _s_inverter_comm = 0;
-uint32_t _s_inverter_comm_delta = 0;
-/* USER CODE END Header_InverterCommTask */
-void InverterCommTask(void const *argument) {
-  /* USER CODE BEGIN InverterCommTask */
-  uint8_t cmd[] = {0x02, 0x41, 0x00, 0x02, 0x42, 0x00, 0x02, 0x43, 0x00};
-  uint32_t nop = 0;
-
-  /* Infinite loop */
-  for (;;) {
-    //      nop = 0;
-    //    _s_inverter_comm = HAL_GetTick();
-    //      while (nop != 0x100000) {
-    //	  __asm("nop\n");
-    //	  nop++;
-    //      }
-    //    _s_inverter_comm_delta = HAL_GetTick()-_s_inverter_comm;
-    osDelay(1);
-  }
-  /* USER CODE END InverterCommTask */
-}
-
 /* beepTimerCallback function */
-void beepTimerCallback(void const *argument) {
+void beepTimerCallback(void const * argument)
+{
   /* USER CODE BEGIN beepTimerCallback */
   HAL_TIM_PWM_Stop(&htim16, TIM_CHANNEL_1);
   /* USER CODE END beepTimerCallback */
 }
 
 /**
- * @brief  Period elapsed callback in non blocking mode
- * @note   This function is called  when TIM1 interrupt took place, inside
- * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
- * a global variable "uwTick" used as application time base.
- * @param  htim : TIM handle
- * @retval None
- */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM1 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
   /* USER CODE BEGIN Callback 0 */
-  static int tick = 0;
 
   /* USER CODE END Callback 0 */
   if (htim->Instance == TIM1) {
@@ -1335,19 +1359,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
   }
   /* USER CODE BEGIN Callback 1 */
   else if (htim->Instance == TIM6) {
-    _t_delta = HAL_GetTick() - _t_tick;
-    _t_tick = HAL_GetTick();
-
     adc_average = ((adc_average * 255) + (adc_hrm * 1000)) / 256;
     adc_average_n = adc_average / 1000;
-
-    // if (!tick) {
-    //   static char data[16];
-    //   int length = sprintf(data, "%d %d %d\n", adc_hrm, adc_average_n,
-    //                        adc_below_average ? 0 : adc_average_n);
-    //   HAL_UART_Transmit_IT(&huart3, data, length);
-    // }
-    // tick = !tick;
 
     if (adc_hrm > (adc_average_n + ADC_THRESHOLD) && adc_below_average) {
       adc_new_beat = HAL_GetTick();
@@ -1365,8 +1378,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
         }
         bpm_current_value = bpm_totals / BPM_BUFFER_READS;
 
-        bpm_buffer_reads[bpm_buffer_index] =
-            ((bpm_current_value * 1) + current_bpm) / 2;
+        bpm_buffer_reads[bpm_buffer_index] = ((bpm_current_value * 1) + current_bpm) / 2;
         bpm_buffer_index = (bpm_buffer_index + 1) % BPM_BUFFER_READS;
 
         adc_old_beat = adc_new_beat;
@@ -1383,10 +1395,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 }
 
 /**
- * @brief  This function is executed in case of error occurrence.
- * @retval None
- */
-void Error_Handler(void) {
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
+void Error_Handler(void)
+{
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
@@ -1395,15 +1408,16 @@ void Error_Handler(void) {
   /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef USE_FULL_ASSERT
+#ifdef  USE_FULL_ASSERT
 /**
- * @brief  Reports the name of the source file and the source line number
- *         where the assert_param error has occurred.
- * @param  file: pointer to the source file name
- * @param  line: assert_param error line source number
- * @retval None
- */
-void assert_failed(uint8_t *file, uint32_t line) {
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
+void assert_failed(uint8_t *file, uint32_t line)
+{
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line
      number, ex: printf("Wrong parameters value: file %s on line %d\r\n", file,

@@ -29,10 +29,10 @@
 #define DEFAULT_LUB_DISTANCE (1500)
 #define DEFAULT_AGE (30)
 
-typedef enum motor_communication_type {
+typedef enum inverter_comm_type {
   MOTOR_COMMUNICATION_TYPE_FREQ = 0,
   MOTOR_COMMUNICATION_TYPE_UART = 1,
-} motor_communication_type_t;
+} inverter_comm_type_t;
 
 typedef enum uart_protocol_state {
   UART_PROTOCOL_INIT_STATE = 0,
@@ -56,7 +56,7 @@ typedef enum treadmill_scene {
   SCENE_TOTALS,
 } treadmill_scene_t;
 
-enum heartrate_hg_state {
+enum handgrip_state {
   HEARTRATE_HG_DISABLED = 0,
   HEARTRATE_HG_INITING,
   HEARTRATE_HG_READING,
@@ -146,20 +146,20 @@ typedef struct treadmill {
     void (*beep)(beep_t beep);
     void (*update_rtc)(const uint32_t ms);
     void (*wait_ms)(const int ms);
-    motor_communication_type_t communication_type;
-    uart_protocol_state_t protocol_state;
 
     ble_t ble;
 
-    struct motor {
+    struct inverter {
       int (*send_data)(const uint8_t *data, int length);
       int (*recv_data)(uint8_t *data, int max_length);
       int (*change_frequency)(uint16_t period);
-    } motor;
+      inverter_comm_type_t comm_type;
+      uart_protocol_state_t protocol;
+    } inverter;
 
     struct {
-      enum heartrate_hg_state hg_state;
-    } heartrate;
+      enum handgrip_state state;
+    } handgrip;
 
   } hw;
 
@@ -191,9 +191,8 @@ void treadmill_save_config(treadmill_t *treadmill);
 
 void treadmill_emergency_pressed(treadmill_t *treadmill);
 
-void treadmill_set_dm_message(treadmill_t *treadmill, const char *text,
-                           const uint32_t duration_ms,
-                           const uint32_t blink_interval);
+void treadmill_set_dm_message(treadmill_t *treadmill, const char *text, const uint32_t duration_ms,
+                              const uint32_t blink_interval);
 
 void treadmill_clear_dm_message(treadmill_t *treadmill);
 

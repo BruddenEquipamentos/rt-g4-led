@@ -3,8 +3,7 @@
 
 static void next_config_option(treadmill_t *treadmill) {
   treadmill->config.option++;
-  if (treadmill->config.option >= CONFIG_OPTION_TOTAL)
-    treadmill->config.option = 0;
+  if (treadmill->config.option >= CONFIG_OPTION_TOTAL) treadmill->config.option = 0;
 }
 
 // exit + set scene here?
@@ -16,6 +15,7 @@ static void change_config_model(treadmill_t *treadmill, const kbd_key_t key) {
       } else {
         treadmill->config.model++;
       }
+      rt_led_load_model_params(treadmill, treadmill->config.model);
       break;
     }
     case KEY_SPEED_DECREMENT: {
@@ -24,6 +24,7 @@ static void change_config_model(treadmill_t *treadmill, const kbd_key_t key) {
       } else {
         treadmill->config.model--;
       }
+      rt_led_load_model_params(treadmill, treadmill->config.model);
       break;
     }
     default:;
@@ -53,16 +54,14 @@ static void change_config_weight(treadmill_t *treadmill, const kbd_key_t key) {
 static void change_config_lub(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_SPEED_INCREMENT: {
-      if (treadmill->config.lub_distance + RT_LED_LUB_STEP_DISTANCE <=
-          RT_LED_LUB_MAX_DISTANCE)
+      if (treadmill->config.lub_distance + RT_LED_LUB_STEP_DISTANCE <= RT_LED_LUB_MAX_DISTANCE)
         treadmill->config.lub_distance += RT_LED_LUB_STEP_DISTANCE;
       else
         treadmill->config.lub_distance = RT_LED_LUB_MIN_DISTANCE;
       break;
     }
     case KEY_SPEED_DECREMENT: {
-      if (treadmill->config.lub_distance - RT_LED_LUB_STEP_DISTANCE >=
-          RT_LED_LUB_MIN_DISTANCE)
+      if (treadmill->config.lub_distance - RT_LED_LUB_STEP_DISTANCE >= RT_LED_LUB_MIN_DISTANCE)
         treadmill->config.lub_distance -= RT_LED_LUB_MIN_DISTANCE;
       else
         treadmill->config.lub_distance = RT_LED_LUB_MAX_DISTANCE;
@@ -77,10 +76,9 @@ static void change_config_modbus(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_SPEED_INCREMENT:
     case KEY_SPEED_DECREMENT: {
-      treadmill->config.modbus =
-          treadmill->config.modbus == RT_LED_CONFIG_MODBUS_HIDE_PARAMS
-              ? RT_LED_CONFIG_MODBUS_SHOW_PARAMS
-              : RT_LED_CONFIG_MODBUS_HIDE_PARAMS;
+      treadmill->config.modbus = treadmill->config.modbus == RT_LED_CONFIG_MODBUS_HIDE_PARAMS
+                                     ? RT_LED_CONFIG_MODBUS_SHOW_PARAMS
+                                     : RT_LED_CONFIG_MODBUS_HIDE_PARAMS;
       break;
     }
     default:;
@@ -92,9 +90,7 @@ static void change_config_test(treadmill_t *treadmill, const kbd_key_t key) {
     case KEY_SPEED_INCREMENT:
     case KEY_SPEED_DECREMENT: {
       treadmill->config.test =
-          treadmill->config.test == RT_LED_CONFIG_TEST_DISABLE
-              ? RT_LED_CONFIG_TEST_ENABLE
-              : RT_LED_CONFIG_TEST_DISABLE;
+          treadmill->config.test == RT_LED_CONFIG_TEST_DISABLE ? RT_LED_CONFIG_TEST_ENABLE : RT_LED_CONFIG_TEST_DISABLE;
       break;
     }
     default:;
