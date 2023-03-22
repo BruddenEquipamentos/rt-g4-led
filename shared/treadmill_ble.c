@@ -42,7 +42,7 @@ void treadmill_ble_process_init(treadmill_t *treadmill) {
       ble_post_message(data, "\x06", 1000);
       ble_post_message("\x02SID,2\n", "AOK", 1000);
 
-      // name by model
+      // TODO: name according to model
 
       ble_post_message("\x02SDN,MovCT\n", "AOK", 1000);
       ble->init_state = BLE_INIT_STATE_PROCESS;
