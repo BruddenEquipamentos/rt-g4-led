@@ -41,8 +41,8 @@ typedef enum program_id {
 
 // hiit
 #define PROGRAM_HIIT_DEFAULT_SECONDS (10 * 60)  // 10 min
-#define PROGRAM_HIIT_DEFAULT_SPEED_T1 (300)  // 3.0 km/h
-#define PROGRAM_HIIT_DEFAULT_SPEED_T2 (700)  // 7.0 km/h
+#define PROGRAM_HIIT_DEFAULT_SPEED_T1 (300)     // 3.0 km/h
+#define PROGRAM_HIIT_DEFAULT_SPEED_T2 (700)     // 7.0 km/h
 #define PROGRAM_HIIT_MAX_TIME (99 * 60)
 #define PROGRAM_HIIT_TIME_STEP (60)
 #define PROGRAM_HIIT_MIN_TIME (3 * 60)
@@ -52,10 +52,10 @@ typedef enum program_id {
 
 // fat burn
 #define PROGRAM_FAT_BURN_DEFAULT_TIME (10 * 60)  // 10 min
-#define PROGRAM_FAT_BURN_DEFAULT_AGE (30)               // 30
+#define PROGRAM_FAT_BURN_DEFAULT_AGE (30)        // 30
 #define PROGRAM_FAT_BURN_TIME_STEP (60)
-#define PROGRAM_FAT_BURN_MAX_TIME (99*60)
-#define PROGRAM_FAT_BURN_MIN_TIME (1*60)
+#define PROGRAM_FAT_BURN_MAX_TIME (99 * 60)
+#define PROGRAM_FAT_BURN_MIN_TIME (1 * 60)
 #define PROGRAM_FAT_BURN_AGE_STEP (1)
 #define PROGRAM_FAT_BURN_MAX_AGE (100)
 #define PROGRAM_FAT_BURN_MIN_AGE (14)
@@ -64,8 +64,8 @@ typedef enum program_id {
 #define PROGRAM_SUPER_CARDIO_DEFAULT_TIME (10 * 60)
 #define PROGRAM_SUPER_CARDIO_DEFAULT_AGE (30)
 #define PROGRAM_SUPER_CARDIO_TIME_STEP (60)
-#define PROGRAM_SUPER_CARDIO_MAX_TIME (99*60)
-#define PROGRAM_SUPER_CARDIO_MIN_TIME (1*60)
+#define PROGRAM_SUPER_CARDIO_MAX_TIME (99 * 60)
+#define PROGRAM_SUPER_CARDIO_MIN_TIME (1 * 60)
 #define PROGRAM_SUPER_CARDIO_AGE_STEP (1)
 #define PROGRAM_SUPER_CARDIO_MAX_AGE (100)
 #define PROGRAM_SUPER_CARDIO_MIN_AGE (14)
@@ -83,7 +83,6 @@ struct p_calories {
 };
 
 struct p_hiit {
-
   uint32_t seconds_t1;
   uint32_t seconds_t2;
 

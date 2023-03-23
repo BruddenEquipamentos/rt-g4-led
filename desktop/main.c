@@ -92,6 +92,10 @@ static void *thread_input(void *arg) {
         treadmill_set_bpm_value(treadmill, treadmill->training.bpm + 20);
         break;
       }
+      case 'l': {
+        treadmill_key_press(treadmill, KEY_LUB);
+        break;
+      }
 
       default: {
       }
@@ -203,7 +207,7 @@ static void display_update(treadmill_t *treadmill) {
     // fprintf(stdout, "Config Model: %d\n", treadmill->config.model);
     // fprintf(stdout, "Config Weight: %d\n", treadmill->config.weight);
     // fprintf(stdout, "Config Age: %d\n", treadmill->config.age);
-    // fprintf(stdout, "Config Lub: %d\n", treadmill->config.lub_distance);
+    // fprintf(stdout, "Config Lub: %d\n", treadmill->config.lub_distance_m);
     // fprintf(stdout, "Config Modbus: %d\n", treadmill->config.modbus);
     // fprintf(stdout, "Config Test: %d\n", treadmill->config.test);
 
@@ -261,7 +265,7 @@ static void *thread_main(void *arg) {
 
     treadmill_ble_process(treadmill);
 
-    // treadmill_motor_process(treadmill);
+    treadmill_motor_process(treadmill);
 
     rt_led_render(treadmill);  // memory update
 

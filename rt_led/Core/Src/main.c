@@ -349,6 +349,11 @@ int main(void) {
     ;
   nvm.NVM_Init();
 
+  //  nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_DISTANCE_METERS, 0);
+  //  nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_TIME_SECONDS, 0);
+  //  nvm.NVM_WriteVariable32bits(NVM_U32_LUB_DISTANCE_PARAM, 1500);
+  //  nvm.NVM_WriteVariable32bits(NVM_U32_LUB_DISTANCE, 0);
+
   //  nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_DISTANCE_METERS, 10000);
   //  nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_TIME_SECONDS, 3600);
 
@@ -1116,58 +1121,74 @@ static void handle_emergency(void) {
   }
 }
 
+static int handle_combined_or_single_key_press(enum key singles, enum key combined, enum key pressed,
+                                               enum key *previous, uint32_t *key_tick) {
+  if (pressed & (singles | combined)) {
+    if (*key_tick == 0) {
+      *key_tick = HAL_GetTick();
+    } else if (HAL_GetTick() - *key_tick >= 50) {
+      if (pressed != combined && *previous == KEY_NONE) {
+        treadmill_key_press(&treadmill, pressed);
+        *previous = pressed;
+      } else {
+        if (pressed == combined && HAL_GetTick() - *key_tick >= 2000) {
+          if (pressed != *previous) treadmill_key_press(&treadmill, pressed);
+          *previous = pressed;
+        }
+      }
+    }
+    return 1;
+  }
+  return 0;
+}
+
+static void handle_key_press(void) {
+  static enum key pressed = KEY_NONE;
+  static enum key previous = KEY_NONE;
+  static uint32_t key_tick = 0;
+  static uint8_t slow_repeat_count = 0;
+  pressed = get_key_pressed();
+
+  if (handle_combined_or_single_key_press((KEY_START | KEY_STOP), KEY_CONFIG, pressed, &previous, &key_tick)) {
+    return;
+  }
+
+  if (handle_combined_or_single_key_press((KEY_SPEED_INCREMENT | KEY_SPEED_DECREMENT), KEY_LUB, pressed, &previous,
+                                          &key_tick)) {
+    return;
+  }
+
+  if (pressed != KEY_NONE && pressed != previous) {
+    treadmill_key_press(&treadmill, pressed);
+    key_tick = 0;
+    slow_repeat_count = 0;
+    previous = pressed;
+  } else if (pressed != KEY_NONE) {
+    if (slow_repeat_count <= 10) {
+      osDelay(25);
+    } else if (slow_repeat_count < 21) {
+      osDelay(200);
+    } else {
+      osDelay(75);
+    }
+    if (slow_repeat_count < 255) slow_repeat_count++;
+    if (slow_repeat_count <= 10) return;
+    treadmill_key_press(&treadmill, pressed);
+  } else {
+    key_tick = 0;
+    previous = pressed;
+    slow_repeat_count = 0;
+  }
+}
+
 /* USER CODE END Header_KeyboardTask */
 void KeyboardTask(void const *argument) {
   /* USER CODE BEGIN KeyboardTask */
-  enum key key_pressed = KEY_NONE;
-  enum key previous_key = KEY_NONE;
-  uint32_t key_tick = 0;
-
-  uint8_t slow_repeat_count = 0;
   /* Infinite loop */
   for (;;) {
     handle_emergency();
-
-    key_pressed = get_key_pressed();
-    if (key_pressed == KEY_START || key_pressed == KEY_STOP || key_pressed == KEY_CONFIG) {
-      if (key_tick == 0) {
-        key_tick = HAL_GetTick();
-
-      } else if (HAL_GetTick() - key_tick >= 50) {
-        if (key_pressed != KEY_CONFIG && previous_key == KEY_NONE) {
-          treadmill_key_press(&treadmill, key_pressed);
-          previous_key = key_pressed;
-        } else {
-          if (key_pressed == KEY_CONFIG && HAL_GetTick() - key_tick >= 2000) {
-            if (key_pressed != previous_key) treadmill_key_press(&treadmill, key_pressed);
-            previous_key = key_pressed;
-          }
-        }
-      }
-    } else if (key_pressed != previous_key) {
-      if (key_pressed != KEY_NONE) {
-        treadmill_key_press(&treadmill, key_pressed);
-      }
-      key_tick = 0;
-      slow_repeat_count = 0;
-      previous_key = key_pressed;
-    } else if (key_pressed != KEY_NONE) {
-      if (slow_repeat_count <= 10) {
-        osDelay(25);
-      } else if (slow_repeat_count < 21) {
-        osDelay(200);
-      } else {
-        osDelay(75);
-      }
-
-      if (slow_repeat_count < 255) slow_repeat_count++;
-      if (slow_repeat_count <= 10) continue;
-      treadmill_key_press(&treadmill, key_pressed);
-      continue;
-    }
-
     handle_shortcut_keys();
-
+    handle_key_press();
     osDelay(1);  // 2 ms
   }
   /* USER CODE END KeyboardTask */

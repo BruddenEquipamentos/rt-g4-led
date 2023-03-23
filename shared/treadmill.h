@@ -14,6 +14,7 @@
 #define NVM_U8_WEIGHT 0x0004
 #define NVM_U32_LUB_DISTANCE 0x0005
 #define NVM_U8_AGE 0x0006
+#define NVM_U32_LUB_DISTANCE_PARAM 0x0007
 
 // Exemplo de NSU "818790500000007067703"
 #define NVM_NS_MAX_LENGTH (22)
@@ -26,7 +27,7 @@
 #define LUB_NOTIFICATION_SCENE_TIME (5000)
 #define IDLE_SCENE_TIME (10000)
 #define DEFAULT_WEIGHT_IN_KG (70)
-#define DEFAULT_LUB_DISTANCE (1500)
+#define DEFAULT_LUB_DISTANCE_PARAM (1500)
 #define DEFAULT_AGE (30)
 
 typedef enum inverter_comm_type {
@@ -115,13 +116,18 @@ typedef struct treadmill {
     int model;
     int weight;
     int age;
-    int lub_distance;
+    uint32_t lub_param_km;
+    uint32_t lub_distance_m;
     int modbus;
     int test;
 
     char nsu[22];
     char nsp[22];  // legado
     char nsi[22];  // legado
+
+    // struct {
+    //   inverter_comm_type_t comm_type;
+    // } inverter;
   } config;
 
   struct total {
@@ -173,6 +179,9 @@ typedef struct treadmill {
   uint32_t (*get_time_ms)(void);
   uint32_t ms;
 
+  kbd_key_t key_pressed;
+  uint32_t key_pressed_tick;
+
 } treadmill_t;
 
 void treadmill_setup(treadmill_t *treadmill);
@@ -195,5 +204,9 @@ void treadmill_set_dm_message(treadmill_t *treadmill, const char *text, const ui
                               const uint32_t blink_interval);
 
 void treadmill_clear_dm_message(treadmill_t *treadmill);
+
+uint32_t treadmill_calculate_lub_distance_remaining(treadmill_t *treadmill);
+
+void treadmill_reset_lub(treadmill_t *treadmill);
 
 #endif

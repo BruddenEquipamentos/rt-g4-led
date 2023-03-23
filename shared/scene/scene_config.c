@@ -54,17 +54,17 @@ static void change_config_weight(treadmill_t *treadmill, const kbd_key_t key) {
 static void change_config_lub(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_SPEED_INCREMENT: {
-      if (treadmill->config.lub_distance + RT_LED_LUB_STEP_DISTANCE <= RT_LED_LUB_MAX_DISTANCE)
-        treadmill->config.lub_distance += RT_LED_LUB_STEP_DISTANCE;
+      if (treadmill->config.lub_param_km + RT_LED_LUB_STEP_DISTANCE <= RT_LED_LUB_MAX_DISTANCE)
+        treadmill->config.lub_param_km += RT_LED_LUB_STEP_DISTANCE;
       else
-        treadmill->config.lub_distance = RT_LED_LUB_MIN_DISTANCE;
+        treadmill->config.lub_param_km = RT_LED_LUB_MIN_DISTANCE;
       break;
     }
     case KEY_SPEED_DECREMENT: {
-      if (treadmill->config.lub_distance - RT_LED_LUB_STEP_DISTANCE >= RT_LED_LUB_MIN_DISTANCE)
-        treadmill->config.lub_distance -= RT_LED_LUB_MIN_DISTANCE;
+      if (treadmill->config.lub_param_km - RT_LED_LUB_STEP_DISTANCE >= RT_LED_LUB_MIN_DISTANCE)
+        treadmill->config.lub_param_km -= RT_LED_LUB_MIN_DISTANCE;
       else
-        treadmill->config.lub_distance = RT_LED_LUB_MAX_DISTANCE;
+        treadmill->config.lub_param_km = RT_LED_LUB_MAX_DISTANCE;
 
       break;
     }

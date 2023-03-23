@@ -140,7 +140,11 @@ void dm_render(treadmill_t *treadmill) {
           break;
         }  // THR
         case CONFIG_OPTION_BLE_STATE: {
-          dm_render_text("S/BL", 16);
+          if (treadmill->hw.ble.state == BLE_STATE_READY) {
+            dm_render_text("BLE", 16);
+          } else {
+            dm_render_text("S/BL", 16);
+          }
           break;
         }  // S/BL
         case CONFIG_OPTION_MODBUS: {

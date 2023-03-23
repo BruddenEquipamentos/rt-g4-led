@@ -9,6 +9,9 @@
 #include "./ble/ble_protocol/ble_protocol_command.h"
 #include "./ble/ble_protocol/ble_protocol_helper.h"
 
+// TODO: refactor
+#include "treadmill_action.h"
+
 void treadmill_ble_process_init(treadmill_t *treadmill) {
   static uint32_t init_wait = 0;
   ble_t *ble = &treadmill->hw.ble;

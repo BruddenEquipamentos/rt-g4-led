@@ -19,6 +19,9 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
       treadmill_config(treadmill);
       break;
     }
+    case KEY_LUB: {
+      treadmill_set_scene(treadmill, SCENE_LUB);
+    }
     default:;
   }
 }

@@ -8,9 +8,8 @@
 #include "panel/rt_led.h"
 
 char *scene_name[SCENE_TOTALS] = {
-    "SCENE_INIT",   "SCENE_IDLE",    "SCENE_EMERGENCY", "SCENE_LUB",
-    "SCENE_CONFIG", "SCENE_PROGRAM", "SCENE_COUNTDOWN", "SCENE_TRAINING",
-    "SCENE_PAUSED", "SCENE_REPORT",
+    "SCENE_INIT",    "SCENE_IDLE",      "SCENE_EMERGENCY", "SCENE_LUB",    "SCENE_CONFIG",
+    "SCENE_PROGRAM", "SCENE_COUNTDOWN", "SCENE_TRAINING",  "SCENE_PAUSED", "SCENE_REPORT",
 };
 
 __attribute__((weak)) void beep(beep_t beep) { (void)beep; }
@@ -68,18 +67,18 @@ uint32_t treadmill_calculate_calories(treadmill_t *treadmill) {
   float fTime = 1;
 
   if (walking_speed(treadmill->training.speed)) {
-    fKcal = (((fSpeed / 0.06) * (0.1 + 1.8 * (fIncline / 100)) + 3.5) *
-             (5 * fWeight * fTime)) /
-            1000;
+    fKcal = (((fSpeed / 0.06) * (0.1 + 1.8 * (fIncline / 100)) + 3.5) * (5 * fWeight * fTime)) / 1000;
   } else {
-    fKcal = (((fSpeed / 0.06) * (0.2 + 0.9 * (fIncline / 100)) + 3.5) *
-             (5 * fWeight * fTime)) /
-            1000;
+    fKcal = (((fSpeed / 0.06) * (0.2 + 0.9 * (fIncline / 100)) + 3.5) * (5 * fWeight * fTime)) / 1000;
   }
   return (uint32_t)((fKcal / 60) * 1000);
 }
 
 void treadmill_key_press(treadmill_t *treadmill, const kbd_key_t key) {
+  if (treadmill->key_pressed != key) {
+    treadmill->key_pressed_tick = treadmill->get_time_ms();
+    treadmill->key_pressed = key;
+  }
   rt_led_key_press(treadmill, key);
 }
 
@@ -93,16 +92,14 @@ void treadmill_load_config(treadmill_t *treadmill) {
   }
 
   uint32_t total_distance_in_meters = 0;
-  if (nvm.NVM_ReadVariable32bits(NVM_U32_TOTAL_DISTANCE_METERS,
-                                 &total_distance_in_meters)) {
+  if (nvm.NVM_ReadVariable32bits(NVM_U32_TOTAL_DISTANCE_METERS, &total_distance_in_meters)) {
     treadmill->total.distance_in_meters = total_distance_in_meters;
   } else {
     treadmill->total.distance_in_meters = 0;
   }
 
   uint32_t total_time_in_seconds = 0;
-  if (nvm.NVM_ReadVariable32bits(NVM_U32_TOTAL_TIME_SECONDS,
-                                 &total_time_in_seconds)) {
+  if (nvm.NVM_ReadVariable32bits(NVM_U32_TOTAL_TIME_SECONDS, &total_time_in_seconds)) {
     treadmill->total.time_in_seconds = total_time_in_seconds;
   } else {
     treadmill->total.time_in_seconds = 0;
@@ -115,11 +112,18 @@ void treadmill_load_config(treadmill_t *treadmill) {
     treadmill->config.weight = DEFAULT_WEIGHT_IN_KG;
   }
 
-  uint32_t lub_distance_in_km = 0;
-  if (nvm.NVM_ReadVariable32bits(NVM_U32_LUB_DISTANCE, &lub_distance_in_km)) {
-    treadmill->config.lub_distance = lub_distance_in_km;
+  uint32_t lub_param_in_km = 0;
+  if (nvm.NVM_ReadVariable32bits(NVM_U32_LUB_DISTANCE_PARAM, &lub_param_in_km)) {
+    treadmill->config.lub_param_km = lub_param_in_km;
   } else {
-    treadmill->config.lub_distance = DEFAULT_LUB_DISTANCE;
+    treadmill->config.lub_param_km = DEFAULT_LUB_DISTANCE_PARAM;
+  }
+
+  uint32_t lub_distance_in_m = 0;
+  if (nvm.NVM_ReadVariable32bits(NVM_U32_LUB_DISTANCE, &lub_distance_in_m)) {
+    treadmill->config.lub_distance_m = lub_distance_in_m;
+  } else {
+    treadmill->config.lub_distance_m = treadmill->total.distance_in_meters;
   }
 
   uint8_t age_in_years = 0;
@@ -154,10 +158,8 @@ void treadmill_save_config(treadmill_t *treadmill) {
   if (treadmill->previous_config.weight != treadmill->config.weight) {
     nvm.NVM_WriteVariable8bits(NVM_U8_WEIGHT, treadmill->config.weight);
   }
-  if (treadmill->previous_config.lub_distance !=
-      treadmill->config.lub_distance) {
-    nvm.NVM_WriteVariable32bits(NVM_U32_LUB_DISTANCE,
-                                treadmill->config.lub_distance);
+  if (treadmill->previous_config.lub_param_km != treadmill->config.lub_param_km) {
+    nvm.NVM_WriteVariable32bits(NVM_U32_LUB_DISTANCE_PARAM, treadmill->config.lub_param_km);
   }
   if (treadmill->previous_config.age != treadmill->config.age) {
     nvm.NVM_WriteVariable8bits(NVM_U8_AGE, treadmill->config.age);
@@ -165,12 +167,10 @@ void treadmill_save_config(treadmill_t *treadmill) {
 }
 
 void treadmill_update(treadmill_t *treadmill) {
-  if (treadmill->message.tick &&
-      treadmill->get_time_ms() - treadmill->message.tick >=
-          treadmill->message.duration) {
+  if (treadmill->message.tick && treadmill->get_time_ms() - treadmill->message.tick >= treadmill->message.duration) {
     treadmill->message.tick = 0;
     treadmill->message.duration = 0;
-    //memcpy(treadmill->message.data, 0x00, 32);
+    // memcpy(treadmill->message.data, 0x00, 32);
   }
 
   rt_led_update(treadmill);
@@ -184,10 +184,8 @@ void treadmill_emergency_pressed(treadmill_t *treadmill) {
   }
 }
 
-#include <string.h>
-void treadmill_set_dm_message(treadmill_t *treadmill, const char *text,
-                           const uint32_t duration_ms,
-                           const uint32_t blink_interval) {
+void treadmill_set_dm_message(treadmill_t *treadmill, const char *text, const uint32_t duration_ms,
+                              const uint32_t blink_interval) {
   strncpy(treadmill->message.data, text, 32);
   treadmill->message.tick = treadmill->get_time_ms();
   treadmill->message.duration = duration_ms;
@@ -197,4 +195,25 @@ void treadmill_set_dm_message(treadmill_t *treadmill, const char *text,
 void treadmill_clear_dm_message(treadmill_t *treadmill) {
   treadmill->message.blink_interval = 0;
   treadmill->message.tick = 0;
+}
+
+/*
+lub_param_m
+lub_distance_m
+*/
+
+uint32_t treadmill_calculate_lub_distance_remaining(treadmill_t *treadmill) {
+  uint32_t param = treadmill->config.lub_param_km * 1000;
+  uint32_t remaining = 0;
+  uint32_t distance = 0;
+  if (treadmill->total.distance_in_meters >= treadmill->config.lub_distance_m)
+    distance = treadmill->total.distance_in_meters - treadmill->config.lub_distance_m;
+  if (param >= distance) remaining = (param - distance) / 1000;
+  return remaining;
+}
+
+void treadmill_reset_lub(treadmill_t *treadmill) {
+  if (nvm.NVM_WriteVariable32bits(NVM_U32_LUB_DISTANCE, treadmill->total.distance_in_meters) == NVM_STATUS_OK) {
+    treadmill->config.lub_distance_m = treadmill->total.distance_in_meters;
+  }
 }
