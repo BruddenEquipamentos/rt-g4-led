@@ -29,6 +29,7 @@
 #define DEFAULT_WEIGHT_IN_KG (70)
 #define DEFAULT_LUB_DISTANCE_PARAM (1500)
 #define DEFAULT_AGE (30)
+#define LUB_NOTIFICATION_DISTANCE_REMAINING_KM (100)
 
 typedef enum inverter_comm_type {
   MOTOR_COMMUNICATION_TYPE_FREQ = 0,
@@ -181,6 +182,7 @@ typedef struct treadmill {
 
   kbd_key_t key_pressed;
   uint32_t key_pressed_tick;
+  uint32_t key_pressed_last_tick;
 
 } treadmill_t;
 
@@ -208,5 +210,7 @@ void treadmill_clear_dm_message(treadmill_t *treadmill);
 uint32_t treadmill_calculate_lub_distance_remaining(treadmill_t *treadmill);
 
 void treadmill_reset_lub(treadmill_t *treadmill);
+
+void treadmill_key_press_clear(treadmill_t *treadmill);
 
 #endif

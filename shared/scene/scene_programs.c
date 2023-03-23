@@ -13,11 +13,11 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
   }
 }
 
-static void update(treadmill_t *treadmill) {}
+static void update(treadmill_t *treadmill) {
+  // if there's no interaction for 30s, return no idle scene
+  if (treadmill->get_time_ms() - treadmill->scene_tick > 30000) {
+    treadmill_set_scene(treadmill, SCENE_IDLE);
+  }
+}
 
-scene_t scene_programs = {
-    .id = SCENE_PROGRAM,
-    .name = "PROGRAMS",
-    .keypress = keypress,
-    .update = update
-};
+scene_t scene_programs = {.id = SCENE_PROGRAM, .name = "PROGRAMS", .keypress = keypress, .update = update};

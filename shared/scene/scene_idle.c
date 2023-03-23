@@ -27,10 +27,10 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
 }
 
 static void update(treadmill_t *treadmill) {
-  if (treadmill->get_time_ms() - treadmill->idle_tick >= IDLE_SCENE_TIME) {
+  if (treadmill_calculate_lub_distance_remaining(treadmill) <= LUB_NOTIFICATION_DISTANCE_REMAINING_KM &&
+      treadmill->get_time_ms() - treadmill->idle_tick >= IDLE_SCENE_TIME) {
     if (!treadmill->config.modbus) treadmill_set_scene(treadmill, SCENE_LUB);
   }
 }
 
-const scene_t scene_idle = {
-    .id = SCENE_IDLE, .name = "IDLE", .keypress = keypress, .update = update};
+const scene_t scene_idle = {.id = SCENE_IDLE, .name = "IDLE", .keypress = keypress, .update = update};

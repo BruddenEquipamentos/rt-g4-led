@@ -77,9 +77,15 @@ uint32_t treadmill_calculate_calories(treadmill_t *treadmill) {
 void treadmill_key_press(treadmill_t *treadmill, const kbd_key_t key) {
   if (treadmill->key_pressed != key) {
     treadmill->key_pressed_tick = treadmill->get_time_ms();
+    treadmill->key_pressed_last_tick = treadmill->get_time_ms();
     treadmill->key_pressed = key;
   }
   rt_led_key_press(treadmill, key);
+}
+
+void treadmill_key_press_clear(treadmill_t *treadmill) {
+  treadmill->key_pressed = KEY_NONE;
+  treadmill->key_pressed_tick = 0;
 }
 
 void treadmill_load_config(treadmill_t *treadmill) {

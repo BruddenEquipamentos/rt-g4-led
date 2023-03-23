@@ -1178,6 +1178,7 @@ static void handle_key_press(void) {
     key_tick = 0;
     previous = pressed;
     slow_repeat_count = 0;
+    treadmill_key_press_clear(&treadmill);
   }
 }
 
@@ -1211,7 +1212,6 @@ void BeepTask(void const *argument) {
   for (;;) {
     if (xQueueReceive(beepEventQueueHandle, &beep, portMAX_DELAY) == pdPASS) {
       HAL_TIM_PWM_Stop(&htim16, TIM_CHANNEL_1);
-      //
       switch (beep) {
         case BEEP_KEYPRESS_ACK: {
           TIM16->CNT = 0;

@@ -14,10 +14,12 @@ static void update(treadmill_t *treadmill) {
         treadmill_reset_lub(treadmill);
       }
     }
-  }
-
-  if (treadmill->get_time_ms() - treadmill->scene_tick >= LUB_NOTIFICATION_SCENE_TIME) {
-    treadmill_set_scene(treadmill, SCENE_IDLE);
+  } else {
+    uint32_t current_tick = treadmill->get_time_ms();
+    if (current_tick - treadmill->scene_tick >= 5000 &&
+        current_tick - treadmill->key_pressed_last_tick >= LUB_NOTIFICATION_SCENE_TIME) {
+      treadmill_set_scene(treadmill, SCENE_IDLE);
+    }
   }
 }
 
