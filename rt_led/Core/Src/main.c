@@ -1029,7 +1029,7 @@ void StartDefaultTask(void const *argument) {
     rt_led_render(&treadmill);
 
     while (treadmill.ms < HAL_GetTick()) {
-      treadmill.ms += 100;
+      treadmill.ms += 50;
       treadmill_update(&treadmill);
       display_update();
     }
@@ -1130,14 +1130,17 @@ static int handle_combined_or_single_key_press(enum key singles, enum key combin
       if (pressed != combined && *previous == KEY_NONE) {
         treadmill_key_press(&treadmill, pressed);
         *previous = pressed;
+        return 1;
       } else {
-        if (pressed == combined && HAL_GetTick() - *key_tick >= 2000) {
-          if (pressed != *previous) treadmill_key_press(&treadmill, pressed);
-          *previous = pressed;
+        if (pressed == combined) {
+          if (HAL_GetTick() - *key_tick >= 2000) {
+            if (pressed != *previous) treadmill_key_press(&treadmill, pressed);
+            *previous = pressed;
+          }
+          return 1;
         }
       }
     }
-    return 1;
   }
   return 0;
 }

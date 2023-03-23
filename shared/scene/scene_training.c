@@ -77,10 +77,17 @@ static void update(treadmill_t *treadmill) {
     treadmill->training.pace = treadmill_calculate_pace(treadmill);
     treadmill->training.pace_total_seconds += treadmill->training.pace;
     treadmill->training.kcal += treadmill_calculate_calories(treadmill);
+  }
 
-    // compute pace // hide display_programs
-
-    // calculate average page
+  if (treadmill->ms - treadmill->aux.speed_ms >= 100) {
+    treadmill->aux.speed_ms = treadmill->ms;
+    if (treadmill->aux.speed_reached != treadmill->aux.speed_target) {
+      if (treadmill->aux.speed_target > treadmill->aux.speed_reached) {
+        treadmill->aux.speed_reached += 10;
+      } else if (treadmill->aux.speed_target < treadmill->aux.speed_reached) {
+        treadmill->aux.speed_reached -= 10;
+      }
+    }
   }
   // handle program specific things
   treadmill_scene_training_programs_update(treadmill);

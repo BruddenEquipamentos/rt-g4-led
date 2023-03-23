@@ -12,8 +12,7 @@ static void dm_render_mb_param_value(treadmill_t *treadmill) {
 }
 
 static uint32_t dm_blink_time_ms = 0;
-static int dm_blink(const uint32_t update_time_ms,
-                    const uint32_t blink_interval_ms) {
+static int dm_blink(const uint32_t update_time_ms, const uint32_t blink_interval_ms) {
   if (blink_interval_ms == 0) return 1;
   if (update_time_ms - dm_blink_time_ms > blink_interval_ms) {
     dm_blink_time_ms = update_time_ms;
@@ -27,8 +26,7 @@ static int dm_blink(const uint32_t update_time_ms,
 void dm_render(treadmill_t *treadmill) {
   if (treadmill->message.tick) {
     dm_clear_buffer();
-    if (!dm_blink(treadmill->get_time_ms(),
-                  treadmill->message.blink_interval)) {
+    if (!dm_blink(treadmill->get_time_ms(), treadmill->message.blink_interval)) {
       dm_render_text(treadmill->message.data, 16);
     }
     return;
@@ -67,19 +65,15 @@ void dm_render(treadmill_t *treadmill) {
         extern uint8_t __new_display;
         if (__new_display) {
           // if incline has been pressed, show incline for specific time
-          if (treadmill->training.incline_changed_time_ms &&
-              treadmill->get_time_ms() -
-                      treadmill->training.incline_changed_time_ms <=
-                  2000) {
+          if (treadmill->aux.incline_changed_time_ms &&
+              treadmill->get_time_ms() - treadmill->aux.incline_changed_time_ms <= 2000) {
             char text[16];
-            sprintf(text, "%1d.%1d%%", treadmill->training.incline / 10,
-                    treadmill->training.incline % 10);
+            sprintf(text, "%1d.%1d%%", treadmill->training.incline / 10, treadmill->training.incline % 10);
             dm_render_text(text, 16);
           }
         }
 
-        if (treadmill->program.id == PROGRAM_FAT_BURN ||
-            treadmill->program.id == PROGRAM_SUPER_CARDIO) {
+        if (treadmill->program.id == PROGRAM_FAT_BURN || treadmill->program.id == PROGRAM_SUPER_CARDIO) {
           if (treadmill->training.bpm == 0) {
             if (!dm_blink(treadmill->get_time_ms(), 1000)) {
               dm_render_text("@;", 12);
@@ -94,7 +88,7 @@ void dm_render(treadmill_t *treadmill) {
       break;
     }
     case SCENE_PAUSED: {
-      dm_render_text_animated("PAUSED", 100, treadmill->get_time_ms());
+      dm_render_text_animated("PAUSA", 100, treadmill->get_time_ms());
       break;
     }
     case SCENE_LUB: {
@@ -168,8 +162,7 @@ void dm_render(treadmill_t *treadmill) {
       break;
     }
     default: {
-      if (treadmill->scene == SCENE_COUNTDOWN &&
-          treadmill->countdown.value != 0) {
+      if (treadmill->scene == SCENE_COUNTDOWN && treadmill->countdown.value != 0) {
         dm_render_number(treadmill->countdown.value);
       } else {
         dm_clear_buffer();

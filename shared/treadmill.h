@@ -98,10 +98,18 @@ typedef struct treadmill {
     uint16_t pace;
     uint8_t bpm;
 
-    uint32_t incline_changed_time_ms;
-
     uint32_t pace_total_seconds;
   } training;
+
+  // TODO: refactor this struct
+  struct aux {
+    uint16_t speed_target;
+    uint16_t speed_reached;
+    uint32_t speed_ms;
+
+    uint32_t incline_changed_time_ms;
+
+  } aux;
 
   struct config {
     struct {

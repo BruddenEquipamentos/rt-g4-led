@@ -18,9 +18,7 @@ void treadmill_start_training(treadmill_t *treadmill) {
   treadmill_set_scene(treadmill, SCENE_TRAINING);
 }
 
-void treadmill_abort_countdown(treadmill_t *treadmill) {
-  treadmill_set_scene(treadmill, SCENE_IDLE);
-}
+void treadmill_abort_countdown(treadmill_t *treadmill) { treadmill_set_scene(treadmill, SCENE_IDLE); }
 
 void treadmill_pause_training(treadmill_t *treadmill) {
   treadmill_clear_dm_message(treadmill);
@@ -28,9 +26,7 @@ void treadmill_pause_training(treadmill_t *treadmill) {
   treadmill_set_scene(treadmill, SCENE_PAUSED);
 }
 
-void treadmill_reset_training(treadmill_t *treadmill) {
-  memset(&treadmill->training, 0x00, sizeof(struct training));
-}
+void treadmill_reset_training(treadmill_t *treadmill) { memset(&treadmill->training, 0x00, sizeof(struct training)); }
 
 void treadmill_resume_training(treadmill_t *treadmill) {
   treadmill->training.speed = treadmill->config.speed.min;
@@ -44,49 +40,45 @@ void treadmill_finish_training(treadmill_t *treadmill) {
   treadmill_set_scene(treadmill, SCENE_REPORT);
 }
 
-void treadmill_finish_program(treadmill_t *treadmill) {
-  treadmill_finish_training(treadmill);
-}
+void treadmill_finish_program(treadmill_t *treadmill) { treadmill_finish_training(treadmill); }
 
 static void treadmill_save_training(treadmill_t *treadmill) {
   treadmill->total.distance_in_meters += treadmill->training.meters;
   treadmill->total.time_in_seconds += treadmill->training.seconds;
-  nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_DISTANCE_METERS,
-                              treadmill->total.distance_in_meters);
-  nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_TIME_SECONDS,
-                              treadmill->total.time_in_seconds);
+  nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_DISTANCE_METERS, treadmill->total.distance_in_meters);
+  nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_TIME_SECONDS, treadmill->total.time_in_seconds);
 }
 
 void treadmill_close_report(treadmill_t *treadmill) {
   treadmill_save_training(treadmill);
-  memset(&treadmill->training, 0x00, sizeof(struct training));
+  treadmill_reset_training(treadmill);
   treadmill->program.id = PROGRAM_NONE;
   treadmill_set_scene(treadmill, SCENE_IDLE);
 }
 
 void treadmill_speed_increment(treadmill_t *treadmill) {
   if (treadmill->training.speed >= treadmill->config.speed.min &&
-      treadmill->training.speed + treadmill->config.speed.step <=
-          treadmill->config.speed.max) {
-    treadmill_set_speed(
-        treadmill, treadmill->training.speed + treadmill->config.speed.step);
+      treadmill->training.speed + treadmill->config.speed.step <= treadmill->config.speed.max) {
+    treadmill_set_speed(treadmill, treadmill->training.speed + treadmill->config.speed.step);
   }
 }
 
 void treadmill_speed_decrement(treadmill_t *treadmill) {
   if (treadmill->training.speed >= treadmill->config.speed.min &&
-      treadmill->training.speed - treadmill->config.speed.step >=
-          treadmill->config.speed.min) {
-    treadmill_set_speed(
-        treadmill, treadmill->training.speed - treadmill->config.speed.step);
+      treadmill->training.speed - treadmill->config.speed.step >= treadmill->config.speed.min) {
+    treadmill_set_speed(treadmill, treadmill->training.speed - treadmill->config.speed.step);
   }
 }
 
 int treadmill_set_speed(treadmill_t *treadmill, const uint16_t speed) {
+  static uint16_t previous_speed = 0;
+
   if (speed > treadmill->config.speed.max) return 0;
   if (speed > 0 && speed < treadmill->config.speed.min) return 0;
   treadmill->training.speed = speed;
   treadmill->training.pace = treadmill_calculate_pace(treadmill);
+
+  treadmill->aux.speed_target = speed;
 
   // todo: refactor
   if (treadmill->training.seconds > 0) {
@@ -106,7 +98,7 @@ int treadmill_set_incline(treadmill_t *treadmill, const int16_t incline) {
   if (incline > treadmill->config.incline.max) return 0;
   if (incline < treadmill->config.incline.min) return 0;
   if (treadmill->training.incline != incline) {
-    treadmill->training.incline_changed_time_ms = treadmill->get_time_ms();
+    treadmill->aux.incline_changed_time_ms = treadmill->get_time_ms();
     treadmill->training.incline = incline;
   }
   return 1;
@@ -114,19 +106,15 @@ int treadmill_set_incline(treadmill_t *treadmill, const int16_t incline) {
 
 void treadmill_incline_increment(treadmill_t *treadmill) {
   if (treadmill->training.incline >= treadmill->config.incline.min &&
-      treadmill->training.incline + treadmill->config.incline.step <=
-          treadmill->config.incline.max) {
-    treadmill_set_incline(treadmill, treadmill->training.incline +
-                                         treadmill->config.incline.step);
+      treadmill->training.incline + treadmill->config.incline.step <= treadmill->config.incline.max) {
+    treadmill_set_incline(treadmill, treadmill->training.incline + treadmill->config.incline.step);
   }
 }
 
 void treadmill_incline_decrement(treadmill_t *treadmill) {
   if (treadmill->training.incline >= treadmill->config.incline.min &&
-      treadmill->training.incline - treadmill->config.incline.step >=
-          treadmill->config.incline.min) {
-    treadmill_set_incline(treadmill, treadmill->training.incline -
-                                         treadmill->config.incline.step);
+      treadmill->training.incline - treadmill->config.incline.step >= treadmill->config.incline.min) {
+    treadmill_set_incline(treadmill, treadmill->training.incline - treadmill->config.incline.step);
   }
 }
 
@@ -150,13 +138,10 @@ void treadmill_exit_program(treadmill_t *treadmill) {
   treadmill_set_scene(treadmill, SCENE_IDLE);
 }
 
-void treadmill_start_program(treadmill_t *treadmill) {
-  treadmill_start_training_countdown(treadmill);
-}
+void treadmill_start_program(treadmill_t *treadmill) { treadmill_start_training_countdown(treadmill); }
 
 void treadmill_config(treadmill_t *treadmill) {
-  memcpy(&treadmill->previous_config, &treadmill->config,
-         sizeof(struct config));
+  memcpy(&treadmill->previous_config, &treadmill->config, sizeof(struct config));
   treadmill_set_scene(treadmill, SCENE_CONFIG);
 }
 
@@ -170,41 +155,34 @@ static int valid_ns(const char *nsu, const int length) {
   return 1;
 }
 
-int treadmill_save_nsu(treadmill_t *treadmill, const char *nsu,
-                       const int length) {
+int treadmill_save_nsu(treadmill_t *treadmill, const char *nsu, const int length) {
   if (!valid_ns(nsu, length)) return 0;
   strcpy(treadmill->config.nsu, nsu);
   nvm.NVM_WriteString(NVM_NSU_START_ADDRESS, nsu, length, NVM_NS_MAX_LENGTH);
   return 1;
 }
 
-int treadmill_save_nsp(treadmill_t *treadmill, const char *nsp,
-                       const int length) {
+int treadmill_save_nsp(treadmill_t *treadmill, const char *nsp, const int length) {
   if (!valid_ns(nsp, length)) return 0;
   strcpy(treadmill->config.nsp, nsp);
   nvm.NVM_WriteString(NVM_NSP_START_ADDRESS, nsp, length, NVM_NS_MAX_LENGTH);
   return 1;
 }
 
-int treadmill_save_nsi(treadmill_t *treadmill, const char *nsi,
-                       const int length) {
+int treadmill_save_nsi(treadmill_t *treadmill, const char *nsi, const int length) {
   if (!valid_ns(nsi, length)) return 0;
   strcpy(treadmill->config.nsi, nsi);
   nvm.NVM_WriteString(NVM_NSI_START_ADDRESS, nsi, length, NVM_NS_MAX_LENGTH);
   return 1;
 }
 
-int treadmill_save_total_distance(treadmill_t *treadmill,
-                                  uint32_t total_distance_in_meters) {
-  nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_DISTANCE_METERS,
-                              total_distance_in_meters);
+int treadmill_save_total_distance(treadmill_t *treadmill, uint32_t total_distance_in_meters) {
+  nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_DISTANCE_METERS, total_distance_in_meters);
   return 1;
 }
 
-int treadmill_save_total_time(treadmill_t *treadmill,
-                              uint32_t total_time_in_seconds) {
-  nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_TIME_SECONDS,
-                              total_time_in_seconds);
+int treadmill_save_total_time(treadmill_t *treadmill, uint32_t total_time_in_seconds) {
+  nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_TIME_SECONDS, total_time_in_seconds);
   return 1;
 }
 
@@ -272,7 +250,7 @@ int treadmill_send_ftms_data(treadmill_t *treadmill) {
     flat_bin_to_ascii_16(buffer, &bindex, BUFSIZE,
                          calories);                     // total energy kcal
     flat_bin_to_ascii_16(buffer, &bindex, BUFSIZE, 0);  // energy per hour kcal
-    flat_bin_to_ascii_8(buffer, &bindex, BUFSIZE, 0);  // energy per minute kcal
+    flat_bin_to_ascii_8(buffer, &bindex, BUFSIZE, 0);   // energy per minute kcal
   }
 
   if (flags & TD_HEART_RATE_PRESENT) {
@@ -291,9 +269,7 @@ int treadmill_send_ftms_data(treadmill_t *treadmill) {
   return treadmill->hw.ble.send_data(buffer, bindex);
 }
 
-void treadmill_set_bpm_read(treadmill_t *treadmill) {
-  treadmill->hw.handgrip.state = HEARTRATE_HG_INITING;
-}
+void treadmill_set_bpm_read(treadmill_t *treadmill) { treadmill->hw.handgrip.state = HEARTRATE_HG_INITING; }
 
 void treadmill_set_bpm_value(treadmill_t *treadmill, uint8_t bpm) {
   treadmill->hw.handgrip.state = HEARTRATE_HG_READING;
@@ -304,4 +280,3 @@ void treadmill_set_bpm_stop(treadmill_t *treadmill) {
   treadmill->hw.handgrip.state = HEARTRATE_HG_DISABLED;
   treadmill->training.bpm = 0;
 }
-

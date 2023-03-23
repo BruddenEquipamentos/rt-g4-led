@@ -66,7 +66,12 @@ static void render_training_data(treadmill_t *treadmill) {
   sd_set_incline(&sd_incline, treadmill->training.incline);
   sd_set_bpm(&sd_bpm, treadmill->training.bpm);
 
-  if (treadmill->scene == SCENE_REPORT || treadmill->scene == SCENE_REPORT) {
+  // TODO: refactor
+  if (treadmill->scene == SCENE_TRAINING && treadmill->aux.speed_reached != treadmill->aux.speed_target) {
+    sd_blink(&sd_speed, treadmill->get_time_ms(), 500);
+  }
+
+  if (treadmill->scene == SCENE_PAUSED || treadmill->scene == SCENE_REPORT) {
     sd_set_min_sec(&sd_pace, treadmill->training.pace_total_seconds / treadmill->training.seconds);
   }
 

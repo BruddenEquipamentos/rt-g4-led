@@ -265,7 +265,7 @@ static void *thread_main(void *arg) {
 
     treadmill_ble_process(treadmill);
 
-    treadmill_motor_process(treadmill);
+    // treadmill_motor_process(treadmill);
 
     rt_led_render(treadmill);  // memory update
 
