@@ -64,10 +64,12 @@ static void render_training_data(treadmill_t *treadmill) {
   sd_set_min_sec(&sd_pace, treadmill->training.pace);
   sd_set_kcal(&sd_kcal, treadmill->training.kcal / 1000);
   sd_set_incline(&sd_incline, treadmill->training.incline);
-  // sd_set_value(&sd_bpm, treadmill->training.bpm);
   sd_set_bpm(&sd_bpm, treadmill->training.bpm);
 
-  // TODO: refactor
+  if (treadmill->scene == SCENE_REPORT || treadmill->scene == SCENE_REPORT) {
+    sd_set_min_sec(&sd_pace, treadmill->training.pace_total_seconds / treadmill->training.seconds);
+  }
+
   if (treadmill->config.modbus) {
     sd_set_visible(&sd_program, true);
     char text[5];

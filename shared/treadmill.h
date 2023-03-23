@@ -99,6 +99,8 @@ typedef struct treadmill {
     uint8_t bpm;
 
     uint32_t incline_changed_time_ms;
+
+    uint32_t pace_total_seconds;
   } training;
 
   struct config {

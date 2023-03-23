@@ -9,11 +9,9 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
       break;
     case KEY_SPEED_INCREMENT:
       if (treadmill->program.id == PROGRAM_WALK_30MIN) {
-        if (treadmill->program.p_walk_30min.target_speed +
-                treadmill->config.speed.step <=
+        if (treadmill->program.p_walk_30min.target_speed + treadmill->config.speed.step <=
             treadmill->config.speed.max) {
-          treadmill->program.p_walk_30min.target_speed +=
-              treadmill->config.speed.step;
+          treadmill->program.p_walk_30min.target_speed += treadmill->config.speed.step;
         }
       } else {
         treadmill_speed_increment(treadmill);
@@ -21,11 +19,9 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
       break;
     case KEY_SPEED_DECREMENT:
       if (treadmill->program.id == PROGRAM_WALK_30MIN) {
-        if ((int)treadmill->program.p_walk_30min.target_speed -
-                treadmill->config.speed.step >=
+        if ((int)treadmill->program.p_walk_30min.target_speed - treadmill->config.speed.step >=
             treadmill->config.speed.min) {
-          treadmill->program.p_walk_30min.target_speed -=
-              treadmill->config.speed.step;
+          treadmill->program.p_walk_30min.target_speed -= treadmill->config.speed.step;
         }
       } else {
         treadmill_speed_decrement(treadmill);
@@ -74,18 +70,20 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
 static void update(treadmill_t *treadmill) {
   if (treadmill->ms - treadmill->training.ms >= 1000) {
     treadmill->training.ms = treadmill->ms;
+
     treadmill->training.seconds++;
     treadmill->training.cm += (treadmill->training.speed * 27778) / 100000;
     treadmill->training.meters = treadmill->training.cm / 100;
     treadmill->training.pace = treadmill_calculate_pace(treadmill);
+    treadmill->training.pace_total_seconds += treadmill->training.pace;
     treadmill->training.kcal += treadmill_calculate_calories(treadmill);
+
     // compute pace // hide display_programs
+
+    // calculate average page
   }
   // handle program specific things
   treadmill_scene_training_programs_update(treadmill);
 }
 
-scene_t scene_training = {.id = SCENE_TRAINING,
-                          .name = "IDLE",
-                          .keypress = keypress,
-                          .update = update};
+scene_t scene_training = {.id = SCENE_TRAINING, .name = "IDLE", .keypress = keypress, .update = update};
