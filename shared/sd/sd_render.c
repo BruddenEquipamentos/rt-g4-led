@@ -83,26 +83,22 @@ static void render_training_data(treadmill_t *treadmill) {
 static void render_training_data_program(treadmill_t *treadmill) {
   switch (treadmill->program.id) {
     case PROGRAM_TIME: {
-      uint32_t remaining_seconds =
-          treadmill->program.p_time.seconds - treadmill->training.seconds;
+      uint32_t remaining_seconds = treadmill->program.p_time.seconds - treadmill->training.seconds;
       sd_set_min_sec(&sd_time, remaining_seconds);
       break;
     }
     case PROGRAM_DISTANCE: {
-      uint32_t remaining_meters =
-          treadmill->program.p_distance.meters - treadmill->training.meters;
+      uint32_t remaining_meters = treadmill->program.p_distance.meters - treadmill->training.meters;
       sd_set_km_m(&sd_distance, remaining_meters);
       break;
     }
     case PROGRAM_CALORIES: {
-      uint32_t remaining_kcal =
-          treadmill->program.p_calories.kcal - treadmill->training.kcal / 1000;
+      uint32_t remaining_kcal = treadmill->program.p_calories.kcal - treadmill->training.kcal / 1000;
       sd_set_value(&sd_kcal, remaining_kcal);
       break;
     }
     case PROGRAM_HIIT: {
-      uint32_t remaining_seconds =
-          treadmill->program.p_hiit.seconds - treadmill->training.seconds;
+      uint32_t remaining_seconds = treadmill->program.p_hiit.seconds - treadmill->training.seconds;
       sd_set_min_sec(&sd_time, remaining_seconds);
       break;
     }
@@ -112,14 +108,12 @@ static void render_training_data_program(treadmill_t *treadmill) {
       break;
     }
     case PROGRAM_FAT_BURN: {
-      uint32_t remaining_seconds =
-          treadmill->program.p_fat_burn.seconds - treadmill->training.seconds;
+      uint32_t remaining_seconds = treadmill->program.p_fat_burn.seconds - treadmill->training.seconds;
       sd_set_min_sec(&sd_time, remaining_seconds);
       break;
     }
     case PROGRAM_SUPER_CARDIO: {
-      uint32_t remaining_seconds = treadmill->program.p_super_cardio.seconds -
-                                   treadmill->training.seconds;
+      uint32_t remaining_seconds = treadmill->program.p_super_cardio.seconds - treadmill->training.seconds;
       sd_set_min_sec(&sd_time, remaining_seconds);
       break;
     }
@@ -159,7 +153,7 @@ static void render_config_data(treadmill_t *treadmill) {
 
     case CONFIG_OPTION_LUB: {
       sd_set_visible(&sd_pace, true);
-      sd_set_value(&sd_pace, treadmill->config.lub_distance);
+      sd_set_value(&sd_pace, treadmill->config.lub_param_km);
       break;
     }
 
@@ -217,9 +211,10 @@ void sd_render(treadmill_t *treadmill) {
     case SCENE_LUB: {
       sd_render_all_visible(false);
       sd_set_visible(&sd_distance, true);
-      sd_set_value(&sd_distance, ((treadmill->config.lub_distance * 1000) -
-                                  (treadmill->total.distance_in_meters)) /
-                                     1000);  // in km
+      sd_set_value(&sd_distance, (uint32_t)treadmill_calculate_lub_distance_remaining(treadmill));  // in km
+      if (treadmill->key_pressed_tick > 0 && treadmill->key_pressed_tick != 0xffffffff) {
+        sd_blink(&sd_distance, treadmill->get_time_ms(), 1000);
+      }
       break;
     }
     case SCENE_CONFIG: {

@@ -14,10 +14,8 @@ extern scene_t scene_report;
 extern scene_t scene_programs;
 
 static const scene_t *rt_led_scenes[] = {
-    &scene_init,   &scene_idle,      &scene_config,
-    &scene_lub,    &scene_countdown, &scene_training,
-    &scene_paused, &scene_report,    &scene_programs,
-    &scene_emergency,
+    &scene_init,     &scene_idle,   &scene_config, &scene_lub,      &scene_countdown,
+    &scene_training, &scene_paused, &scene_report, &scene_programs, &scene_emergency,
 };
 
 static const scene_t *rt_led_current_scene(treadmill_scene_t treadmill_scene) {
@@ -34,7 +32,8 @@ void rt_led_key_press(treadmill_t *treadmill, const kbd_key_t key) {
   if (scene == NULL) return;
 
   // prevent beeping on keypress if it is going to start the countdown
-  if (!(treadmill->scene == SCENE_IDLE && key == KEY_START)) {
+  if (!(treadmill->scene == SCENE_IDLE && key == KEY_START) &&
+      !(treadmill->scene == SCENE_LUB && treadmill->key_pressed_tick > 0)) {
     treadmill->hw.beep(BEEP_KEYPRESS_ACK);
   }
 
@@ -67,7 +66,6 @@ void rt_led_load_model_params(treadmill_t *treadmill, rt_led_model_t model) {
 
       treadmill->config.weight = 70;
 
-      // todo: check organization
       treadmill->hw.inverter.comm_type = MOTOR_COMMUNICATION_TYPE_FREQ;
       break;
     }
