@@ -1026,13 +1026,13 @@ void StartDefaultTask(void const *argument) {
 
     treadmill_motor_process(&treadmill);
 
-    rt_led_render(&treadmill);
-
     while (treadmill.ms < HAL_GetTick()) {
       treadmill.ms += 10;
       treadmill_update(&treadmill);
       display_update();
     }
+
+    rt_led_render(&treadmill);
 
     stats.mainloop.end = HAL_GetTick();
     stats.mainloop.delta = (stats.mainloop.end - stats.mainloop.start);
