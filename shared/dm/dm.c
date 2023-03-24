@@ -31,7 +31,6 @@ void dm_reset_frame(void) {
   frametick = 0;
 }
 
-
 void dm_update(void) {
   if (_dm_update != 0) _dm_update(dm_buffer);
 }
@@ -66,6 +65,36 @@ void dm_render_column_line(int col) {
   if (col > 15) return;
   for (int row = 0; row < 5; ++row) {
     dm_buffer[row] |= (1 << (15 - col));
+  }
+}
+
+void dm_render_column_with_height(int col, int height, uint32_t current_ms, uint32_t blink_ms) {
+  static uint32_t dm_blink_time_ms = 0;
+  if (blink_ms != 0) {
+    if (current_ms - dm_blink_time_ms > blink_ms) {
+      dm_blink_time_ms = current_ms;
+    } else if (current_ms - dm_blink_time_ms > blink_ms / 2) {
+      return;
+    }
+  }
+  for (int i = 0; i < 5 && height >= 0; ++i) {
+    dm_buffer[4 - i] |= (1 << (15 - col));
+    height--;
+  }
+}
+
+// dm_render_line(0, 4, 15, 4);
+void dm_render_line(int line) {
+  /*
+  4 ................
+  3 ................
+  2 ................
+  1 ................
+  0 ................
+  */
+  if (line > 4) return;
+  for (int col = 0; col < 16; col++) {
+    dm_buffer[line] |= (1 << (15 - col));
   }
 }
 

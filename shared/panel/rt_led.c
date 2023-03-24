@@ -42,7 +42,6 @@ void rt_led_key_press(treadmill_t *treadmill, const kbd_key_t key) {
 
 void rt_led_update(treadmill_t *treadmill) {
   const scene_t *scene = rt_led_current_scene(treadmill->scene);
-
   if (scene == NULL) return;
   scene->update(treadmill);
 }

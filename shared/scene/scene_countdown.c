@@ -10,8 +10,7 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
 }
 
 static void update(treadmill_t *treadmill) {
-  if (treadmill->countdown.ms == 0 &&
-      treadmill->countdown.value >= START_TRAINING_COUNTDOWN_VALUE) {
+  if (treadmill->countdown.ms == 0 && treadmill->countdown.value >= START_TRAINING_COUNTDOWN_VALUE) {
     treadmill->countdown.value = START_TRAINING_COUNTDOWN_VALUE;
     treadmill->countdown.ms = treadmill->ms;
     treadmill->hw.beep(BEEP_COUNTDOWN_COUNT);
@@ -27,7 +26,4 @@ static void update(treadmill_t *treadmill) {
   }
 }
 
-const scene_t scene_countdown = {.id = SCENE_COUNTDOWN,
-                                 .name = "IDLE",
-                                 .keypress = keypress,
-                                 .update = update};
+const scene_t scene_countdown = {.id = SCENE_COUNTDOWN, .name = "IDLE", .keypress = keypress, .update = update};

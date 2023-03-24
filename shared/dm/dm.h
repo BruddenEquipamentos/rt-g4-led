@@ -32,4 +32,8 @@ extern uint16_t dm_buffer[5];
 
 const digit_t *dm_number(const int number);
 
+void dm_render_line(int line);
+void dm_render_line_column(int line, int column);
+void dm_render_column_with_height(int col, int height, uint32_t current_ms, uint32_t blink_ms);
+
 #endif

@@ -176,7 +176,6 @@ void treadmill_update(treadmill_t *treadmill) {
   if (treadmill->message.tick && treadmill->get_time_ms() - treadmill->message.tick >= treadmill->message.duration) {
     treadmill->message.tick = 0;
     treadmill->message.duration = 0;
-    // memcpy(treadmill->message.data, 0x00, 32);
   }
 
   rt_led_update(treadmill);

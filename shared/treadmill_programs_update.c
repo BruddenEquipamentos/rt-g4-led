@@ -10,6 +10,9 @@ typedef struct program_training_callback {
 } program_training_callback_t;
 
 static void update_program_time(treadmill_t *treadmill) {
+  treadmill->training.total_seconds = treadmill->program.p_time.seconds;
+  treadmill->training.remaining_seconds = treadmill->training.total_seconds - treadmill->training.seconds;
+
   if (treadmill->training.seconds >= treadmill->program.p_time.seconds) {
     treadmill_finish_program(treadmill);
   }
@@ -28,6 +31,9 @@ static void update_program_calories(treadmill_t *treadmill) {
 }
 
 static void update_program_hiit(treadmill_t *treadmill) {
+  treadmill->training.total_seconds = treadmill->program.p_hiit.seconds;
+  treadmill->training.remaining_seconds = treadmill->training.total_seconds - treadmill->training.seconds;
+
   if ((treadmill->training.seconds / 60) & 1) {
     treadmill->training.speed = treadmill->program.p_hiit.speed_t2;
   } else {
@@ -40,6 +46,9 @@ static void update_program_hiit(treadmill_t *treadmill) {
 }
 
 static void update_program_walk_30min(treadmill_t *treadmill) {
+  treadmill->training.total_seconds = (30 * 60);
+  treadmill->training.remaining_seconds = treadmill->training.total_seconds - treadmill->training.seconds;
+
   if (treadmill->training.seconds < 30 * 60) {
     int calculated_speed = (int)treadmill->program.p_walk_30min.target_speed;
     if (treadmill->training.seconds < 5 * 60)
@@ -62,20 +71,16 @@ static void update_program_walk_30min(treadmill_t *treadmill) {
   }
 }
 
-static int treadmill_has_incline(treadmill_t *treadmill) {
-  return treadmill->config.incline.step > 0;
-}
+static int treadmill_has_incline(treadmill_t *treadmill) { return treadmill->config.incline.step > 0; }
 
 static int treadmill_can_increment_incline(treadmill_t *treadmill) {
   return (treadmill->config.incline.step > 0) &&
-         (treadmill->training.incline + treadmill->config.incline.step <=
-          treadmill->config.incline.max);
+         (treadmill->training.incline + treadmill->config.incline.step <= treadmill->config.incline.max);
 }
 
 static int treadmill_can_decrement_incline(treadmill_t *treadmill) {
   return (treadmill->config.incline.step > 0) &&
-         (treadmill->training.incline - treadmill->config.incline.step >=
-          treadmill->config.incline.min);
+         (treadmill->training.incline - treadmill->config.incline.step >= treadmill->config.incline.min);
 }
 
 static void treadmill_hr_program_below_range_handler(treadmill_t *treadmill) {
@@ -104,6 +109,9 @@ static void treadmill_hr_program_above_range_handler(treadmill_t *treadmill) {
 
 static void update_program_fat_burn(treadmill_t *treadmill) {
   struct p_fat_burn *p_fat_burn = &treadmill->program.p_fat_burn;
+
+  treadmill->training.total_seconds = p_fat_burn->seconds;
+  treadmill->training.remaining_seconds = treadmill->training.total_seconds - treadmill->training.seconds;
 
   switch (p_fat_burn->hr_program_state) {
     case HEART_RATE_PROGRAM_STATE_INIT: {
@@ -137,6 +145,9 @@ static void update_program_fat_burn(treadmill_t *treadmill) {
 
 static void update_program_super_cardio(treadmill_t *treadmill) {
   struct p_super_cardio *p_super_cardio = &treadmill->program.p_super_cardio;
+
+  treadmill->training.total_seconds = p_super_cardio->seconds;
+  treadmill->training.remaining_seconds = treadmill->training.total_seconds - treadmill->training.seconds;
 
   switch (p_super_cardio->hr_program_state) {
     case HEART_RATE_PROGRAM_STATE_INIT: {

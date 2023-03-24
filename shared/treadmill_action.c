@@ -26,7 +26,10 @@ void treadmill_pause_training(treadmill_t *treadmill) {
   treadmill_set_scene(treadmill, SCENE_PAUSED);
 }
 
-void treadmill_reset_training(treadmill_t *treadmill) { memset(&treadmill->training, 0x00, sizeof(struct training)); }
+void treadmill_reset_training(treadmill_t *treadmill) {
+  memset(&treadmill->training, 0x00, sizeof(struct training));
+  memset(&treadmill->aux, 0x00, sizeof(struct aux));
+}
 
 void treadmill_resume_training(treadmill_t *treadmill) {
   treadmill->training.speed = treadmill->config.speed.min;
@@ -71,8 +74,6 @@ void treadmill_speed_decrement(treadmill_t *treadmill) {
 }
 
 int treadmill_set_speed(treadmill_t *treadmill, const uint16_t speed) {
-  static uint16_t previous_speed = 0;
-
   if (speed > treadmill->config.speed.max) return 0;
   if (speed > 0 && speed < treadmill->config.speed.min) return 0;
   treadmill->training.speed = speed;
@@ -138,7 +139,10 @@ void treadmill_exit_program(treadmill_t *treadmill) {
   treadmill_set_scene(treadmill, SCENE_IDLE);
 }
 
-void treadmill_start_program(treadmill_t *treadmill) { treadmill_start_training_countdown(treadmill); }
+void treadmill_start_program(treadmill_t *treadmill) {
+  //
+  treadmill_start_training_countdown(treadmill);
+}
 
 void treadmill_config(treadmill_t *treadmill) {
   memcpy(&treadmill->previous_config, &treadmill->config, sizeof(struct config));

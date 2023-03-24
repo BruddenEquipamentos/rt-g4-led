@@ -99,7 +99,7 @@ osTimerId beepTimerHandle;
 treadmill_t treadmill;
 treadmill_t *pTreadmill = &treadmill;
 
-uint8_t __new_display = 1;
+uint8_t __new_display = 0;
 
 volatile uint8_t _huart3_buffer[2] = {0};
 /* USER CODE END PV */
@@ -1029,7 +1029,7 @@ void StartDefaultTask(void const *argument) {
     rt_led_render(&treadmill);
 
     while (treadmill.ms < HAL_GetTick()) {
-      treadmill.ms += 50;
+      treadmill.ms += 10;
       treadmill_update(&treadmill);
       display_update();
     }

@@ -65,6 +65,7 @@ enum handgrip_state {
 };
 
 extern char *scene_name[];
+
 typedef struct treadmill {
   treadmill_scene_t scene;
   treadmill_scene_t previous_scene;
@@ -99,6 +100,14 @@ typedef struct treadmill {
     uint8_t bpm;
 
     uint32_t pace_total_seconds;
+
+    // TODO: refactor
+    uint32_t remaining_seconds;
+    uint32_t total_seconds;
+
+    uint32_t bpm_total;
+    uint32_t bpm_count;
+    uint32_t bpm_average;
   } training;
 
   // TODO: refactor this struct
@@ -108,6 +117,15 @@ typedef struct treadmill {
     uint32_t speed_ms;
 
     uint32_t incline_changed_time_ms;
+
+    // TEMP
+    struct average_history {
+      uint32_t minute;
+      uint16_t average_speed;
+      uint16_t height;
+    } average_history[16];
+
+    uint16_t average_history_index;
 
   } aux;
 

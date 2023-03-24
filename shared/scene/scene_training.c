@@ -67,18 +67,65 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
   }
 }
 
+// CHECK HERE
+static uint32_t treadmill_calculate_speed(uint32_t dm, uint32_t seconds) {
+  volatile uint32_t cm_sec = (dm * 100 / seconds);
+  uint32_t speed = ((cm_sec * 36) / 1000);  // 333 * 36 = 1198
+  uint32_t speed_mod = (speed) % 10;
+  if (speed_mod >= 5) speed = speed + (10 - speed_mod);
+  return speed / 10;
+}
+
 static void update(treadmill_t *treadmill) {
-  if (treadmill->ms - treadmill->training.ms >= 1000) {
+  if (treadmill->ms - treadmill->training.ms >= 10) {
     treadmill->training.ms = treadmill->ms;
 
     treadmill->training.seconds++;
-    treadmill->training.cm += (treadmill->training.speed * 27778) / 100000;
-    treadmill->training.meters = treadmill->training.cm / 100;
+    treadmill->training.remaining_seconds--;
+
+    uint32_t mm = (treadmill->training.speed * 27778) / 10000;
+    uint32_t cm = mm / 10;
+    uint32_t m = cm / 100;
+    treadmill->training.cm += cm;
+    treadmill->training.meters += m;
+
     treadmill->training.pace = treadmill_calculate_pace(treadmill);
-    treadmill->training.pace_total_seconds += treadmill->training.pace;
     treadmill->training.kcal += treadmill_calculate_calories(treadmill);
+
+    treadmill->training.pace_total_seconds += treadmill->training.pace;
+
+    if (treadmill->training.bpm >= 40 && treadmill->training.bpm <= 240) {
+      treadmill->training.bpm_total += treadmill->training.bpm;
+      treadmill->training.bpm_count++;
+      treadmill->training.bpm_average = treadmill->training.bpm_total / treadmill->training.bpm_count;
+    }
+
+    {
+      // Compute dot matrix data to be shown
+      static uint32_t mm_per_minute = 0;
+      mm_per_minute += mm;
+
+      if (treadmill->training.seconds && treadmill->training.seconds % 60 == 0) {
+        uint32_t minute = (treadmill->training.seconds / 60);
+
+        treadmill->aux.average_history[treadmill->aux.average_history_index].minute = minute;
+        treadmill->aux.average_history[treadmill->aux.average_history_index].average_speed =
+            treadmill_calculate_speed(mm_per_minute, 60);
+
+        if (minute > 16) {
+          for (int i = 1; i < 16; ++i) {
+            treadmill->aux.average_history[i - 1] = treadmill->aux.average_history[i];
+          }
+        } else if (minute < 16) {
+          treadmill->aux.average_history_index = (treadmill->aux.average_history_index + 1) % 16;
+        }
+
+        mm_per_minute = mm;
+      }
+    }
   }
 
+  // Simulate time that it takes to reach the targeted speed
   if (treadmill->ms - treadmill->aux.speed_ms >= 100) {
     treadmill->aux.speed_ms = treadmill->ms;
     if (treadmill->aux.speed_reached != treadmill->aux.speed_target) {

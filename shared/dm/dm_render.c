@@ -6,13 +6,8 @@
 #include "../treadmill_motor_modbus.h"
 #include "dm.h"
 
-static void dm_render_mb_param_value(treadmill_t *treadmill) {
-  mb_operation_t *op = modbus_get_current_selected_param();
-  dm_render_text(op->rfmtd, 16);
-}
-
-static uint32_t dm_blink_time_ms = 0;
 static int dm_blink(const uint32_t update_time_ms, const uint32_t blink_interval_ms) {
+  static uint32_t dm_blink_time_ms = 0;
   if (blink_interval_ms == 0) return 1;
   if (update_time_ms - dm_blink_time_ms > blink_interval_ms) {
     dm_blink_time_ms = update_time_ms;
@@ -21,6 +16,69 @@ static int dm_blink(const uint32_t update_time_ms, const uint32_t blink_interval
     return 0;
   }
   return 1;
+}
+
+static void dm_render_mb_param_value(treadmill_t *treadmill) {
+  mb_operation_t *op = modbus_get_current_selected_param();
+  dm_render_text(op->rfmtd, 16);
+}
+
+static int dm_get_height_for_speed(const uint16_t speed) {
+  static const uint16_t speeds[5] = {500, 800, 1100, 1400, 1800};
+  static const int heights[5] = {0, 1, 2, 3, 4};
+  if (speed < speeds[0])
+    return heights[0];
+  else if (speed < speeds[1])
+    return heights[1];
+  else if (speed < speeds[2])
+    return heights[2];
+  else if (speed < speeds[3])
+    return heights[3];
+  else
+    return heights[4];
+}
+
+static void dm_render_time(treadmill_t *treadmill) {
+
+  int height = dm_get_height_for_speed(treadmill->training.speed);
+
+  for (int i = 0; i < 16; i++) {
+    if (i == treadmill->aux.average_history_index) {
+      dm_render_column_with_height(i, height, treadmill->get_time_ms(), 800);
+    } else {
+      int h = dm_get_height_for_speed(treadmill->aux.average_history[i].average_speed);
+      dm_render_column_with_height(i, h, 0, 0);
+    }
+
+    // int current_column = 0;
+    // if (treadmill->training.total_seconds > 0)
+    //   current_column = (15 * treadmill->training.seconds) / treadmill->training.total_seconds;
+    // else
+    //   current_column = (treadmill->training.seconds / 60) % 16;
+
+    // get height of current speed for current column
+    // int height = dm_get_height_for_speed(treadmill->training.speed);
+
+    // for (int i = 0; i < 16; i++) {
+    //   if (i == current_column) {
+    //     dm_render_column_with_height(i, height, treadmill->get_time_ms(), 800);
+    //   } else {
+    //     int h = dm_get_height_for_speed(treadmill->aux.average_history[i].average_speed);
+    //     dm_render_column_with_height(i, h, 0, 0);
+    //   }
+
+    // // First Implementation
+    // if (i == current_column) {
+    //   dm_render_column_with_height(i, height, treadmill->get_time_ms(), 800);
+    // } else if (i < current_column ) {
+    //   // get from history average
+    //   int h = dm_get_height_for_speed(treadmill->aux.average_history[i].average_speed);
+    //   dm_render_column_with_height(i, h, 0, 0);
+    // }
+    // else {
+    //   dm_render_column_with_height(i, 0, 0, 0);
+    // }
+  }
 }
 
 void dm_render(treadmill_t *treadmill) {
@@ -70,6 +128,7 @@ void dm_render(treadmill_t *treadmill) {
             char text[16];
             sprintf(text, "%1d.%1d%%", treadmill->training.incline / 10, treadmill->training.incline % 10);
             dm_render_text(text, 16);
+            return;
           }
         }
 
@@ -77,18 +136,21 @@ void dm_render(treadmill_t *treadmill) {
           if (treadmill->training.bpm == 0) {
             if (!dm_blink(treadmill->get_time_ms(), 1000)) {
               dm_render_text("@;", 12);
+              return;
             }
           }
         }
+
+        dm_render_time(treadmill);
       }
       break;
     }
     case SCENE_EMERGENCY: {
-      dm_render_text_animated("EMERGENCIA", 100, treadmill->get_time_ms());
+      dm_render_text_animated("EMERGENCIA", 70, treadmill->get_time_ms());
       break;
     }
     case SCENE_PAUSED: {
-      dm_render_text_animated("PAUSA", 100, treadmill->get_time_ms());
+      dm_render_text_animated("PAUSA", 70, treadmill->get_time_ms());
       break;
     }
     case SCENE_LUB: {

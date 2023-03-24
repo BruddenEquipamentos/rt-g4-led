@@ -73,6 +73,16 @@ static void render_training_data(treadmill_t *treadmill) {
 
   if (treadmill->scene == SCENE_PAUSED || treadmill->scene == SCENE_REPORT) {
     sd_set_min_sec(&sd_pace, treadmill->training.pace_total_seconds / treadmill->training.seconds);
+    sd_set_bpm(&sd_bpm, treadmill->training.bpm_average);
+  }
+
+  if (treadmill->scene == SCENE_REPORT) {
+    // on report show average speed
+    uint32_t cm_sec = (treadmill->training.meters*100 / treadmill->training.seconds);
+    uint32_t speed = ((cm_sec * 36)/10); // 333 * 36 = 1198
+    uint32_t speed_mod = speed%10;
+    if (speed_mod >= 5) speed = speed + (10 - speed_mod);
+    sd_set_kmh(&sd_speed, speed);
   }
 
   if (treadmill->config.modbus) {
@@ -90,8 +100,7 @@ static void render_training_data(treadmill_t *treadmill) {
 static void render_training_data_program(treadmill_t *treadmill) {
   switch (treadmill->program.id) {
     case PROGRAM_TIME: {
-      uint32_t remaining_seconds = treadmill->program.p_time.seconds - treadmill->training.seconds;
-      sd_set_min_sec(&sd_time, remaining_seconds);
+      sd_set_min_sec(&sd_time, treadmill->training.remaining_seconds);
       break;
     }
     case PROGRAM_DISTANCE: {
