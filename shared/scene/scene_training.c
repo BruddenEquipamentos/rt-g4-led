@@ -34,12 +34,15 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
       treadmill_incline_decrement(treadmill);
       break;
     case KEY_SPEED_5:
+      // treadmill_set_bpm_value(treadmill, 40);
       treadmill_set_speed(treadmill, 500);
       break;
     case KEY_SPEED_8:
+      // treadmill_set_bpm_value(treadmill, treadmill->training.bpm - 10);
       treadmill_set_speed(treadmill, 800);
       break;
     case KEY_SPEED_11:
+      // treadmill_set_bpm_value(treadmill, treadmill->training.bpm + 10);
       treadmill_set_speed(treadmill, 1100);
       break;
     case KEY_SPEED_14:
@@ -77,7 +80,7 @@ static uint32_t treadmill_calculate_speed(uint32_t dm, uint32_t seconds) {
 }
 
 static void update(treadmill_t *treadmill) {
-  if (treadmill->ms - treadmill->training.ms >= 10) {
+  if (treadmill->ms - treadmill->training.ms >= 1000) {
     treadmill->training.ms = treadmill->ms;
 
     treadmill->training.seconds++;

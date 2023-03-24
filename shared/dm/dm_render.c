@@ -39,7 +39,6 @@ static int dm_get_height_for_speed(const uint16_t speed) {
 }
 
 static void dm_render_time(treadmill_t *treadmill) {
-
   int height = dm_get_height_for_speed(treadmill->training.speed);
 
   for (int i = 0; i < 16; i++) {
@@ -138,10 +137,12 @@ void dm_render(treadmill_t *treadmill) {
               dm_render_text("@;", 12);
               return;
             }
+          } else {
+            dm_render_time(treadmill);
           }
+        } else {
+          dm_render_time(treadmill);
         }
-
-        dm_render_time(treadmill);
       }
       break;
     }

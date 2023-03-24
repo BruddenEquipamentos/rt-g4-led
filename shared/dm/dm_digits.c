@@ -420,12 +420,47 @@ const digit_t dm_bpm_pointer = {
     }
 };
 
+const digit_t dm_bpm_increase = {
+    .cols = 5,
+    .data = {
+        0b00100,
+        0b01110,
+        0b10101,
+        0b00100,
+        0b00100,
+        // 0b000,
+        // 0b010,
+        // 0b111,
+        // 0b010,
+        // 0b000,
+    }
+};
+
+const digit_t dm_bpm_decrease = {
+    .cols = 5,
+    .data = {
+        0b00100,
+        0b00100,
+        0b10101,
+        0b01110,
+        0b00100,
+        // 0b000,
+        // 0b000,
+        // 0b111,
+        // 0b000,
+        // 0b000,
+    }
+};
+
+
 digit_map_t dm_map[] = {
     {.ch=' ', .dm=&dm_space},
     {.ch='%', .dm=&dm_percentage},
-    {.ch='-', .dm=&dm_hyphen},
+    //{.ch='-', .dm=&dm_hyphen},
     {.ch='/', .dm=&dm_slash},
     {.ch='@', .dm=&dm_heart},
+    {.ch='+', .dm=&dm_bpm_increase},
+    {.ch='-', .dm=&dm_bpm_decrease},
     {.ch='0', .dm=&dm_0},
     {.ch='1', .dm=&dm_1},
     {.ch='2', .dm=&dm_2},
