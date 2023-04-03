@@ -259,11 +259,12 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
 
 /**
  * @brief  The application entry point.
- * @retval int
+ * @retval int os
  */
 int main(void) {
   /* USER CODE BEGIN 1 */
-
+  static const uint32_t APPLICATION_ADDRESS = 0x8005000;
+  SCB->VTOR = APPLICATION_ADDRESS;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -1137,6 +1138,8 @@ static int handle_combined_or_single_key_press(enum key singles, enum key combin
             if (pressed != *previous) treadmill_key_press(&treadmill, pressed);
             *previous = pressed;
           }
+          return 1;
+        } else {
           return 1;
         }
       }

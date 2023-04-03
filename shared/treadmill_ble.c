@@ -43,7 +43,10 @@ void treadmill_ble_process_init(treadmill_t *treadmill) {
       ftms_range_command((uint8_t *)data, &length, 32, BP_FTMS_SUPPORTED_INCLINATION_RANGE,
                          treadmill->config.incline.min, treadmill->config.incline.max, treadmill->config.incline.step);
       ble_post_message(data, "\x06", 1000);
-      ble_post_message("\x02SID,2\n", "AOK", 1000);
+      ble_post_message(
+          "\x02"
+          "SID,10\n",
+          "AOK", 1000);
 
       // TODO: name according to model
 
@@ -136,17 +139,22 @@ void treadmill_ble_process(treadmill_t *treadmill) {
       break;
     }
     case BLE_STATE_READY: {
-      if (treadmill->hw.ble.ftms.subscribed) {
-        if (treadmill->get_time_ms() - treadmill->hw.ble.ftms.tick_data_ms >=
-            (treadmill->hw.ble.connection.interval * 125) / 100) {
-          treadmill->hw.ble.ftms.tick_data_ms = treadmill->get_time_ms();
-          treadmill_send_ftms_data(treadmill);
+      if (treadmill->hw.ble.ftms.subscribed && (treadmill->get_time_ms() - treadmill->hw.ble.ftms.tick_data_ms >=
+                                                (treadmill->hw.ble.connection.interval * 125) / 100)) {
+        treadmill->hw.ble.ftms.tick_data_ms = treadmill->get_time_ms();
+        treadmill_send_ftms_data(treadmill);
+      } else {
+        // periodic queue command to check connection
+        if (treadmill->get_time_ms() - treadmill->hw.ble.check_com_ms >= 3000) {
+          treadmill->hw.ble.check_com_ms = treadmill->get_time_ms();
+          ble_post_message("\n", "AOK", 1000);
         }
       }
 
       if (ble_process_commands(ble) == BLE_PROCESS_STATUS_ERROR) {
         ble->state = BLE_STATE_ERROR;
       }
+
       break;
     }
     case BLE_STATE_ERROR: {

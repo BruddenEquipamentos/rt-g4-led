@@ -107,15 +107,20 @@ static void render_to_display(sdhw_t* sdhw, enum sd_digit digit, uint8_t pos, ui
 }
 
 static void render_dot(sdhw_t* sdhw, uint8_t* buffer) {
+  if (sdhw->sd->dot > DOT_3) return;
+
   switch (sdhw->on_addr) {
     case 0x01:
-      buffer[sdhw->addr[7]] = (buffer[sdhw->addr[7]] & 0xF0) | (dot_value[sdhw->sd->dot]);
+      // buffer[sdhw->addr[7]] = (buffer[sdhw->addr[7]] & 0xF0) | (dot_value[sdhw->sd->dot]);
+      buffer[sdhw->addr[7]] = (buffer[sdhw->addr[7]] & 0xF0) | (sdhw->sd->dot);
       break;
     case 0x10:
-      buffer[sdhw->addr[7]] = (buffer[sdhw->addr[7]] & 0x0F) | (dot_value[sdhw->sd->dot] << 4);
+      // buffer[sdhw->addr[7]] = (buffer[sdhw->addr[7]] & 0x0F) | (dot_value[sdhw->sd->dot] << 4);
+      buffer[sdhw->addr[7]] = (buffer[sdhw->addr[7]] & 0x0F) | (sdhw->sd->dot << 4);
       break;
     case 0x20:
-      buffer[sdhw->addr[7]] = (buffer[sdhw->addr[7]] & 0x1F) | (dot_value[sdhw->sd->dot] << 4);
+      // buffer[sdhw->addr[7]] = (buffer[sdhw->addr[7]] & 0x1F) | (dot_value[sdhw->sd->dot] << 4);
+      buffer[sdhw->addr[7]] = (buffer[sdhw->addr[7]] & 0x1F) | (sdhw->sd->dot << 4);
       break;
   }
 }

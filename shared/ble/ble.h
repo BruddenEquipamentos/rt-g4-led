@@ -35,6 +35,8 @@ typedef struct ble {
   send_data_cb send_data;
   recv_data_cb recv_data;
 
+  uint32_t check_com_ms;
+
   uint32_t (*get_tick)(void);
   void (*reset)(void);
 

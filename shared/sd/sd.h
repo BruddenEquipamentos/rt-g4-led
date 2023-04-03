@@ -11,11 +11,11 @@ typedef enum sd_flag {
 } sd_flag_t;
 
 typedef enum sd_dot {
-  SD_DOT_NO_DOT,
-  SD_DOT_AT_0,
-  SD_DOT_AT_1,
-  SD_DOT_AT_2,
-  SD_DOT_AT_3,
+  SD_DOT_NO_DOT = 0,
+  SD_DOT_AT_0 = 0x01,
+  SD_DOT_AT_1 = 0x02,
+  SD_DOT_AT_2 = 0x04,
+  SD_DOT_AT_3 = 0x08,
   SD_DOT_HIDDEN_AT_2,
   SD_DOT_TOTALS,
 } sd_dot_t;

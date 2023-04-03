@@ -110,9 +110,11 @@ void sd_set_incline(sd_t *sd, const int16_t incline) {
 void sd_set_version(sd_t *sd, const uint8_t major, const uint8_t minor,
                     const uint8_t revision) {
   sd->flag |= SD_FLAG_PAD_LEADING_ZERO;
-  sd->digit[3] = major;
-  sd->digit[2] = minor;
-  sd->digit[1] = revision;
+  sd->dot |= SD_DOT_AT_1 | SD_DOT_AT_2;
+  sd->digit[3] = 0;
+  sd->digit[2] = major;
+  sd->digit[1] = minor;
+  sd->digit[0] = revision;
   snprintf(sd->text, 8, "%1d.%1d.%1d", major, minor, revision);
 }
 
