@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "display.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -45,7 +45,7 @@ I2C_HandleTypeDef hi2c1;
 UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
-
+const uint32_t APPLICATION_ADDRESS = 0x8005000;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -59,7 +59,24 @@ static void MX_USART3_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+typedef void (*pFunction)(void);
 
+static void jumpToApplication() {
+  pFunction appEntry;
+  uint32_t appStack;
+
+  SysTick->CTRL = 0;
+  SCB->ICSR |= SCB_ICSR_PENDSTCLR_Msk;
+
+  SCB->VTOR = APPLICATION_ADDRESS;
+  appStack = (uint32_t) * ((__IO uint32_t *)APPLICATION_ADDRESS);
+  appEntry = (pFunction) * (__IO uint32_t *)(APPLICATION_ADDRESS + 4);
+
+  __set_MSP(appStack);
+  appEntry();
+}
+
+int _ble_module_connected = 0;
 /* USER CODE END 0 */
 
 /**
@@ -94,6 +111,38 @@ int main(void)
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 
+  // Init I2C Display
+  display_init();
+
+  // Draw dot matrix animation
+  {
+    dm_render_clear();
+    for (int i = 0; i < 16; ++i) {
+      dm_render_column_line(i);
+      display_update();
+      HAL_Delay(15);
+    }
+    dm_render_clear();
+    display_update();
+  }
+
+  // Check if BLE module is connected
+  {
+    if (ble_module_is_connected())
+    {
+	_ble_module_connected = 1;
+	if (ble_module_dfu_available())
+	{
+	    HAL_FLASH_Unlock();
+	    ble_module_dfu_handle();
+	    HAL_FLASH_Lock();
+	}
+    }
+  }
+
+  //ble_module_dfu_handle();
+
+  jumpToApplication();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -238,6 +287,7 @@ static void MX_USART3_UART_Init(void)
   */
 static void MX_GPIO_Init(void)
 {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
 /* USER CODE BEGIN MX_GPIO_Init_1 */
 /* USER CODE END MX_GPIO_Init_1 */
 
@@ -245,6 +295,17 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, CMD_Pin|W_HW_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pins : CMD_Pin W_HW_Pin */
+  GPIO_InitStruct.Pin = CMD_Pin|W_HW_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */

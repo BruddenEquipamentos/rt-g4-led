@@ -41,7 +41,7 @@ extern "C" {
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
-
+extern const uint32_t APPLICATION_ADDRESS;
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
@@ -57,6 +57,10 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define CMD_Pin GPIO_PIN_0
+#define CMD_GPIO_Port GPIOB
+#define W_HW_Pin GPIO_PIN_2
+#define W_HW_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
