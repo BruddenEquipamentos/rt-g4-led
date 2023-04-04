@@ -50,7 +50,7 @@ extern "C" {
 
     mb_operation_t *mb_operation_get(mb_operation_t *ops, uint16_t length, uint16_t addr);
 
-    mb_operation_t *mb_operation_fetch_next_op();
+    mb_operation_t *mb_operation_fetch_next_op(void);
 
     //mb_operation_t* mb_operation_process(mb_operation_t *op);
 

@@ -13,7 +13,7 @@ extern "C" {
 #include "mb_common.h"
 
 extern int (*mb_master_send)(mb_buffer_t *tx);
-extern int (*mb_master_wait_recv_or_timeout)();
+extern int (*mb_master_wait_recv_or_timeout)(void);
 
 extern mb_buffer_t mb_master_tx;
 extern mb_buffer_t mb_master_rx;

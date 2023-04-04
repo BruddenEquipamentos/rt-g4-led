@@ -59,7 +59,7 @@ void dm_clear_buffer(void) {
   for (int i = 0; i < 5; ++i) dm_buffer[i] = 0x0000;
 }
 
-void dm_init() { dm_clear_buffer(); }
+void dm_init(void) { dm_clear_buffer(); }
 
 void dm_render_column_line(int col) {
   if (col > 15) return;

@@ -6,7 +6,7 @@
 
 int (*mb_master_send)(mb_buffer_t *tx) = NULL;
 
-int (*mb_master_wait_recv_or_timeout)() = NULL;
+int (*mb_master_wait_recv_or_timeout)(void) = NULL;
 
 mb_buffer_t mb_master_tx = {.data = {0}, .length = 0};
 mb_buffer_t mb_master_rx = {.data = {0}, .length = 0};
@@ -75,7 +75,7 @@ static void mb_buffer_clear(struct mb_buffer *buffer) {
   buffer->length = 0;
 }
 
-static int mb_master_process_tx_rx() {
+static int mb_master_process_tx_rx(void) {
   if (!mb_master_send) return MB_MASTER_SEND_UNDEFINED;
   if (!mb_master_wait_recv_or_timeout)
     return MB_MASTER_WAIT_RECV_OR_TIMEOUT_UNDEFINED;

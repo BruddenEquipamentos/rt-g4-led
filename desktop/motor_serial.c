@@ -78,7 +78,7 @@ int motor_serial_read(uint8_t *buffer, int max_length) {
   return length;
 }
 
-int motor_serial_open() {
+int motor_serial_open(void) {
   const char *portname = "/dev/tty.usbserial-FTHFP6SH";
   fd = open(portname, O_RDWR | O_NOCTTY | O_SYNC | O_NONBLOCK);
   if (fd < 0) {

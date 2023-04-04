@@ -105,7 +105,7 @@ static void *thread_input(void *arg) {
   return NULL;
 }
 
-static uint32_t get_time_ms() {
+static uint32_t get_time_ms(void) {
   struct timespec ts;
   uint64_t ms = 0;
   if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0) {

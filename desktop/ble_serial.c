@@ -60,7 +60,7 @@ int ble_serial_read(uint8_t *buffer, int max_length) {
   return read(fd, buffer, max_length);
 }
 
-int ble_serial_open() {
+int ble_serial_open(void) {
   const char *portname = "/dev/tty.usbmodemL10021951";
   fd = open(portname, O_RDWR | O_NOCTTY | O_SYNC | O_NONBLOCK);
   if (fd < 0) {

@@ -89,6 +89,7 @@ static void update(treadmill_t *treadmill) {
     uint32_t mm = (treadmill->training.speed * 27778) / 10000;
     uint32_t cm = mm / 10;
     uint32_t m = cm / 100;
+    (void)m;
     treadmill->training.cm += cm;
     treadmill->training.meters = treadmill->training.cm / 100;
 

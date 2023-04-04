@@ -82,7 +82,7 @@ static int is_timedout(ble_t *ble, ble_command_t *cmd) {
 }
 
 static int ble_ftms_control_point_response(uint8_t response_opcode, uint8_t opcode, fmcp_result_t result) {
-  uint8_t response[40]; // todo: predefine buffer
+  uint8_t response[40];  // todo: predefine buffer
   uint8_t index = 0;
   uint8_t cs = 0;
 
@@ -104,55 +104,49 @@ static int ble_ftms_control_point(char *ptr) {
   fmcp_result_t result = FMCP_RESULT_SUCCESS;
   uint8_t opcode = next_u8(&ptr);
   switch (opcode) {
-  case FMCP_REQUEST_CONTROL: {
-    // todo: rule to allow control point control
-    pTreadmill->hw.ble.ftms.control_point_allowed = 1;
-    break;
-  }
-  case FMCP_RESET: {
-    // todo: implement
-    break;
-  }
-  case FMCP_SET_TARGET_SPEED: {
-    uint16_t speed = next_u16_le(&ptr);
-    pTreadmill->hw.beep(BEEP_KEYPRESS_ACK);
-    if (!treadmill_set_speed(pTreadmill, speed))
-      result = FMCP_RESULT_CODE_OPERATION_FAILED;
-    break;
-  }
-  case FMCP_SET_TARGET_INCLINATION: {
-    int16_t inclination = next_i16_le(&ptr);
-    pTreadmill->hw.beep(BEEP_KEYPRESS_ACK);
-    if (!treadmill_set_incline(pTreadmill, inclination))
-      result = FMCP_RESULT_CODE_OPERATION_FAILED;
-    break;
-  }
-  case FMCP_SET_TARGET_START_OR_RESUME: {
-    if (pTreadmill->hw.ble.ftms.control_point_allowed) {
-      if (pTreadmill->scene == SCENE_PAUSED)
-        pTreadmill->hw.beep(BEEP_KEYPRESS_ACK);
-      if (!treadmill_start_or_resume(pTreadmill))
-        result = FMCP_RESULT_CODE_OPERATION_FAILED;
-    } else {
-      result = FMCP_RESULT_CODE_CONTROL_NOT_PERMITTED;
+    case FMCP_REQUEST_CONTROL: {
+      // todo: rule to allow control point control
+      pTreadmill->hw.ble.ftms.control_point_allowed = 1;
+      break;
     }
-    break;
-  }
-  case FMCP_SET_TARGET_STOP_OR_PAUSE: {
-    uint8_t param = next_u8(&ptr);
-    pTreadmill->hw.beep(BEEP_KEYPRESS_ACK);
-    if (param == 1) {
-      if (!treadmill_stop_procedure(pTreadmill))
-        result = FMCP_RESULT_CODE_OPERATION_FAILED;
-    } else if (param == 2) {
-      if (!treadmill_pause_procedure(pTreadmill))
-        result = FMCP_RESULT_CODE_OPERATION_FAILED;
+    case FMCP_RESET: {
+      // todo: implement
+      break;
     }
-    break;
-  }
-  default:
-    result = FMCP_RESULT_CODE_OPCODE_NOT_SUPPORTED;
-    break;
+    case FMCP_SET_TARGET_SPEED: {
+      uint16_t speed = next_u16_le(&ptr);
+      pTreadmill->hw.beep(BEEP_KEYPRESS_ACK);
+      if (!treadmill_set_speed(pTreadmill, speed)) result = FMCP_RESULT_CODE_OPERATION_FAILED;
+      break;
+    }
+    case FMCP_SET_TARGET_INCLINATION: {
+      int16_t inclination = next_i16_le(&ptr);
+      pTreadmill->hw.beep(BEEP_KEYPRESS_ACK);
+      if (!treadmill_set_incline(pTreadmill, inclination)) result = FMCP_RESULT_CODE_OPERATION_FAILED;
+      break;
+    }
+    case FMCP_SET_TARGET_START_OR_RESUME: {
+      if (pTreadmill->hw.ble.ftms.control_point_allowed) {
+        if (pTreadmill->scene == SCENE_PAUSED) pTreadmill->hw.beep(BEEP_KEYPRESS_ACK);
+        if (!treadmill_start_or_resume(pTreadmill)) result = FMCP_RESULT_CODE_OPERATION_FAILED;
+      } else {
+        result = FMCP_RESULT_CODE_CONTROL_NOT_PERMITTED;
+      }
+      break;
+    }
+    case FMCP_SET_TARGET_STOP_OR_PAUSE: {
+      uint8_t param = next_u8(&ptr);
+      pTreadmill->hw.beep(BEEP_KEYPRESS_ACK);
+      if (param == 1) {
+        if (!treadmill_stop_procedure(pTreadmill)) result = FMCP_RESULT_CODE_OPERATION_FAILED;
+      } else if (param == 2) {
+        if (!treadmill_pause_procedure(pTreadmill)) result = FMCP_RESULT_CODE_OPERATION_FAILED;
+      }
+      break;
+    }
+    default:
+      result = FMCP_RESULT_CODE_OPCODE_NOT_SUPPORTED;
+      break;
   }
 
   return ble_ftms_control_point_response(FMCP_RESPONSE_CODE, opcode, result);
@@ -167,46 +161,46 @@ void ble_protocol_process(uint8_t *ptr_data, int length) {
   uint8_t opcode = next_u8(&ptr);
 
   switch (opcode) {
-  case BP_SUBSCRIBE: {
-    uint16_t uuid = next_u16_le(&ptr);
-    if (uuid == FTMS_TREADMILL_DATA_UUID) {
-      pTreadmill->hw.ble.ftms.subscribed = 1;
+    case BP_SUBSCRIBE: {
+      uint16_t uuid = next_u16_le(&ptr);
+      if (uuid == FTMS_TREADMILL_DATA_UUID) {
+        pTreadmill->hw.ble.ftms.subscribed = 1;
+      }
+      // movble_treadmill_subscribed(ptr);
+      break;
     }
-    // movble_treadmill_subscribed(ptr);
-    break;
-  }
-  case BP_UNSUBSCRIBE: {
-    uint16_t uuid = next_u16_le(&ptr);
-    if (uuid == FTMS_TREADMILL_DATA_UUID) {
-      pTreadmill->hw.ble.ftms.subscribed = 0;
+    case BP_UNSUBSCRIBE: {
+      uint16_t uuid = next_u16_le(&ptr);
+      if (uuid == FTMS_TREADMILL_DATA_UUID) {
+        pTreadmill->hw.ble.ftms.subscribed = 0;
+      }
+      break;
     }
-    break;
-  }
-  case BP_CONTROL_POINT: {
-    ble_ftms_control_point(ptr);
-    break;
-  }
-  case BP_LINKINFO: {
-    pTreadmill->hw.ble.connection.interval = next_u16_le(&ptr);
-    pTreadmill->hw.ble.connection.latency = next_u16_le(&ptr);
-    pTreadmill->hw.ble.connection.timeout = next_u16_le(&ptr);
-    pTreadmill->hw.ble.connection.mtu = next_u16_le(&ptr);
-    break;
-  }
-  case BP_BLE_HEARTRATE_CONNECTING: {
-    pTreadmill->hw.ble.heartrate.connecting = 1;
-    break;
-  }
-  case BP_BLE_HEARTRATE: {
-    pTreadmill->hw.ble.heartrate.connecting = 0;
-    pTreadmill->hw.ble.heartrate.bpm = next_u8(&ptr);
-    break;
-  }
-  case BP_BLE_HEARTRATE_DISCONNECT: {
-    pTreadmill->hw.ble.heartrate.connecting = 0;
-    break;
-  }
-  default:;
+    case BP_CONTROL_POINT: {
+      ble_ftms_control_point(ptr);
+      break;
+    }
+    case BP_LINKINFO: {
+      pTreadmill->hw.ble.connection.interval = next_u16_le(&ptr);
+      pTreadmill->hw.ble.connection.latency = next_u16_le(&ptr);
+      pTreadmill->hw.ble.connection.timeout = next_u16_le(&ptr);
+      pTreadmill->hw.ble.connection.mtu = next_u16_le(&ptr);
+      break;
+    }
+    case BP_BLE_HEARTRATE_CONNECTING: {
+      pTreadmill->hw.ble.heartrate.connecting = 1;
+      break;
+    }
+    case BP_BLE_HEARTRATE: {
+      pTreadmill->hw.ble.heartrate.connecting = 0;
+      pTreadmill->hw.ble.heartrate.bpm = next_u8(&ptr);
+      break;
+    }
+    case BP_BLE_HEARTRATE_DISCONNECT: {
+      pTreadmill->hw.ble.heartrate.connecting = 0;
+      break;
+    }
+    default:;
   }
 }
 
@@ -230,44 +224,44 @@ static void ble_interpret_message_bytes(ble_t *ble, char *data, int length) {
   for (int i = 0; i < length; ++i) {
     uint8_t byte = (uint8_t)data[i];
     switch (byte) {
-    case 0x01:
-    case 0x02:
-      mBufferIndex = 0;
-      break;
+      case 0x01:
+      case 0x02:
+        mBufferIndex = 0;
+        break;
 
-    case 0x03:
-    case 0x04:
-    case 0x0A: {
-      mBuffer[mBufferIndex] = 0;
-      ble_legacy_commands_handler((char *)mBuffer); // ok
-      break;
-    }
+      case 0x03:
+      case 0x04:
+      case 0x0A: {
+        mBuffer[mBufferIndex] = 0;
+        ble_legacy_commands_handler((char *)mBuffer);  // ok
+        break;
+      }
 
-    case 0xF0:
-    case 0xF1:
-      mBufferIndex = 0;
-      mBuffer[mBufferIndex++] = byte;
-      break;
+      case 0xF0:
+      case 0xF1:
+        mBufferIndex = 0;
+        mBuffer[mBufferIndex++] = byte;
+        break;
 
-    case 0xF5:
-    case 0xF6:
-      mBuffer[mBufferIndex] = '\0';
-      ble_protocol_process(mBuffer, mBufferIndex); // ok
-      break;
+      case 0xF5:
+      case 0xF6:
+        mBuffer[mBufferIndex] = '\0';
+        ble_protocol_process(mBuffer, mBufferIndex);  // ok
+        break;
 
-    case 0x0F:
-      ble_connected(ble); // ok
-      break;
+      case 0x0F:
+        ble_connected(ble);  // ok
+        break;
 
-    case 0x19:
-    case 0x0E:
-      ble_disconnected(ble); // ok
-      break;
+      case 0x19:
+      case 0x0E:
+        ble_disconnected(ble);  // ok
+        break;
 
-    default: {
-      mBuffer[mBufferIndex] = byte;
-      mBufferIndex = (mBufferIndex + 1) % 256;
-    }
+      default: {
+        mBuffer[mBufferIndex] = byte;
+        mBufferIndex = (mBufferIndex + 1) % 256;
+      }
     }
   }
 }
@@ -279,26 +273,24 @@ int ble_process_received(ble_t *ble, char *data, int length) {
   if (tail != head) {
     ble_command_t *cmd = &commands[tail];
     switch (cmd->status) {
-    case BLE_COMMAND_STATUS_WAIT_FOR_RESPONSE: {
-      if (length <= 0)
+      case BLE_COMMAND_STATUS_WAIT_FOR_RESPONSE: {
+        if (length <= 0) break;
+        // temp_debug_print(data, length);
+        if (is_expected_response(cmd, data, length)) {
+          cmd->status = BLE_COMMAND_STATUS_OK;
+          return 1;
+        } else if (is_error_response(cmd, data, length)) {
+          cmd->status = BLE_COMMAND_STATUS_ERROR;
+          return 1;
+        } else if (is_timedout(ble, cmd)) {
+          cmd->status = BLE_COMMAND_STATUS_TIMEDOUT;
+        }
         break;
-      // temp_debug_print(data, length);
-      if (is_expected_response(cmd, data, length)) {
-        cmd->status = BLE_COMMAND_STATUS_OK;
-        return 1;
-      } else if (is_error_response(cmd, data, length)) {
-        cmd->status = BLE_COMMAND_STATUS_ERROR;
-        return 1;
-      } else if (is_timedout(ble, cmd)) {
-        cmd->status = BLE_COMMAND_STATUS_TIMEDOUT;
       }
-      break;
-    }
-    default:;
+      default:;
     }
 
-    if (length <= 0)
-      return 1;
+    if (length <= 0) return 1;
   }
   return 1;
 }
@@ -307,32 +299,32 @@ int ble_process_commands(ble_t *ble) {
   if (head != tail) {
     ble_command_t *cmd = &commands[tail];
     switch (cmd->status) {
-    case BLE_COMMAND_STATUS_PENDING: {
-      ble->send_data((uint8_t *)cmd->data, strlen(cmd->data));
-      if (strlen(cmd->response) > 0 && cmd->timeout_tick > 0) {
-        cmd->status = BLE_COMMAND_STATUS_WAIT_FOR_RESPONSE;
-        cmd->tick = ble->get_tick();
-      } else {
-        cmd->status = BLE_COMMAND_STATUS_OK;
+      case BLE_COMMAND_STATUS_PENDING: {
+        ble->send_data((uint8_t *)cmd->data, strlen(cmd->data));
+        if (strlen(cmd->response) > 0 && cmd->timeout_tick > 0) {
+          cmd->status = BLE_COMMAND_STATUS_WAIT_FOR_RESPONSE;
+          cmd->tick = ble->get_tick();
+        } else {
+          cmd->status = BLE_COMMAND_STATUS_OK;
+        }
+        break;
       }
-      break;
-    }
-    case BLE_COMMAND_STATUS_WAIT_FOR_RESPONSE: {
-      if (is_timedout(ble, cmd)) {
-        cmd->status = BLE_COMMAND_STATUS_TIMEDOUT;
+      case BLE_COMMAND_STATUS_WAIT_FOR_RESPONSE: {
+        if (is_timedout(ble, cmd)) {
+          cmd->status = BLE_COMMAND_STATUS_TIMEDOUT;
+        }
+        break;
       }
-      break;
-    }
-    case BLE_COMMAND_STATUS_OK: {
-      tail = (tail + 1) % MAX_NUM_COMMANDS;
-      break;
-    }
-    case BLE_COMMAND_STATUS_TIMEDOUT: {
-      return BLE_PROCESS_STATUS_ERROR;
-    }
-    case BLE_COMMAND_STATUS_ERROR: {
-      return BLE_PROCESS_STATUS_ERROR;
-    }
+      case BLE_COMMAND_STATUS_OK: {
+        tail = (tail + 1) % MAX_NUM_COMMANDS;
+        break;
+      }
+      case BLE_COMMAND_STATUS_TIMEDOUT: {
+        return BLE_PROCESS_STATUS_ERROR;
+      }
+      case BLE_COMMAND_STATUS_ERROR: {
+        return BLE_PROCESS_STATUS_ERROR;
+      }
     }
 
     return BLE_PROCESS_STATUS_OK;

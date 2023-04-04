@@ -48,7 +48,7 @@ static void dprint_value(mb_operation_t *op)
 #endif
 }
 
-static void dprint_newline()
+static void dprint_newline(void)
 {
 #ifdef MB_DEBUG_PRINT
     printf("\n");
@@ -66,7 +66,7 @@ static void dprint_exception(u8 exception) {
 #endif
 }
 
-mb_operation_t *mb_operation_fetch_next_op() {
+mb_operation_t *mb_operation_fetch_next_op(void) {
     static size_t index = 0;
     extern uint8_t mb_op_index;
     mb_operation_t *op;
