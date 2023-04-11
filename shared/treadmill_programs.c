@@ -81,6 +81,25 @@ static void program_calories_key_press(treadmill_t *treadmill, const kbd_key_t k
   }
 }
 
+static uint32_t get_speed_from_shortcut_speed_key(const kbd_key_t key) {
+  switch (key) {
+    case KEY_SPEED_5:
+      return 500;
+      break;
+    case KEY_SPEED_8:
+      return 800;
+      break;
+    case KEY_SPEED_11:
+      return 1100;
+      break;
+    case KEY_SPEED_14:
+      return 1400;
+      break;
+    default:;
+  }
+  return 0;
+}
+
 static void program_hiit_key_press(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_START:
@@ -131,6 +150,19 @@ static void program_hiit_key_press(treadmill_t *treadmill, const kbd_key_t key) 
           break;
       }
       break;
+    case KEY_SPEED_5:
+    case KEY_SPEED_8:
+    case KEY_SPEED_11:
+    case KEY_SPEED_14:
+      switch (treadmill->program.param_index) {
+        case 1:
+          treadmill->program.p_hiit.speed_t1 = get_speed_from_shortcut_speed_key(key);
+          break;
+        case 2:
+          treadmill->program.p_hiit.speed_t2 = get_speed_from_shortcut_speed_key(key);
+          break;
+      }
+      break;
     case KEY_INCLINE_INCREMENT:
       break;
     case KEY_INCLINE_DECREMENT:
@@ -151,12 +183,16 @@ void program_walk_30min_key_press(treadmill_t *treadmill, const kbd_key_t key) {
       treadmill_exit_program(treadmill);
       break;
     case KEY_SPEED_INCREMENT:
-      if (treadmill->program.p_walk_30min.target_speed + treadmill->config.speed.step <= treadmill->config.speed.max)
+      if (treadmill->program.p_walk_30min.target_speed + treadmill->config.speed.step <= PROGRAM_WALK_30MIN_MAX_SPEED)
         treadmill->program.p_walk_30min.target_speed += treadmill->config.speed.step;
       break;
     case KEY_SPEED_DECREMENT:
-      if (treadmill->program.p_walk_30min.target_speed - treadmill->config.speed.step >= treadmill->config.speed.min)
+      if (treadmill->program.p_walk_30min.target_speed - treadmill->config.speed.step >= PROGRAM_WALK_30MIN_MIN_SPEED)
         treadmill->program.p_walk_30min.target_speed -= treadmill->config.speed.step;
+      break;
+    case KEY_SPEED_5:
+    case KEY_SPEED_8:
+      treadmill->program.p_walk_30min.target_speed = get_speed_from_shortcut_speed_key(key);
       break;
     case KEY_INCLINE_INCREMENT:
       break;
@@ -230,9 +266,9 @@ static void program_super_cardio_key_press(treadmill_t *treadmill, const kbd_key
           treadmill->program.param_index++;
           break;
         case 1:
-          treadmill->program.p_fat_burn.max_bpm = 220 - treadmill->program.p_fat_burn.age;
-          treadmill->program.p_fat_burn.low_bpm = (treadmill->program.p_fat_burn.max_bpm * 50) / 100;
-          treadmill->program.p_fat_burn.high_bpm = (treadmill->program.p_fat_burn.max_bpm * 60) / 100;
+          treadmill->program.p_super_cardio.max_bpm = 220 - treadmill->program.p_super_cardio.age;
+          treadmill->program.p_super_cardio.low_bpm = (treadmill->program.p_super_cardio.max_bpm * 75) / 100;
+          treadmill->program.p_super_cardio.high_bpm = (treadmill->program.p_super_cardio.max_bpm * 85) / 100;
           treadmill_start_program(treadmill);
           break;
       }

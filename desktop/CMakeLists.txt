@@ -3,6 +3,8 @@ project(desktop VERSION 1.0)
 
 # include_directories(../shared/nvm/ST/EEPROM_Emul/Core)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 file(GLOB source_files
           "../shared/ble/ble_protocol/*.h"
           "../shared/ble/ble_protocol/*.c"

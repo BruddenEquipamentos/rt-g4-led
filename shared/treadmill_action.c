@@ -34,6 +34,7 @@ void treadmill_reset_training(treadmill_t *treadmill) {
 void treadmill_resume_training(treadmill_t *treadmill) {
   treadmill->training.speed = treadmill->config.speed.min;
   treadmill->training.ms = treadmill->ms;
+
   treadmill_set_scene(treadmill, SCENE_TRAINING);
 }
 
@@ -82,7 +83,7 @@ int treadmill_set_speed(treadmill_t *treadmill, const uint16_t speed) {
   treadmill->aux.speed_target = speed;
 
   // todo: refactor
-  if (treadmill->training.seconds > 0) {
+  if (treadmill->training.seconds > 0 && speed > 0) {
     if (treadmill->program.id == PROGRAM_HIIT) {
       if ((treadmill->training.seconds / 60) & 1) {
         treadmill->program.p_hiit.speed_t2 = speed;

@@ -116,7 +116,7 @@ static void update(treadmill_t *treadmill) {
         treadmill->aux.average_history[treadmill->aux.average_history_index].average_speed =
             treadmill_calculate_speed(mm_per_minute, 60);
 
-        if (minute > 16) {
+        if (minute >= 16) {
           for (int i = 1; i < 16; ++i) {
             treadmill->aux.average_history[i - 1] = treadmill->aux.average_history[i];
           }

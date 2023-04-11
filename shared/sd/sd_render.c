@@ -267,15 +267,15 @@ void sd_render(treadmill_t *treadmill) {
     default:;
   }
 
-  // static uint32_t t = 0;
-  // static uint32_t seconds = 0;
-  // static uint32_t value = 0;
-  // if (treadmill->get_time_ms() - t >= 1000) {
-  //   seconds = (seconds + 1) % 10;
-  //   value = seconds * 1000 + seconds * 100 + seconds * 10 + seconds;
-  //   t = treadmill->get_time_ms();
-  // }
-  // sd_set_value_to_all(value);
-  // sd_render_all_visible(true);
-  // sd_render_all_no_pad();
+//   static uint32_t t = 0;
+//   static uint32_t seconds = 0;
+//   static uint32_t value = 0;
+//   if (treadmill->get_time_ms() - t >= 1000) {
+//     seconds = (seconds + 1) % 10;
+//     value = seconds * 1000 + seconds * 100 + seconds * 10 + seconds;
+//     t = treadmill->get_time_ms();
+//   }
+//   sd_set_value_to_all(value);
+//   sd_render_all_visible(true);
+//   sd_render_all_no_pad();
 }

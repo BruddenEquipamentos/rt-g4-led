@@ -233,12 +233,12 @@ void dm_render(treadmill_t *treadmill) {
     };
   }
 
-  // static int col = 0;
-  // static uint32_t t = 0;
-  // if (treadmill->get_time_ms() - t >= 250) {
-  //   col = (col + 1) % 16;
-  //   t = treadmill->get_time_ms();
-  // }
-  // dm_clear_buffer();
-  // for (int i = 0; i < col + 1; ++i) dm_render_column_line(i);
+//   static int col = 0;
+//   static uint32_t t = 0;
+//   if (treadmill->get_time_ms() - t >= 250) {
+//     col = (col + 1) % 16;
+//     t = treadmill->get_time_ms();
+//   }
+//   dm_clear_buffer();
+//   for (int i = 0; i < col + 1; ++i) dm_render_column_line(i);
 }

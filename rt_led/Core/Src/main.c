@@ -67,9 +67,12 @@ struct stats stats;
 uint32_t PolarICValue1 = 0;
 uint32_t PolarICValue2 = 0;
 uint32_t PolarICDiff = 0;
-uint32_t ICCapturedLastTick = 0;
+uint32_t ICCapturedPolarLastTick = 0;
 uint32_t ICCapturedFirstTick = 0;
 uint32_t PolarBPM = 0;
+
+uint32_t ICCapturedWheelLastTick = 0;
+
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -222,17 +225,23 @@ int motor_change_frequency(const uint16_t period) {
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
   if (htim->Instance == TIM17) {
-    if (ICCapturedLastTick == 0) {
+    if (ICCapturedPolarLastTick == 0) {
       PolarICValue1 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
-      ICCapturedLastTick = HAL_GetTick();
+      ICCapturedPolarLastTick = HAL_GetTick();
     } else {
       PolarICValue2 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
-      ICCapturedLastTick = HAL_GetTick();
+      ICCapturedPolarLastTick = HAL_GetTick();
       if (PolarICValue2 > PolarICValue1) {
         PolarICDiff = PolarICValue2 - PolarICValue1;
         PolarBPM = (PolarBPM * 3 + (60000 / PolarICDiff)) / 4;
       }
       PolarICValue1 = PolarICValue2;
+    }
+  } else if (htim->Instance == TIM14) {
+    if (ICCapturedWheelLastTick == 0) {
+      ICCapturedWheelLastTick = HAL_GetTick();
+    } else {
+      ICCapturedWheelLastTick = HAL_GetTick();
     }
   }
 }
@@ -998,17 +1007,28 @@ static inline void bpm_read_handler(void) {
     }
   }
   {  // POLAR
-    if (ICCapturedLastTick) {
-      uint32_t t = HAL_GetTick() - ICCapturedLastTick;
+    if (ICCapturedPolarLastTick) {
+      uint32_t t = HAL_GetTick() - ICCapturedPolarLastTick;
       if (PolarBPM < 40 && PolarBPM > 240) {
         treadmill_set_bpm_read(&treadmill);
       } else if (t >= 10000) {
         PolarICDiff = 0;
         PolarBPM = 0;
-        ICCapturedLastTick = 0;
+        ICCapturedPolarLastTick = 0;
         treadmill_set_bpm_stop(&treadmill);
       } else {
         treadmill_set_bpm_value(&treadmill, (uint8_t)PolarBPM);
+      }
+    }
+  }
+  {
+    // RODA
+    if (treadmill.scene == SCENE_TRAINING) {
+      if (ICCapturedWheelLastTick == 0) ICCapturedWheelLastTick = HAL_GetTick();
+      else if (HAL_GetTick() - ICCapturedWheelLastTick >= 5000) {
+        // communicate wheel sensor
+        treadmill_stop_procedure(&treadmill);
+        ICCapturedWheelLastTick = 0;
       }
     }
   }
@@ -1140,7 +1160,7 @@ static int handle_combined_or_single_key_press(enum key singles, enum key combin
           }
           return 1;
         } else {
-          return 1;
+          if (!(singles & (KEY_SPEED_INCREMENT | KEY_SPEED_DECREMENT))) return 1;
         }
       }
     }

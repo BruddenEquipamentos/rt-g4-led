@@ -53,6 +53,17 @@ uint32_t treadmill_calculate_pace(treadmill_t *treadmill) {
 
 static int walking_speed(const uint16_t speed) { return speed < 600; }
 
+volatile uint32_t _kcal = 0;
+// volatile float _fKcal = 0.0f;
+//
+// volatile float exp1 = 0;
+// volatile float exp2 = 0;
+
+uint32_t _exp1 = 0;
+uint32_t _exp2 = 0;
+
+uint32_t _result;
+
 uint32_t treadmill_calculate_calories(treadmill_t *treadmill) {
   // No painel de LED atual, não se leva em consideração o BPM
   // no calculo de gasto calórico.
@@ -60,18 +71,26 @@ uint32_t treadmill_calculate_calories(treadmill_t *treadmill) {
   // gasto calórico entre homem e mulher
   // float fAge = treadmill->config.age;
 
-  float fKcal = 0;
-  float fSpeed = (treadmill->training.speed / 100.0f);
-  float fIncline = (treadmill->training.incline / 10.0f);
-  float fWeight = treadmill->config.weight;
-  float fTime = 1;
+  uint32_t factor = 1;
+  uint32_t speed = treadmill->training.speed * factor;
+  uint32_t incline = treadmill->training.incline * (factor / 10);
+  uint32_t weight = treadmill->config.weight;
+  uint32_t time = 1;
+  uint32_t kcal = 0;
 
   if (walking_speed(treadmill->training.speed)) {
-    fKcal = (((fSpeed / 0.06) * (0.1 + 1.8 * (fIncline / 100)) + 3.5) * (5 * fWeight * fTime)) / 1000;
+    _exp1 = ((speed * 100 / 6) * (10 + 180 * incline / 100) + 350 * factor * 100);
+    _exp2 = (5 * weight * time * factor * factor);
+    //  fKcal = (((fSpeed / 0.06) * (0.1 + 1.8 * (fIncline / 100)) + 3.5) * (5 * fWeight * fTime)) / 1000;
   } else {
-    fKcal = (((fSpeed / 0.06) * (0.2 + 0.9 * (fIncline / 100)) + 3.5) * (5 * fWeight * fTime)) / 1000;
+    _exp1 = ((speed * 100 / 6) * (20 + 90 * incline / 100) + 350 * factor * 100);
+    _exp2 = (5 * weight * time * factor * factor);
+    // fKcal = (((fSpeed / 0.06) * (0.2 + 0.9 * (fIncline / 100)) + 3.5) * (5 * fWeight * fTime)) / 1000;
   }
-  return (uint32_t)((fKcal / 60) * 1000);
+
+  kcal = (_exp1 * _exp2);
+
+  return kcal / 600000;
 }
 
 void treadmill_key_press(treadmill_t *treadmill, const kbd_key_t key) {

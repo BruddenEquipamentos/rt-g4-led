@@ -13,5 +13,6 @@
     "string.h": "c",
     "scene.h": "c",
     "mb_operation.h": "c"
-  }
+  },
+  "sonarlint.pathToCompileCommands": "${workspaceFolder}/desktop/build/compile_commands.json"
 }

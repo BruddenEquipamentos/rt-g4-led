@@ -4,6 +4,8 @@
 #include "treadmill_action.h"
 #include "treadmill_programs.h"
 
+#include <stddef.h>
+
 typedef struct program_training_callback {
   program_id_t id;
   void (*update)(treadmill_t *treadmill);
@@ -186,6 +188,7 @@ static void update_program_super_cardio(treadmill_t *treadmill) {
 }
 
 program_training_callback_t program_training_callbacks[] = {
+    {.id = PROGRAM_NONE, .update = NULL},
     {.id = PROGRAM_TIME, .update = update_program_time},
     {.id = PROGRAM_DISTANCE, .update = update_program_distance},
     {.id = PROGRAM_CALORIES, .update = update_program_calories},
@@ -198,7 +201,7 @@ program_training_callback_t program_training_callbacks[] = {
 void treadmill_scene_training_programs_update(treadmill_t *treadmill) {
   for (program_id_t i = 0; i < PROGRAM_TOTALS; ++i) {
     if (program_training_callbacks[i].id == treadmill->program.id) {
-      program_training_callbacks[i].update(treadmill);
+      if (program_training_callbacks[i].update != NULL) program_training_callbacks[i].update(treadmill);
       return;
     }
   }
