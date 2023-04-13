@@ -1,8 +1,30 @@
 #include "../panel/rt_led.h"
 #include "scene.h"
 
+static void on_exit_config_option(treadmill_t *treadmill) {
+  switch (treadmill->config.option) {
+    case CONFIG_OPTION_BLE_STATE: {
+      ble_post_message("\x02""SET,dfu adv=0\n", "AOK", 100);
+      break;
+    }
+    default:;
+  }
+}
+
+static void on_enter_config_option(treadmill_t *treadmill) {
+  switch (treadmill->config.option) {
+    case CONFIG_OPTION_BLE_STATE: {
+      ble_post_message("\x02""SET,dfu adv=1\n", "AOK", 100);
+      break;
+    }
+    default:;
+  }
+}
+
 static void next_config_option(treadmill_t *treadmill) {
+  on_exit_config_option(treadmill);
   treadmill->config.option++;
+  on_enter_config_option(treadmill);
   if (treadmill->config.option >= CONFIG_OPTION_TOTAL) treadmill->config.option = 0;
 }
 

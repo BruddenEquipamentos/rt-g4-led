@@ -50,7 +50,7 @@ void treadmill_ble_process_init(treadmill_t *treadmill) {
 
       // TODO: name according to model
 
-      ble_post_message("\x02SDN,MovCT\n", "AOK", 1000);
+      ble_post_message("\x02""SDN,MovCT\n", "AOK", 1000);
       ble->init_state = BLE_INIT_STATE_PROCESS;
       break;
     }

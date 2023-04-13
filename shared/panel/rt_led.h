@@ -9,7 +9,7 @@
 
 #define MAJOR 1
 #define MINOR 0
-#define REVISION 0
+#define REVISION 1
 
 typedef enum scene_config_option {
   CONFIG_OPTION_MODEL,           // MDL
