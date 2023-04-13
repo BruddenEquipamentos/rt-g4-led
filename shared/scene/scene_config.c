@@ -4,7 +4,10 @@
 static void on_exit_config_option(treadmill_t *treadmill) {
   switch (treadmill->config.option) {
     case CONFIG_OPTION_BLE_STATE: {
-      ble_post_message("\x02""SET,dfu adv=0\n", "AOK", 100);
+      ble_post_message(
+          "\x02"
+          "SET,dfu adv=0\n",
+          "AOK", 100);
       break;
     }
     default:;
@@ -14,7 +17,10 @@ static void on_exit_config_option(treadmill_t *treadmill) {
 static void on_enter_config_option(treadmill_t *treadmill) {
   switch (treadmill->config.option) {
     case CONFIG_OPTION_BLE_STATE: {
-      ble_post_message("\x02""SET,dfu adv=1\n", "AOK", 100);
+      ble_post_message(
+          "\x02"
+          "SET,dfu adv=1\n",
+          "AOK", 100);
       break;
     }
     default:;
@@ -38,6 +44,7 @@ static void change_config_model(treadmill_t *treadmill, const kbd_key_t key) {
         treadmill->config.model++;
       }
       rt_led_load_model_params(treadmill, treadmill->config.model);
+      treadmill_ble_restart(treadmill);
       break;
     }
     case KEY_SPEED_DECREMENT: {
@@ -47,6 +54,7 @@ static void change_config_model(treadmill_t *treadmill, const kbd_key_t key) {
         treadmill->config.model--;
       }
       rt_led_load_model_params(treadmill, treadmill->config.model);
+      treadmill_ble_restart(treadmill);
       break;
     }
     default:;

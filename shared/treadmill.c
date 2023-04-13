@@ -28,6 +28,8 @@ __attribute__((weak)) int motor_recv(uint8_t *data, int max_length) {
 
 void treadmill_setup(treadmill_t *treadmill) {
   memset(treadmill, 0x00, sizeof(treadmill_t));
+  strncpy(treadmill->config.device_name, "MovCT", 15);
+
   treadmill->hw.beep = beep;
   treadmill->hw.update_rtc = update_rtc;
   treadmill->hw.inverter.send_data = motor_send;
@@ -241,3 +243,5 @@ void treadmill_reset_lub(treadmill_t *treadmill) {
     treadmill->config.lub_distance_m = treadmill->total.distance_in_meters;
   }
 }
+
+void treadmill_ble_restart(treadmill_t *treadmill) { treadmill->hw.ble.init_state = BLE_INIT_STATE_INIT; }

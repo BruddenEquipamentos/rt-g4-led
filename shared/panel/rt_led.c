@@ -1,6 +1,7 @@
 #include "rt_led.h"
 
 #include <stddef.h>
+#include <string.h>
 
 extern scene_t scene_init;
 extern scene_t scene_idle;
@@ -12,6 +13,8 @@ extern scene_t scene_training;
 extern scene_t scene_countdown;
 extern scene_t scene_report;
 extern scene_t scene_programs;
+
+uint16_t fw_version = MAJOR*100 + MINOR*10 + REVISION;
 
 static const scene_t *rt_led_scenes[] = {
     &scene_init,     &scene_idle,   &scene_config, &scene_lub,      &scene_countdown,
@@ -66,6 +69,8 @@ void rt_led_load_model_params(treadmill_t *treadmill, rt_led_model_t model) {
       treadmill->config.weight = 70;
 
       treadmill->hw.inverter.comm_type = MOTOR_COMMUNICATION_TYPE_FREQ;
+
+      strncpy(treadmill->config.device_name, "RT LED", 15);
       break;
     }
     case RT_LED_MODEL_150_USART: {
@@ -80,6 +85,8 @@ void rt_led_load_model_params(treadmill_t *treadmill, rt_led_model_t model) {
       treadmill->config.weight = 70;
 
       treadmill->hw.inverter.comm_type = MOTOR_COMMUNICATION_TYPE_UART;
+
+      strncpy(treadmill->config.device_name, "RT LED", 15);
       break;
     }
     case RT_LED_MODEL_250_USART: {
@@ -94,6 +101,8 @@ void rt_led_load_model_params(treadmill_t *treadmill, rt_led_model_t model) {
       treadmill->config.weight = 70;
 
       treadmill->hw.inverter.comm_type = MOTOR_COMMUNICATION_TYPE_UART;
+
+      strncpy(treadmill->config.device_name, "RT iLED", 15);
       break;
     }
     default:;

@@ -8,7 +8,7 @@
 
 static int dm_blink(const uint32_t update_time_ms, const uint32_t blink_interval_ms) {
   static uint32_t dm_blink_time_ms = 0;
-  if (blink_interval_ms == 0) return 1;
+  if (blink_interval_ms == 0) return 0;
   if (update_time_ms - dm_blink_time_ms > blink_interval_ms) {
     dm_blink_time_ms = update_time_ms;
     return 1;
@@ -84,7 +84,11 @@ void dm_render(treadmill_t *treadmill) {
   if (treadmill->message.tick) {
     dm_clear_buffer();
     if (!dm_blink(treadmill->get_time_ms(), treadmill->message.blink_interval)) {
-      dm_render_text(treadmill->message.data, 16);
+      if (dm_compute_length(treadmill->message.data) > 16) {
+        dm_render_text_animated(treadmill->message.data, 50, treadmill->get_time_ms());
+      } else {
+        dm_render_text(treadmill->message.data, 16);
+      }
     }
     return;
   }

@@ -341,6 +341,9 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* htim_base)
     GPIO_InitStruct.Alternate = GPIO_AF4_TIM14;
     HAL_GPIO_Init(BK_RODA_GPIO_Port, &GPIO_InitStruct);
 
+    /* TIM14 interrupt Init */
+    HAL_NVIC_SetPriority(TIM14_IRQn, 3, 0);
+    HAL_NVIC_EnableIRQ(TIM14_IRQn);
   /* USER CODE BEGIN TIM14_MspInit 1 */
 
   /* USER CODE END TIM14_MspInit 1 */
@@ -480,6 +483,8 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* htim_base)
     */
     HAL_GPIO_DeInit(BK_RODA_GPIO_Port, BK_RODA_Pin);
 
+    /* TIM14 interrupt DeInit */
+    HAL_NVIC_DisableIRQ(TIM14_IRQn);
   /* USER CODE BEGIN TIM14_MspDeInit 1 */
 
   /* USER CODE END TIM14_MspDeInit 1 */

@@ -11,6 +11,8 @@
 #define MINOR 0
 #define REVISION 1
 
+extern uint16_t fw_version;
+
 typedef enum scene_config_option {
   CONFIG_OPTION_MODEL,           // MDL
   CONFIG_OPTION_LANGUAGE,        // LNG

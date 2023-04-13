@@ -49,8 +49,16 @@ void treadmill_ble_process_init(treadmill_t *treadmill) {
           "AOK", 1000);
 
       // TODO: name according to model
+      snprintf(data, 32,
+               "\x02"
+               "SDN,%s\n",
+               treadmill->config.device_name);
+      ble_post_message(data, "AOK", 1000);
 
-      ble_post_message("\x02""SDN,MovCT\n", "AOK", 1000);
+      extern uint16_t fw_version;
+      snprintf(data, 32, "\x02""SB1,%d\n", fw_version);
+      ble_post_message(data, "AOK", 1000);
+
       ble->init_state = BLE_INIT_STATE_PROCESS;
       break;
     }

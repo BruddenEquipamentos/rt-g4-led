@@ -154,9 +154,7 @@ typedef struct treadmill {
     char nsp[22];  // legado
     char nsi[22];  // legado
 
-    // struct {
-    //   inverter_comm_type_t comm_type;
-    // } inverter;
+    char device_name[15];
   } config;
 
   struct total {
@@ -240,5 +238,7 @@ uint32_t treadmill_calculate_lub_distance_remaining(treadmill_t *treadmill);
 void treadmill_reset_lub(treadmill_t *treadmill);
 
 void treadmill_key_press_clear(treadmill_t *treadmill);
+
+void treadmill_ble_restart(treadmill_t *treadmill);
 
 #endif
