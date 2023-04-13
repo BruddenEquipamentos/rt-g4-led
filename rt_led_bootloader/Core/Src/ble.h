@@ -10,5 +10,9 @@
 
 int ble_module_is_connected(void);
 int ble_module_dfu_handle(void);
+int ble_module_dfu_available(void);
+
+void ble_push_byte(const uint8_t byte);
+
 
 #endif /* SRC_BLE_H_ */

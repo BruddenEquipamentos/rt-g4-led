@@ -1,20 +1,20 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2023 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2023 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "display.h"
+#include "ble.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -43,37 +44,57 @@
 I2C_HandleTypeDef hi2c1;
 
 UART_HandleTypeDef huart3;
+DMA_HandleTypeDef hdma_usart3_rx;
 
 /* USER CODE BEGIN PV */
 const uint32_t APPLICATION_ADDRESS = 0x8005000;
+volatile uint8_t _huart3_buffer[2] = { 0 };
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_USART3_UART_Init(void);
 /* USER CODE BEGIN PFP */
-
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
+	if (huart == &huart3) {
+		HAL_UART_Receive_DMA(huart, (uint8_t*) &_huart3_buffer[0], 2);
+	}
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+	if (huart == &huart3) {
+		ble_push_byte(_huart3_buffer[1]);
+	}
+}
+
+void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart) {
+	if (huart == &huart3) {
+		ble_push_byte(_huart3_buffer[0]);
+	}
+}
+
 typedef void (*pFunction)(void);
 
 static void jumpToApplication() {
-  pFunction appEntry;
-  uint32_t appStack;
+	pFunction appEntry;
+	uint32_t appStack;
 
-  SysTick->CTRL = 0;
-  SCB->ICSR |= SCB_ICSR_PENDSTCLR_Msk;
+	SysTick->CTRL = 0;
+	SCB->ICSR |= SCB_ICSR_PENDSTCLR_Msk;
 
-  SCB->VTOR = APPLICATION_ADDRESS;
-  appStack = (uint32_t) * ((__IO uint32_t *)APPLICATION_ADDRESS);
-  appEntry = (pFunction) * (__IO uint32_t *)(APPLICATION_ADDRESS + 4);
+	SCB->VTOR = APPLICATION_ADDRESS;
+	appStack = (uint32_t) *((__IO uint32_t*) APPLICATION_ADDRESS);
+	appEntry = (pFunction) *(__IO uint32_t*) (APPLICATION_ADDRESS + 4);
 
-  __set_MSP(appStack);
-  appEntry();
+	__set_MSP(appStack);
+	appEntry();
 }
 
 int _ble_module_connected = 0;
@@ -107,52 +128,56 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_I2C1_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  // Init I2C Display
-  display_init();
+	// Init I2C Display
+	display_init();
 
-  // Draw dot matrix animation
-  {
-    dm_render_clear();
-    for (int i = 0; i < 16; ++i) {
-      dm_render_column_line(i);
-      display_update();
-      HAL_Delay(15);
-    }
-    dm_render_clear();
-    display_update();
-  }
+	HAL_UART_Receive_DMA(&huart3, (uint8_t *)&_huart3_buffer[0], 2);
 
-  // Check if BLE module is connected
-  {
-    if (ble_module_is_connected())
-    {
-	_ble_module_connected = 1;
-	if (ble_module_dfu_available())
+	HAL_GPIO_WritePin(CMD_GPIO_Port, CMD_Pin, GPIO_PIN_RESET);
+	HAL_Delay(10);
+	HAL_GPIO_WritePin(CMD_GPIO_Port, CMD_Pin, GPIO_PIN_SET);
+
+	// Draw dot matrix animation
 	{
-	    HAL_FLASH_Unlock();
-	    ble_module_dfu_handle();
-	    HAL_FLASH_Lock();
+		dm_render_clear();
+		for (int i = 0; i < 16; ++i) {
+			dm_render_column_line(i);
+			display_update();
+			HAL_Delay(35);
+		}
+		dm_render_clear();
+		display_update();
 	}
-    }
-  }
 
-  //ble_module_dfu_handle();
+	HAL_Delay(500);
 
-  jumpToApplication();
+	// Check if BLE module is connected
+	{
+		if (ble_module_is_connected()) {
+			_ble_module_connected = 1;
+			if (ble_module_dfu_available()) {
+				ble_module_dfu_handle();
+			}
+		}
+	}
+
+	//ble_module_dfu_handle();
+
+	jumpToApplication();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
+	while (1) {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  }
+	}
   /* USER CODE END 3 */
 }
 
@@ -275,8 +300,23 @@ static void MX_USART3_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART3_Init 2 */
-
   /* USER CODE END USART3_Init 2 */
+
+}
+
+/**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 
 }
 
@@ -322,11 +362,10 @@ static void MX_GPIO_Init(void)
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
-  __disable_irq();
-  while (1)
-  {
-  }
+	/* User can add his own implementation to report the HAL error return state */
+	__disable_irq();
+	while (1) {
+	}
   /* USER CODE END Error_Handler_Debug */
 }
 
