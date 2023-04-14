@@ -225,7 +225,7 @@ int treadmill_send_ftms_data(treadmill_t *treadmill) {
   uint32_t total_distance = treadmill->training.meters;
   uint16_t elapsed_time = treadmill->training.seconds;
   uint16_t inclination = treadmill->training.incline;
-  uint16_t calories = treadmill->training.kcal;
+  uint16_t calories = treadmill->training.kcal/1000;
 
   uint16_t flags = 0x0000;
   flags |= TD_TOTAL_DISTANCE_PRESENT;
