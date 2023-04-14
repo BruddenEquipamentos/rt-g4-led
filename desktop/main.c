@@ -241,6 +241,9 @@ static void display_update(treadmill_t *treadmill) {
 
     fprintf(stdout, "BPM low: %d, high: %d, max: %d\n", treadmill->program.p_fat_burn.low_bpm,
             treadmill->program.p_fat_burn.high_bpm, treadmill->program.p_fat_burn.max_bpm);
+
+
+    fprintf(stdout, "INT: %d\n", treadmill->hw.ble.ftms.tick_data_ms);
   }
 }
 

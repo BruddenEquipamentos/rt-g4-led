@@ -1,5 +1,6 @@
 #include "treadmill_ble.h"
 
+#include <stdio.h>
 #include <string.h>
 
 #include "./ble/ble.h"
@@ -10,6 +11,8 @@
 #include "./ble/ble_protocol/ble_protocol_helper.h"
 
 // TODO: refactor
+#include <string.h>
+
 #include "treadmill_action.h"
 
 void treadmill_ble_process_init(treadmill_t *treadmill) {
@@ -18,6 +21,10 @@ void treadmill_ble_process_init(treadmill_t *treadmill) {
   switch (ble->init_state) {
     case BLE_INIT_STATE_INIT: {
       if (ble->reset) ble->reset();
+      ble->connected = 0;
+      memset(&ble->ftms, 0x00, sizeof(struct ftms));
+      memset(&ble->connection, 0x00, sizeof(struct connection));
+
       ble->init_state = BLE_INIT_STATE_WAIT;
       init_wait = treadmill->get_time_ms();
       break;
@@ -56,7 +63,10 @@ void treadmill_ble_process_init(treadmill_t *treadmill) {
       ble_post_message(data, "AOK", 1000);
 
       extern uint16_t fw_version;
-      snprintf(data, 32, "\x02""SB1,%d\n", fw_version);
+      snprintf(data, 32,
+               "\x02"
+               "SB1,%d\n",
+               fw_version);
       ble_post_message(data, "AOK", 1000);
 
       ble->init_state = BLE_INIT_STATE_PROCESS;
@@ -147,15 +157,20 @@ void treadmill_ble_process(treadmill_t *treadmill) {
       break;
     }
     case BLE_STATE_READY: {
-      if (treadmill->hw.ble.ftms.subscribed && (treadmill->get_time_ms() - treadmill->hw.ble.ftms.tick_data_ms >=
-                                                (treadmill->hw.ble.connection.interval * 125) / 100)) {
-        treadmill->hw.ble.ftms.tick_data_ms = treadmill->get_time_ms();
-        treadmill_send_ftms_data(treadmill);
+      if (treadmill->hw.ble.ftms.subscribed) {
+        if (treadmill->get_time_ms() - treadmill->hw.ble.ftms.tick_data_ms >=
+            (treadmill->hw.ble.connection.interval * 125) / 100) {
+          treadmill->hw.ble.ftms.tick_data_ms = treadmill->get_time_ms();
+          treadmill_send_ftms_data(treadmill);
+        }
       } else {
         // periodic queue command to check connection
         if (treadmill->get_time_ms() - treadmill->hw.ble.check_com_ms >= 3000) {
           treadmill->hw.ble.check_com_ms = treadmill->get_time_ms();
-          ble_post_message("\n", "AOK", 1000);
+          ble_post_message(
+              "\x02"
+              "\n",
+              "AOK", 1000);
         }
       }
 

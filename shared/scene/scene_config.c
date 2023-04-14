@@ -20,7 +20,7 @@ static void on_enter_config_option(treadmill_t *treadmill) {
       ble_post_message(
           "\x02"
           "SET,dfu adv=1\n",
-          "AOK", 100);
+          "AOK", 500);
       break;
     }
     default:;
