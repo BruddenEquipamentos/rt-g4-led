@@ -260,7 +260,7 @@ int treadmill_send_ftms_data(treadmill_t *treadmill) {
   }
 
   if (flags & TD_HEART_RATE_PRESENT) {
-    flat_bin_to_ascii_8(buffer, &bindex, BUFSIZE, 0);
+    flat_bin_to_ascii_8(buffer, &bindex, BUFSIZE, treadmill->training.bpm);
   }
 
   if (flags & TD_ELAPSED_TIME_PRESENT) {
