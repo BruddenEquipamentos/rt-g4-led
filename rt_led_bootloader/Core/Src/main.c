@@ -86,6 +86,10 @@ static void jumpToApplication() {
 	pFunction appEntry;
 	uint32_t appStack;
 
+	//HAL_UART_DeInit(&huart3);
+	HAL_UART_DMAStop(&huart3);
+  HAL_NVIC_DisableIRQ(DMA1_Channel1_IRQHandler());
+
 	SysTick->CTRL = 0;
 	SCB->ICSR |= SCB_ICSR_PENDSTCLR_Msk;
 
