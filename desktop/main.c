@@ -87,6 +87,7 @@ static void *thread_input(void *arg) {
       }
       case ',': {
         treadmill_set_bpm_value(treadmill, treadmill->training.bpm - 20);
+        break;
       }
       case '.': {
         treadmill_set_bpm_value(treadmill, treadmill->training.bpm + 20);
