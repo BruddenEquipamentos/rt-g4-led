@@ -48,35 +48,6 @@ static void dm_render_time(treadmill_t *treadmill) {
       int h = dm_get_height_for_speed(treadmill->aux.average_history[i].average_speed);
       dm_render_column_with_height(i, h, 0, 0);
     }
-
-    // int current_column = 0;
-    // if (treadmill->training.total_seconds > 0)
-    //   current_column = (15 * treadmill->training.seconds) / treadmill->training.total_seconds;
-    // else
-    //   current_column = (treadmill->training.seconds / 60) % 16;
-
-    // get height of current speed for current column
-    // int height = dm_get_height_for_speed(treadmill->training.speed);
-
-    // for (int i = 0; i < 16; i++) {
-    //   if (i == current_column) {
-    //     dm_render_column_with_height(i, height, treadmill->get_time_ms(), 800);
-    //   } else {
-    //     int h = dm_get_height_for_speed(treadmill->aux.average_history[i].average_speed);
-    //     dm_render_column_with_height(i, h, 0, 0);
-    //   }
-
-    // // First Implementation
-    // if (i == current_column) {
-    //   dm_render_column_with_height(i, height, treadmill->get_time_ms(), 800);
-    // } else if (i < current_column ) {
-    //   // get from history average
-    //   int h = dm_get_height_for_speed(treadmill->aux.average_history[i].average_speed);
-    //   dm_render_column_with_height(i, h, 0, 0);
-    // }
-    // else {
-    //   dm_render_column_with_height(i, 0, 0, 0);
-    // }
   }
 }
 

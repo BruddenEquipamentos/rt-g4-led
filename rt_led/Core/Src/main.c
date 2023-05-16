@@ -1445,8 +1445,15 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         adc_old_beat = adc_new_beat;
 
         // if not reading PolarBPM, use Handgrip
-        if (PolarBPM == 0 && adc_new_beat - adc_delay_tick_ms > 2000)
-          treadmill_set_bpm_value(&treadmill, (uint8_t)bpm_current_value);
+        if (PolarBPM == 0 && adc_new_beat - adc_delay_tick_ms > 2000) {
+          if (bpm_current_value < 40) {
+            treadmill_set_bpm_read(&treadmill);
+          } else {
+            treadmill_set_bpm_value(&treadmill, (uint8_t)bpm_current_value);
+          }
+
+        }
+
       }
     } else if (adc_hrm < adc_average_n) {
       adc_below_average = 1;

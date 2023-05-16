@@ -64,7 +64,16 @@ static void render_training_data(treadmill_t *treadmill) {
   sd_set_min_sec(&sd_pace, treadmill->training.pace);
   sd_set_kcal(&sd_kcal, treadmill->training.kcal / 1000);
   sd_set_incline(&sd_incline, treadmill->training.incline);
-  sd_set_bpm(&sd_bpm, treadmill->training.bpm);
+
+
+// if BPM is handgrip and less than 40, blink and display ---
+  if (treadmill->hw.handgrip.state == HEARTRATE_HG_INITING) {
+    sd_set_bpm_detected(&sd_bpm);
+    sd_blink(&sd_bpm, treadmill->get_time_ms(), 500);
+  } else {
+    sd_set_bpm(&sd_bpm, treadmill->training.bpm);
+  }
+
 
   // TODO: refactor
   if (treadmill->scene == SCENE_TRAINING && treadmill->aux.speed_reached != treadmill->aux.speed_target) {
