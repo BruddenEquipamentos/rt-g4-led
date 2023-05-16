@@ -252,25 +252,51 @@ void display_update(void) {
   // OK
   render_display_calories(sdhw_kcal, page_buffer);
 
+//  if (__new_display) {
+//    if (sd_program.visible) {
+//      display_five.sd = &sd_program;
+//    } else {
+//      display_five.sd = &sd_pace;
+//    }
+//    render_display(&display_five, page_buffer);
+//
+//    display_six.sd = &sd_bpm;
+//    render_display(&display_six, page_buffer);
+//    // render_display_pace(sdhw_pace, page_buffer);
+//    // render_display_program(sdhw_program, page_buffer);
+//    // render_display_bpm(sdhw_bpm, page_buffer);
+//  } else {
+//    render_display_pace(sdhw_pace, page_buffer);
+//    render_display_program(sdhw_program, page_buffer);
+//    render_display_bpm(sdhw_bpm, page_buffer);
+//    render_display_incline(sdhw_incline, page_buffer);
+//  }
   if (__new_display) {
-    if (sd_program.visible) {
-      display_five.sd = &sd_program;
-    } else {
-      display_five.sd = &sd_pace;
-    }
-    render_display(&display_five, page_buffer);
+      if (sd_program.visible) {
+        display_five.sd = &sd_program;
+      } else {
+        extern treadmill_t *pTreadmill     ;
+        if (pTreadmill->scene == SCENE_CONFIG) {
+          display_five.sd = &sd_program;
+          display_six.sd = &sd_pace;
+        } else {
+          display_five.sd = &sd_pace;
+          display_six.sd = &sd_bpm;
+        }
+      }
+      render_display(&display_five, page_buffer);
 
-    display_six.sd = &sd_bpm;
-    render_display(&display_six, page_buffer);
-    // render_display_pace(sdhw_pace, page_buffer);
-    // render_display_program(sdhw_program, page_buffer);
-    // render_display_bpm(sdhw_bpm, page_buffer);
-  } else {
-    render_display_pace(sdhw_pace, page_buffer);
-    render_display_program(sdhw_program, page_buffer);
-    render_display_bpm(sdhw_bpm, page_buffer);
-    render_display_incline(sdhw_incline, page_buffer);
-  }
+      render_display(&display_six, page_buffer);
+    } else {
+      display_five.sd = &sd_program;
+      display_six.sd = &sd_pace;
+      render_display_pace(sdhw_pace, page_buffer);
+      render_display_program(sdhw_program, page_buffer);
+      render_display_bpm(sdhw_bpm, page_buffer);
+      render_display_incline(sdhw_incline, page_buffer);
+    }
+
+
 
   // convert buffer to page buffer mapping
   display_update_dm_buffer(page_buffer, dm_buffer);
