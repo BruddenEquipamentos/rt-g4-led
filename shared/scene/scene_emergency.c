@@ -9,7 +9,9 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
 }
 
 static void update(treadmill_t *treadmill) {
-  (void)treadmill;
+  if (treadmill->get_time_ms() - treadmill->scene_tick >= 10500) {
+    treadmill_set_scene(treadmill, SCENE_IDLE);
+  }
 }
 
 const scene_t scene_emergency = {
