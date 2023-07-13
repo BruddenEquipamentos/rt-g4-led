@@ -1106,9 +1106,9 @@ static inline void bpm_read_handler(void) {
       if (ICCapturedWheelLastTick == 0)
         ICCapturedWheelLastTick = HAL_GetTick();
       else if (HAL_GetTick() - ICCapturedWheelLastTick >= 5000) {
-        treadmill_stop_procedure(&treadmill);
-        treadmill_set_dm_message(&treadmill, "ERRO RODA", 3000, 0);
-        ICCapturedWheelLastTick = 0;
+       treadmill_stop_procedure(&treadmill);
+       treadmill_set_dm_message(&treadmill, "ERRO RODA", 3000, 0);
+       ICCapturedWheelLastTick = 0;
       }
     } else {
     	ICCapturedWheelLastTick = 0;

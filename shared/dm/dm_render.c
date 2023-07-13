@@ -100,8 +100,16 @@ void dm_render(treadmill_t *treadmill) {
           if (treadmill->aux.incline_changed_time_ms &&
               treadmill->get_time_ms() - treadmill->aux.incline_changed_time_ms <= 2000) {
             char text[16];
-            sprintf(text, "%1d.%1d%%", treadmill->training.incline / 10, treadmill->training.incline % 10);
-            dm_render_text(text, 16);
+//            sprintf(text, "%1d.%1d%%", treadmill->training.incline / 10, treadmill->training.incline % 10);
+            sprintf(text, "%1d%%", treadmill->training.incline / 10);
+
+            int length = dm_compute_length(text);
+            if (length < 16) {
+            	dm_render_text(text, 8 + length/2);
+            } else {
+            	dm_render_text(text, 16);
+            }
+
             return;
           }
         }
