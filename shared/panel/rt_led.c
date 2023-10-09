@@ -95,7 +95,7 @@ void rt_led_load_model_params(treadmill_t *treadmill, rt_led_model_t model) {
     }
     case RT_LED_MODEL_250_USART: {
       treadmill->config.incline.min = 0;
-      treadmill->config.incline.max = 160;
+      treadmill->config.incline.max = 150;
       treadmill->config.incline.step = 10;
 
       treadmill->config.speed.min = 120;
