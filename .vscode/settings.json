@@ -12,7 +12,8 @@
     "treadmill_action.h": "c",
     "string.h": "c",
     "scene.h": "c",
-    "mb_operation.h": "c"
+    "mb_operation.h": "c",
+    "lib_ndef_bluetooth.h": "c"
   },
   "sonarlint.pathToCompileCommands": "${workspaceFolder}/desktop/build/compile_commands.json"
 }

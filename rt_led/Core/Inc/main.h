@@ -53,6 +53,7 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
+void MX_I2C2_Init(void);
 
 /* USER CODE BEGIN EFP */
 
@@ -97,12 +98,8 @@ void Error_Handler(void);
 #define TS10_GPIO_Port GPIOC
 #define TS11_Pin GPIO_PIN_7
 #define TS11_GPIO_Port GPIOC
-#define TP1_Pin GPIO_PIN_10
-#define TP1_GPIO_Port GPIOA
-#define TP2_Pin GPIO_PIN_11
-#define TP2_GPIO_Port GPIOA
-#define TP3_Pin GPIO_PIN_12
-#define TP3_GPIO_Port GPIOA
+#define GPO_Pin GPIO_PIN_10
+#define GPO_GPIO_Port GPIOA
 #define TS00_Pin GPIO_PIN_15
 #define TS00_GPIO_Port GPIOA
 #define TS01_Pin GPIO_PIN_0

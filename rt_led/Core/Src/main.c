@@ -35,6 +35,12 @@
 #include "treadmill.h"
 #include "treadmill_ble.h"
 #include "treadmill_motor.h"
+
+#include "tft10_bus.h"
+
+#include "st25dv.h"
+#include "common.h"
+#include "nfc.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -84,6 +90,7 @@ DMA_HandleTypeDef hdma_adc1;
 CRC_HandleTypeDef hcrc;
 
 I2C_HandleTypeDef hi2c1;
+I2C_HandleTypeDef hi2c2;
 
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim6;
@@ -401,6 +408,26 @@ int main(void)
 
   HAL_UART_Receive_DMA(&huart3, (uint8_t *)&_huart3_buffer[0], 2);
 
+//#define NFC
+#ifdef NFC
+  MX_I2C2_Init();
+
+  if (BSP_NFCTAG_Init(0U) == 0U)
+	{
+  		volatile ST25DV_UID uid;
+  		volatile uint8_t ProductRef;
+
+  		ST25_RETRY( BSP_NFCTAG_ReadUID(0U, &uid) );
+			ProductRef = (uid.MsbUid & 0xFF00) >> 8;
+
+  		NDEF_Write_URI_URL();
+
+//  		NDEF_Write_BLE_OOB();
+	}
+#endif
+
+
+
   /* USER CODE END RTOS_THREADS */
 
   /* Start scheduler */
@@ -590,6 +617,54 @@ static void MX_I2C1_Init(void)
   /* USER CODE BEGIN I2C1_Init 2 */
 
   /* USER CODE END I2C1_Init 2 */
+
+}
+
+/**
+  * @brief I2C2 Initialization Function
+  * @param None
+  * @retval None
+  */
+void MX_I2C2_Init(void)
+{
+
+  /* USER CODE BEGIN I2C2_Init 0 */
+
+  /* USER CODE END I2C2_Init 0 */
+
+  /* USER CODE BEGIN I2C2_Init 1 */
+
+  /* USER CODE END I2C2_Init 1 */
+  hi2c2.Instance = I2C2;
+  hi2c2.Init.Timing = 0x0010061A;
+  hi2c2.Init.OwnAddress1 = 0;
+  hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c2.Init.OwnAddress2 = 0;
+  hi2c2.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
+  hi2c2.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c2.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Analogue filter
+  */
+  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c2, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Digital filter
+  */
+  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c2, 0) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C2_Init 2 */
+
+  /* USER CODE END I2C2_Init 2 */
 
 }
 
@@ -975,9 +1050,6 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(TS09_GPIO_Port, TS09_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, TP1_Pin|TP2_Pin|TP3_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOD, TS06_Pin|TS07_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
@@ -991,9 +1063,9 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : INC_MINUS_Pin SP_MINUS_Pin SP_PLUS_Pin INC_PLUS_Pin
-                           TS05_Pin TS00_Pin */
+                           TS05_Pin GPO_Pin TS00_Pin */
   GPIO_InitStruct.Pin = INC_MINUS_Pin|SP_MINUS_Pin|SP_PLUS_Pin|INC_PLUS_Pin
-                          |TS05_Pin|TS00_Pin;
+                          |TS05_Pin|GPO_Pin|TS00_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -1013,12 +1085,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : TS09_Pin TP1_Pin TP2_Pin TP3_Pin */
-  GPIO_InitStruct.Pin = TS09_Pin|TP1_Pin|TP2_Pin|TP3_Pin;
+  /*Configure GPIO pin : TS09_Pin */
+  GPIO_InitStruct.Pin = TS09_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(TS09_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : TS01_Pin TS02_Pin */
   GPIO_InitStruct.Pin = TS01_Pin|TS02_Pin;
