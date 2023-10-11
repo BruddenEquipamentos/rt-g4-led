@@ -408,7 +408,7 @@ int main(void)
 
   HAL_UART_Receive_DMA(&huart3, (uint8_t *)&_huart3_buffer[0], 2);
 
-//#define NFC
+#define NFC
 #ifdef NFC
   MX_I2C2_Init();
 
