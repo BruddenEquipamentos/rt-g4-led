@@ -4,6 +4,8 @@
 static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
   if (key == KEY_STOP) treadmill_set_scene(treadmill, SCENE_IDLE);
 
+  treadmill->idle_tick = treadmill->get_time_ms();
+
   // delegate
   for (int idx = 0; idx < PROGRAM_TOTALS; ++idx) {
     if (treadmill->program.id == key_press_program_callback[idx].id) {
@@ -15,7 +17,8 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
 
 static void update(treadmill_t *treadmill) {
   // if there's no interaction for 30s, return no idle scene
-  if (treadmill->get_time_ms() - treadmill->scene_tick > 30000) {
+  
+  if (treadmill->get_time_ms() - treadmill->idle_tick > 30000) {
     treadmill_set_scene(treadmill, SCENE_IDLE);
   }
 }
