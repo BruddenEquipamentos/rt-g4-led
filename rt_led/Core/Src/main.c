@@ -134,7 +134,7 @@ static void beep(beep_t beep) { xQueueSend(beepEventQueueHandle, &beep, 0); }
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-#define ADC_SAMPLE_SIZE 4
+#define ADC_SAMPLE_SIZE 16
 #define ADC_BUFFER_SIZE (ADC_SAMPLE_SIZE * 1)
 static uint32_t adc_values[ADC_BUFFER_SIZE];  // 2 is the number of channels
 uint16_t adc_hrm = 0;
@@ -148,13 +148,20 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 
 uint32_t adc_average = 0;
 uint32_t adc_average_n = 0;
-const uint32_t ADC_THRESHOLD = 55;
+uint32_t adc_hrm_average = 0;
+uint32_t adc_peak_low = 0;
+uint32_t adc_peak_high = 0;
+uint32_t adc_peak_delta = 0;
+uint32_t adc_peak_delta_average = 0;
+uint32_t adc_peak_average = 0;
+uint32_t adc_peak_tick = 0;
+const uint32_t ADC_THRESHOLD = 100;
 int adc_below_average = 0;
 uint32_t adc_new_beat = 0;
 uint32_t adc_old_beat = 0;
 #define BPM_BUFFER_READS (16)
 uint16_t bpm_buffer_index = 0;
-uint16_t bpm_buffer_reads[BPM_BUFFER_READS] = {0};
+uint32_t bpm_buffer_reads[BPM_BUFFER_READS] = {0};
 uint32_t bpm_current_value = 0;
 uint32_t adc_delay_tick_ms = 0;
 
@@ -405,6 +412,7 @@ int main(void)
 
   /* Start scheduler */
   osKernelStart();
+
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -1419,7 +1427,36 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
-  else if (htim->Instance == TIM6) {
+  else if (htim->Instance == TIM6) {    
+
+	if (HAL_GPIO_ReadPin(LO_MINUS_GPIO_Port, LO_MINUS_Pin) == GPIO_PIN_SET ||
+	  HAL_GPIO_ReadPin(LO_PLUS_GPIO_Port, LO_PLUS_Pin) == GPIO_PIN_SET) {
+	  return;
+	}
+
+	if (uwTick - adc_peak_tick >= 1000) {
+		adc_peak_delta = adc_peak_high - adc_peak_low;
+		adc_peak_delta_average  = (adc_peak_delta_average*4 + adc_peak_delta)/5;
+		adc_peak_low = adc_average_n;
+		adc_peak_high = 0;
+		adc_peak_tick = uwTick;
+	} else {
+		if (adc_below_average) {
+		  if (adc_hrm < adc_peak_low) {
+			  adc_peak_low = adc_hrm;
+		  }
+		} else {
+		  if (adc_hrm > adc_peak_high) {
+			  adc_peak_high = adc_hrm;
+		  }
+		}
+	}
+
+	uint32_t threshold = adc_average_n + ADC_THRESHOLD;
+	if (adc_peak_delta_average < adc_peak_high && adc_peak_delta_average >= threshold) {
+		threshold = adc_peak_delta_average / 3;
+	}
+
     adc_average = ((adc_average * 255) + (adc_hrm * 1000)) / 256;
     adc_average_n = adc_average / 1000;
 
@@ -1431,12 +1468,18 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       if (diff < 250) {
         // BPM > 240 bpm
       } else {
+
+  	    if (adc_hrm > adc_peak_high) {
+		  adc_peak_high = adc_hrm;
+	    }
+
         uint32_t current_bpm = 60000 / diff;
 
         uint32_t bpm_totals = 0;
         for (int i = 0; i < BPM_BUFFER_READS; ++i) {
           bpm_totals += bpm_buffer_reads[i];
         }
+
         bpm_current_value = bpm_totals / BPM_BUFFER_READS;
 
         bpm_buffer_reads[bpm_buffer_index] = ((bpm_current_value * 1) + current_bpm) / 2;
