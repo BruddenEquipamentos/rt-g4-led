@@ -5,7 +5,8 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
 }
 
 static void update(treadmill_t *treadmill) {
-  treadmill_set_scene(treadmill, SCENE_LUB);
+  treadmill_set_scene(treadmill, SCENE_IDLE);
+
 }
 
 const scene_t scene_init = {

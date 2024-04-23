@@ -1136,7 +1136,7 @@ void StartDefaultTask(void const * argument)
 
     treadmill_ble_process(&treadmill);
 
-    treadmill_motor_process(&treadmill);
+    // treadmill_motor_process(&treadmill);
 
     while (treadmill.ms < HAL_GetTick()) {
       treadmill.ms += 10;

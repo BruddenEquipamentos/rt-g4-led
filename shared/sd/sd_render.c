@@ -209,6 +209,8 @@ static void render_config_data(treadmill_t *treadmill) {
   }
 }
 
+int test_calories = 0;
+
 void sd_render(treadmill_t *treadmill) {
   sd_render_all_visible(true);
   switch (treadmill->scene) {
@@ -218,8 +220,17 @@ void sd_render(treadmill_t *treadmill) {
       break;
     }
     case SCENE_IDLE: {
-      sd_set_visible(&sd_program, false);
+      sd_set_visible(&sd_program, false);      
       render_training_data(treadmill);
+
+      extern uint8_t test_id;
+      extern uint8_t test_message_id;
+      extern uint8_t test_message_speed;
+      extern uint8_t test_road_speed;
+      static int prev_test_id = 0; 
+      
+      sd_set_kcal(&sd_kcal, test_calories);
+      sd_set_bpm(&sd_bpm, test_message_speed);
       break;
     }
     case SCENE_EMERGENCY: {

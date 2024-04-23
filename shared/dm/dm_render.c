@@ -84,7 +84,100 @@ void dm_render(treadmill_t *treadmill) {
       if (treadmill->config.modbus) {
         dm_render_mb_param_value(treadmill);
       } else {
-        dm_clear_buffer();
+        extern uint8_t test_id;
+        extern uint8_t test_message_id;
+        extern uint8_t test_message_speed;
+        extern uint8_t test_road_speed;
+        static int prev_test_id = 0;        
+        extern int test_calories;
+        static uint32_t test_tick = 0;
+        static uint8_t dm_render = 0;
+
+        if (prev_test_id != test_id)  {
+          dm_reset_frame();
+          test_calories = 0;
+          test_tick = 0;
+          dm_render = 0;
+        }
+
+        switch (test_id) {
+          case 0: {
+            switch (test_message_id) {
+            case 0:
+              dm_render_text_animated("APERTE START PARA COMEcAR OU SELECIONE ALGUM PROGRAMA NO ATALHO DO TECLADO", test_message_speed, treadmill->get_time_ms());
+              break;
+            case 1:
+              dm_render_text_animated("PRIMEIRO KM ATINGIDO!", test_message_speed, treadmill->get_time_ms());
+              break;
+            case 2:
+              dm_render_text_animated("AUMENTE A VELOCIDADE OU INCLINACAO PARA AUMENTAR A INTENSIDADE", test_message_speed, treadmill->get_time_ms());
+              break;
+            case 3:
+              break;
+            case 4:
+              break;
+            }        
+            break;
+          }
+          case 1: {
+            dm_render_road(test_message_speed, treadmill->get_time_ms());
+            break;
+          }  
+          case 2: {
+            
+            // simulate training  with calories            
+            if (test_tick == 0) {
+              test_tick = treadmill->get_time_ms();
+              dm_clear_buffer();
+            } else {
+              if (treadmill->get_time_ms() - test_tick >= 150) {
+                test_tick = treadmill->get_time_ms();
+                test_calories++;
+              }
+            }
+            
+            if (test_calories == 100) {
+              dm_render = 1;              
+            } else if (test_calories == 200) {
+              dm_render = 2;
+            } if (test_calories == 300) {
+              test_calories = 0;
+              test_tick = 0;
+              dm_render = 0;
+              dm_clear_buffer();
+            }
+            switch (dm_render) {
+              case 0: {                
+                int total = 15;
+                int target = 200;
+                int c = total * test_calories / target;
+                dm_render_column_line(c);
+                break;
+              }
+              case 1: {
+                if (dm_render_text_animated("METADE DO OBJETIVO ATINGIDO! PARABENS!", test_message_speed, treadmill->get_time_ms())) {
+                  dm_render = 0;
+                }
+                break;
+              }
+              case 2: {
+                if (dm_render_text_animated("OBJETIVO ATINGIDO! PARABENS", test_message_speed, treadmill->get_time_ms())) {
+                  dm_render = 0;
+                }
+                break;
+              }
+            }
+
+            break;
+          }
+          case 3: {
+            dm_render_text("@", 12);
+            break;
+          }
+        }
+
+        prev_test_id = test_id;
+
       }
       break;
     }

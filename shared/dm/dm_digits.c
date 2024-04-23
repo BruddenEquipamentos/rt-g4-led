@@ -1,13 +1,13 @@
 #include "dm_digits.h"
 
 const digit_t dm_space = {
-    .cols = 0,
+    .cols = 4,
     .data = {
-        0b0,
-        0b0,
-        0b0,
-        0b0,
-        0b0
+        0b0000,
+        0b0000,
+        0b0000,
+        0b0000,
+        0b0000
     }
 };
 
@@ -156,46 +156,57 @@ const digit_t dm_9 = {
     }};
 
 const digit_t dm_A = {
-    .cols = 3,
+    .cols = 5,
     .data = {
-        0b111,
-        0b101,
-        0b111,
-        0b101,
-        0b101,
+        0b01110,
+        0b10001,
+        0b11111,
+        0b10001,
+        0b10001,
     }
 };
 
 const digit_t dm_C = {
-    .cols = 3,
+    .cols = 5,
     .data = {
-        0b111,
-        0b100,
-        0b100,
-        0b100,
-        0b111,
+        0b01111,
+        0b10000,
+        0b10000,
+        0b10000,
+        0b01111,
+    }
+};
+
+const digit_t dm_C_ = {
+    .cols = 5,
+    .data = {
+        0b01111,
+        0b10000,
+        0b10000,
+        0b10100,
+        0b01111,
     }
 };
 
 const digit_t dm_D = {
-    .cols = 3,
+    .cols = 5,
     .data = {
-        0b110,
-        0b101,
-        0b101,
-        0b101,
-        0b110,
+        0b11110,
+        0b10001,
+        0b10001,
+        0b10001,
+        0b11110,
     }
 };
 
 const digit_t dm_E = {
-    .cols = 3,
+    .cols = 5,
     .data = {
-        0b111,
-        0b100,
-        0b111,
-        0b100,
-        0b111,
+        0b11111,
+        0b10000,
+        0b11111,
+        0b10000,
+        0b11111,
     }
 };
 
@@ -212,24 +223,24 @@ const digit_t dm_F = {
 
 
 const digit_t dm_G = {
-    .cols = 3,
+    .cols = 5,
     .data = {
-        0b111,
-        0b100,
-        0b111,
-        0b101,
-        0b111
+        0b01111,
+        0b10000,
+        0b10111,
+        0b10001,
+        0b01111
     }
 };
 
 const digit_t dm_H = {
-    .cols = 3,
+    .cols = 5,
     .data = {
-        0b101,
-        0b101,
-        0b111,
-        0b101,
-        0b101,
+        0b10001,
+        0b10001,
+        0b11111,
+        0b10001,
+        0b10001,
     }
 };
 
@@ -244,14 +255,36 @@ const digit_t dm_I = {
     }
 };
 
-const digit_t dm_L = {
-    .cols = 2,
+const digit_t dm_J = {
+    .cols = 1,
     .data = {
-        0b10,
-        0b10,
-        0b10,
-        0b10,
-        0b11,
+        0b00111,
+        0b00001,
+        0b00001,
+        0b10001,
+        0b01110,
+    }
+};
+
+const digit_t dm_K = {
+    .cols = 5,
+    .data = {
+        0b10010,
+        0b10100,
+        0b11110,
+        0b10001,
+        0b10001
+    }
+};
+
+const digit_t dm_L = {
+    .cols = 5,
+    .data = {
+        0b10000,
+        0b10000,
+        0b10000,
+        0b10000,
+        0b11111,
     }
 };
 
@@ -267,79 +300,79 @@ const digit_t dm_M = {
 };
 
 const digit_t dm_N = {
-    .cols = 3,
+    .cols = 5,
     .data = {
-        0b110,
-        0b101,
-        0b101,
-        0b101,
-        0b101,
+        0b11001,
+        0b10101,
+        0b10101,
+        0b10101,
+        0b10011,
     }
 };
 
 const digit_t dm_O = {
-    .cols = 3,
+    .cols = 5,
     .data = {
-        0b111,
-        0b101,
-        0b101,
-        0b101,
-        0b111,
+        0b01110,
+        0b10001,
+        0b10001,
+        0b10001,
+        0b01110,
     }
 };
 
 const digit_t dm_P = {
-    .cols = 3,
+    .cols = 5,
     .data = {
-        0b111,
-        0b101,
-        0b111,
-        0b100,
-        0b100,
+        0b11110,
+        0b10001,
+        0b11110,
+        0b10000,
+        0b10000,
     }
 };
 
 const digit_t dm_R = {
-    .cols = 3,
+    .cols = 5,
     .data = {
-        0b111,
-        0b101,
-        0b110,
-        0b101,
-        0b101,
+        0b11110,
+        0b10001,
+        0b11110,
+        0b10010,
+        0b10001,
     }
 };
 
 const digit_t dm_S = {
-    .cols = 3,
+    .cols = 5,
     .data = {
-        0b111,
-        0b100,
-        0b111,
-        0b001,
-        0b111,
+        0b01111,
+        0b10000,
+        0b01110,
+        0b00001,
+        0b11110,
     }
 };
 
 const digit_t dm_T = {
-    .cols = 3,
+    .cols = 5,
     .data = {
-        0b111,
-        0b010,
-        0b010,
-        0b010,
-        0b010,
+        0b11111,
+        0b00100,
+        0b00100,
+        0b00100,
+        0b00100,
     }
 };
 
 const digit_t dm_U = {
-    .cols = 3,
+    .cols = 5,
     .data = {
-        0b101,
-        0b101,
-        0b101,
-        0b101,
-        0b111,
+        0b10001,
+        0b10001,
+        0b10001,
+        0b10001,
+        0b01110,
     }
 };
 
@@ -373,6 +406,17 @@ const digit_t dm_X = {
         0b00100,
         0b01010,
         0b10001
+    }
+};
+
+const digit_t dm_exclamation = {
+    .cols = 1,
+    .data = {
+        0b1,
+        0b1,
+        0b1,
+        0b0,
+        0b1,
     }
 };
 
@@ -453,6 +497,8 @@ const digit_t dm_bpm_decrease = {
 };
 
 
+
+
 digit_map_t dm_map[] = {
     {.ch=' ', .dm=&dm_space},
     {.ch='%', .dm=&dm_percentage},
@@ -474,12 +520,15 @@ digit_map_t dm_map[] = {
     {.ch='A', .dm=&dm_A},
     {.ch='B', .dm=&dm_B},
     {.ch='C', .dm=&dm_C},
+    {.ch='c', .dm=&dm_C_},
     {.ch='D', .dm=&dm_D},
     {.ch='E', .dm=&dm_E},
     {.ch='F', .dm=&dm_F},
     {.ch='G', .dm=&dm_G},
     {.ch='H', .dm=&dm_H},
     {.ch='I', .dm=&dm_I},
+    {.ch='J', .dm=&dm_J},
+    {.ch='K', .dm=&dm_K},
     {.ch='L', .dm=&dm_L},
     {.ch='M', .dm=&dm_M},
     {.ch='N', .dm=&dm_N},
@@ -493,6 +542,7 @@ digit_map_t dm_map[] = {
     {.ch='W', .dm=&dm_W},
     {.ch='X', .dm=&dm_X},
     {.ch='x', .dm=&dm_x},
+    {.ch='!', .dm=&dm_exclamation},
     {.ch='.', .dm=&dm_dot},
     {.ch=';', .dm=&dm_bpm_pointer},
 };
