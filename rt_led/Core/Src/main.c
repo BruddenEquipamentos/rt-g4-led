@@ -373,10 +373,13 @@ int main(void)
   __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_OPTVERR);
   while (__HAL_FLASH_GET_FLAG(FLASH_FLAG_OPTVERR) != RESET)
     ;
-  nvm.NVM_Init();
 
-  //  nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_DISTANCE_METERS, 0);
-  //  nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_TIME_SECONDS, 0);
+  if (nvm.NVM_Init() != NVM_STATUS_OK) {
+	  nvm.NVM_Format();
+  }
+
+  // nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_DISTANCE_METERS, 36141000);
+//    nvm.NVM_WriteVariable32bits(NVM_U32_TOTAL_TIME_SECONDS, 0);
   //  nvm.NVM_WriteVariable32bits(NVM_U32_LUB_DISTANCE_PARAM, 1500);
   //  nvm.NVM_WriteVariable32bits(NVM_U32_LUB_DISTANCE, 0);
 
