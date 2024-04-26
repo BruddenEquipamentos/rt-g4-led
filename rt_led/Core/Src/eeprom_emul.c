@@ -1095,8 +1095,11 @@ __weak void EE_EndOfCleanup_UserCallback(void)
   *           - EE_OK: if variable was found
   *           - EE error code: if an error occurs
   */
+
+uint16_t _VirtAddress = 0;
+uint32_t _DataValue = 0;
 #ifndef FLASH_LINES_128B
-static EE_Status ReadVariable(uint16_t VirtAddress, EE_DATA_TYPE* pData)
+static EE_Status ReadVariable(volatile uint16_t VirtAddress, EE_DATA_TYPE* pData)
 #else
 static EE_Status ReadVariable(uint16_t VirtAddress, EE_DATA_TYPE* pData)
 #endif
@@ -1134,9 +1137,11 @@ static EE_Status ReadVariable(uint16_t VirtAddress, EE_DATA_TYPE* pData)
 #ifndef FLASH_LINES_128B
       if (addressvalue != EE_PAGESTAT_ERASED)
       {
+	    _VirtAddress = EE_VIRTUALADDRESS_VALUE(addressvalue);
         /* Compare the read address with the virtual address */
         if (EE_VIRTUALADDRESS_VALUE(addressvalue) == VirtAddress)
         {
+          _DataValue = EE_DATA_VALUE(addressvalue);
           /* Calculate crc of variable data and virtual address */
           crc = CalculateCrc(EE_DATA_VALUE(addressvalue), EE_VIRTUALADDRESS_VALUE(addressvalue));
           
