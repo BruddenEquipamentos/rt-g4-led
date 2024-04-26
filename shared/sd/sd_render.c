@@ -181,13 +181,27 @@ static void render_config_data(treadmill_t *treadmill) {
       break;
     }
     case CONFIG_OPTION_TOTAL_DISTANCE: {
+      if ((treadmill->total.distance_in_meters / 1000)/10000) {
+    	  sd_set_visible(&sd_program, true);
+    	  sd_set_value(&sd_program, (treadmill->total.distance_in_meters / 1000) / 10000);
+      }
+
       sd_set_visible(&sd_pace, true);
-      sd_set_value(&sd_pace, treadmill->total.distance_in_meters / 1000);
+      sd_set_value(&sd_pace, (treadmill->total.distance_in_meters / 1000) % 10000);
+
+      sd_program.flag = SD_FLAG_PAD_LEADING_ZERO;
       break;
     }
     case CONFIG_OPTION_TOTAL_HOURS: {
+      if ((treadmill->total.time_in_seconds / 3600) / 10000) {
+    	sd_set_visible(&sd_program, true);
+ 	    sd_set_value(&sd_program, (treadmill->total.time_in_seconds / 3600) / 10000);
+      }
+
       sd_set_visible(&sd_pace, true);
-      sd_set_value(&sd_pace, treadmill->total.time_in_seconds / 3600);
+      sd_set_value(&sd_pace, (treadmill->total.time_in_seconds / 3600) % 10000);
+
+      sd_program.flag = SD_FLAG_PAD_LEADING_ZERO;
       break;
     }
     case CONFIG_OPTION_BLE_STATE: {
