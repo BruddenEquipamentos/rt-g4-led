@@ -150,13 +150,14 @@ int main(void)
 		for (int i = 0; i < 16; ++i) {
 			dm_render_column_line(i);
 			display_update();
-			HAL_Delay(35);
+//			HAL_Delay(35);
+			HAL_Delay(67);
 		}
 		dm_render_clear();
 		display_update();
 	}
 
-	HAL_Delay(500);
+//	HAL_Delay(500);
 
 	// Check if BLE module is connected
 	{
