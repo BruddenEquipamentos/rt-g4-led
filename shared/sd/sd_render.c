@@ -227,13 +227,30 @@ void sd_render(treadmill_t *treadmill) {
   sd_render_all_visible(true);
   switch (treadmill->scene) {
     case SCENE_INIT: {
-      sd_set_visible(&sd_program, false);
-      render_training_data(treadmill);
+      sd_set_value_to_all(8888);
+      sd_render_all_visible(true);
+      // sd_set_visible(&sd_program, false);
+      // render_training_data(treadmill);
       break;
     }
     case SCENE_IDLE: {
+
+      // extern int run_test;
+      // extern int test_count;
+      // if (run_test == 1) {
+      //   sd_set_value_to_all(run_test);
+      // } else if (run_test == 2) {
+      //   sd_set_value_to_all(test_count);
+      // } else if (run_test == 3) {
+      //   sd_set_value_to_all(run_test);
+      // } else {
+      //   sd_set_visible(&sd_program, false);
+      //   render_training_data(treadmill);
+      // }
+
       sd_set_visible(&sd_program, false);
       render_training_data(treadmill);
+      
       break;
     }
     case SCENE_EMERGENCY: {

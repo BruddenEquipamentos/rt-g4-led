@@ -80,6 +80,14 @@ void dm_render(treadmill_t *treadmill) {
   treadmill->previous_scene = treadmill->scene;
 
   switch (treadmill->scene) {
+    case SCENE_INIT: {
+      dm_render_line(4);
+      dm_render_line(3);
+      dm_render_line(2);
+      dm_render_line(1);
+      dm_render_line(0);
+      break;
+    }
     case SCENE_IDLE: {
       if (treadmill->config.modbus) {
         dm_render_mb_param_value(treadmill);
