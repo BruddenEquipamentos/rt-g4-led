@@ -114,7 +114,7 @@ void treadmill_load_config(treadmill_t *treadmill) {
   if (nvm.NVM_ReadVariable8bits(NVM_U8_MODEL, (uint8_t *)&model)) {
     rt_led_load_model_params(treadmill, model);
   } else {
-    rt_led_load_model_params(treadmill, RT_LED_MODEL_150_USART);
+    rt_led_load_model_params(treadmill, RT_LED_MODEL_250_USART);
     treadmill_save_config(treadmill);
   }
 
