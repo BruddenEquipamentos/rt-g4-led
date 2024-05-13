@@ -288,8 +288,8 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  static const uint32_t APPLICATION_ADDRESS = 0x8005000;
-  SCB->VTOR = APPLICATION_ADDRESS;
+//  static const uint32_t APPLICATION_ADDRESS = 0x8005000;
+//  SCB->VTOR = APPLICATION_ADDRESS;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
