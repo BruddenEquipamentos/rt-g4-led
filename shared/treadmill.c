@@ -39,14 +39,18 @@ void treadmill_setup(treadmill_t *treadmill) {
   treadmill->scene_tick = 0;
 
   treadmill_load_config(treadmill);
-
   treadmill->debug.print_states = true;
 }
 
 void treadmill_set_scene(treadmill_t *treadmill, treadmill_scene_t scene) {
+  treadmill->previous_scene = treadmill->scene;
   treadmill->scene = scene;
   treadmill->scene_tick = treadmill->get_time_ms();
-  treadmill->idle_tick = treadmill->get_time_ms();
+  treadmill->idle_tick = treadmill->get_time_ms();  
+
+  // if (treadmill->on_state_changed_callback) {
+  //   treadmill->on_state_changed_callback(treadmill, scene);
+  // }
 }
 
 uint32_t treadmill_calculate_pace(treadmill_t *treadmill) {

@@ -45,7 +45,8 @@ typedef enum uart_protocol_state {
 } uart_protocol_state_t;
 
 typedef enum treadmill_scene {
-  SCENE_INIT = 0,
+  SCENE_RESET = 0,
+  SCENE_INIT,
   SCENE_IDLE,
   SCENE_EMERGENCY,
   SCENE_LUB,
@@ -209,6 +210,12 @@ typedef struct treadmill {
   kbd_key_t key_pressed;
   uint32_t key_pressed_tick;
   uint32_t key_pressed_last_tick;
+
+  // int (*on_speed_changed_callback)(treadmill_t *t, const uint16_t speed);
+  // int (*on_incline_changed_callback)(treadmill_t *t, const int16_t incline);
+  // int (*on_state_changed_callback)(treadmill_t *t, const int state); // state/scene
+
+  int (*on_update_fms_callback)(treadmill_t *t, const uint8_t, const void *param);
 
 } treadmill_t;
 

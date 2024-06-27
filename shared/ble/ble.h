@@ -4,59 +4,68 @@
 #include <stdint.h>
 
 typedef enum ble_state {
-  BLE_STATE_INIT = 0,
-  BLE_STATE_READY,
-  BLE_STATE_ERROR,
+    BLE_STATE_INIT = 0,
+    BLE_STATE_READY,
+    BLE_STATE_ERROR,
 } ble_state_t;
 
 typedef enum ble_init_state {
-  BLE_INIT_STATE_INIT = 0,
-  BLE_INIT_STATE_WAIT,
-  BLE_INIT_POST_COMMANDS,
-  BLE_INIT_STATE_PROCESS,
-  BLE_INIT_STATE_READY
+    BLE_INIT_STATE_INIT = 0,
+    BLE_INIT_STATE_WAIT,
+    BLE_INIT_POST_COMMANDS,
+    BLE_INIT_STATE_PROCESS,
+    BLE_INIT_STATE_READY
 } ble_init_state_t;
 
 typedef enum ble_process_status {
-  BLE_PROCESS_STATUS_ERROR = 0,
-  BLE_PROCESS_STATUS_OK,
-  BLE_PROCESS_STATUS_IDLE
+    BLE_PROCESS_STATUS_ERROR = 0,
+    BLE_PROCESS_STATUS_OK,
+    BLE_PROCESS_STATUS_IDLE
 } ble_process_status_t;
 
 typedef int (*send_data_cb)(const uint8_t *data, int length);
 typedef int (*recv_data_cb)(uint8_t *data, int max_length);
 
 typedef struct ble {
-  int connected;
+    int connected;
 
-  ble_state_t state;
-  ble_init_state_t init_state;
+    ble_state_t state;
+    ble_init_state_t init_state;
 
-  send_data_cb send_data;
-  recv_data_cb recv_data;
+    send_data_cb send_data;
+    recv_data_cb recv_data;
 
-  uint32_t check_com_ms;
+    uint32_t check_com_ms;
 
-  uint32_t (*get_tick)(void);
-  void (*reset)(void);
+    uint32_t (*get_tick)(void);
+    void (*reset)(void);
 
-  struct ftms {
-    uint8_t subscribed;
-    uint8_t control_point_allowed;
-    uint32_t tick_data_ms;
-  } ftms;
+    struct ftms {
+        uint8_t subscribed;
+        uint8_t control_point_allowed;
+        uint32_t tick_data_ms;
+    } ftms;
 
-  struct connection {
-    uint16_t mtu;
-    uint16_t interval;
-    uint16_t latency;
-    uint16_t timeout;
-  } connection;
+    struct connection {
+        uint16_t mtu;
+        uint16_t interval;
+        uint16_t latency;
+        uint16_t timeout;
+    } connection;
 
-  struct heartrate {
-    uint8_t connecting;
-    uint8_t bpm;
-  } heartrate;
+    struct heartrate {
+        uint8_t connecting;
+        uint8_t bpm;
+    } heartrate;
+
+    struct {
+        int connected;
+        uint16_t bpm;
+        uint16_t active_energy;
+        uint16_t total_energy;
+        uint16_t average_bpm;
+        uint32_t last_time_received;
+    } gk;
 
 } ble_t;
 
@@ -65,8 +74,7 @@ typedef struct ble {
 
 void ble_reset(ble_t *ble);
 void ble_clear_commands(void);
-int ble_post_message(const char *data, const char *response,
-                     const uint32_t timeout_tick);
+int ble_post_message(const char *data, const char *response, const uint32_t timeout_tick);
 
 int ble_process_received(ble_t *ble, char *data, int length);
 int ble_process_commands(ble_t *ble);

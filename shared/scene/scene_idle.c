@@ -1,6 +1,5 @@
 #include "../treadmill_motor_modbus.h"
 #include "scene.h"
-#include "../rt_led/Core/Src/nvm_emb.h"
 
 int run_test = 0;
 int test_count = 0;

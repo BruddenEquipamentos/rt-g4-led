@@ -9,3 +9,4 @@ main
 .DS_Store
 build/
 *.dat
+.vscode/

@@ -100,14 +100,22 @@ enum ble_rx_event {
   BLE_RX_EVENT_DISCONNECTED
 };
 
+#define BLE_DATA_SIZE 256
 struct ble_data {
   enum ble_rx_event event;
   uint8_t length;
-  uint8_t data[64];
+  uint8_t data[BLE_DATA_SIZE];
 };
 
 #define BLE_DATA_QUEUE_LENGTH (5)
 struct ble_data ble_data[BLE_DATA_QUEUE_LENGTH];
+
+static void treadmill_ble_reset(treadmill_t *treadmill) {
+  memset(&treadmill->hw.ble.ftms, 0, sizeof(treadmill->hw.ble.ftms));
+  memset(&treadmill->hw.ble.connection, 0, sizeof(treadmill->hw.ble.connection));
+  memset(&treadmill->hw.ble.heartrate, 0, sizeof(treadmill->hw.ble.heartrate));
+  memset(&treadmill->hw.ble.gk, 0, sizeof(treadmill->hw.ble.gk));
+}
 
 void treadmill_ble_process(treadmill_t *treadmill) {
   ble_t *ble = &treadmill->hw.ble;
@@ -139,11 +147,15 @@ void treadmill_ble_process(treadmill_t *treadmill) {
         break;
       }
       case BLE_RX_EVENT_CONNECTED: {
+        if (ble_data_msg->length > 0 && ble_data_msg->data[0] == 1) {
+          treadmill->hw.ble.gk.connected = 1;
+        }
         treadmill->hw.ble.connected = 1;
         break;
       }
-      case BLE_RX_EVENT_DISCONNECTED: {
+      case BLE_RX_EVENT_DISCONNECTED: {        
         treadmill->hw.ble.connected = 0;
+        treadmill_ble_reset(treadmill);
         break;
       }
       default:;
@@ -197,7 +209,7 @@ void treadmill_ble_post_message(enum ble_rx_event event, uint8_t *data, uint8_t 
   struct ble_data *ble_data_msg = &ble_data[_head];
   ble_data_msg->event = event;
   ble_data_msg->length = length;
-  memset(ble_data_msg->data, 0x00, 64);
+  memset(ble_data_msg->data, 0x00, BLE_DATA_SIZE);
   memcpy(ble_data_msg->data, data, length);
   _head = (_head + 1) % BLE_DATA_QUEUE_LENGTH;
 }
@@ -223,7 +235,8 @@ void treadmill_ble_push_byte(treadmill_t *treadmill, const uint8_t byte) {
     case 0xF0:
     case 0xF1:
       length = 0;
-      buffer[length++] = byte;
+      buffer[length] = byte;
+      length = (length + 1) % RX_BUFFER_LENGTH;
       break;
 
     case 0xF5:
@@ -235,6 +248,11 @@ void treadmill_ble_push_byte(treadmill_t *treadmill, const uint8_t byte) {
     case 0x0F:
       treadmill_ble_post_message(BLE_RX_EVENT_CONNECTED, 0, 0);
       break;
+    case 0x10: {
+      static uint8_t gk = 1;
+      treadmill_ble_post_message(BLE_RX_EVENT_CONNECTED, &gk, sizeof(gk));
+      break;
+    }
 
     case 0x19:
     case 0x0E:
@@ -244,7 +262,8 @@ void treadmill_ble_push_byte(treadmill_t *treadmill, const uint8_t byte) {
     // temp solution
     case 0x06:
     case 0x15:
-      buffer[length++] = byte;
+      buffer[length] = byte;
+      length = (length + 1) % RX_BUFFER_LENGTH;
       treadmill_ble_post_message(BLE_RX_EVENT_03_04_0A, buffer, length);
       break;
 

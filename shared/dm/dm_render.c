@@ -75,9 +75,7 @@ void dm_render(treadmill_t *treadmill) {
       }
       default:;
     }
-  }
-
-  treadmill->previous_scene = treadmill->scene;
+  }  
 
   switch (treadmill->scene) {
     case SCENE_INIT: {

@@ -4,6 +4,7 @@
 
 #include "nvm/nvm.h"
 #include "treadmill_programs.h"
+#include "ble/ble_protocol/ble_ftms_treadmill.h"
 
 void treadmill_start_training_countdown(treadmill_t *treadmill) {
   treadmill->countdown.value = START_TRAINING_COUNTDOWN_VALUE;
@@ -14,34 +15,51 @@ void treadmill_start_training_countdown(treadmill_t *treadmill) {
 void treadmill_start_training(treadmill_t *treadmill) {
   memset(&treadmill->training, 0x00, sizeof(struct training));
   treadmill->training.ms = treadmill->ms;
-  treadmill_set_speed(treadmill, treadmill->config.speed.min);
+
   treadmill_set_scene(treadmill, SCENE_TRAINING);
+  if (treadmill->on_update_fms_callback) {
+    treadmill->on_update_fms_callback(treadmill, StartedOrResumedByTheUser, NULL);
+  }
+
+  treadmill_set_speed(treadmill, treadmill->config.speed.min);  
 }
 
 void treadmill_abort_countdown(treadmill_t *treadmill) { treadmill_set_scene(treadmill, SCENE_IDLE); }
 
 void treadmill_pause_training(treadmill_t *treadmill) {
-  treadmill_clear_dm_message(treadmill);
-  treadmill_set_speed(treadmill, 0);
+  treadmill_clear_dm_message(treadmill);  
   treadmill_set_scene(treadmill, SCENE_PAUSED);
+  if (treadmill->on_update_fms_callback) {
+    uint8_t paused = 0x02;
+    treadmill->on_update_fms_callback(treadmill, StoppedOrPausedByTheUser, &paused);
+  }
+
+  treadmill_set_speed(treadmill, 0);
 }
 
 void treadmill_reset_training(treadmill_t *treadmill) {
   memset(&treadmill->training, 0x00, sizeof(struct training));
   memset(&treadmill->aux, 0x00, sizeof(struct aux));
+  treadmill->on_update_fms_callback(treadmill, Reset, NULL);
 }
 
-void treadmill_resume_training(treadmill_t *treadmill) {
-  treadmill->training.speed = treadmill->config.speed.min;
+void treadmill_resume_training(treadmill_t *treadmill) {  
   treadmill->training.ms = treadmill->ms;
-
   treadmill_set_scene(treadmill, SCENE_TRAINING);
+  if (treadmill->on_update_fms_callback) {
+    treadmill->on_update_fms_callback(treadmill, StartedOrResumedByTheUser, NULL);
+  }
+  treadmill_set_speed(treadmill, treadmill->config.speed.min);
 }
 
 void treadmill_finish_training(treadmill_t *treadmill) {
   treadmill_clear_dm_message(treadmill);
   treadmill_set_speed(treadmill, 0);
   treadmill_set_scene(treadmill, SCENE_REPORT);
+  if (treadmill->on_update_fms_callback) {
+    uint8_t stopped = 0x01;
+    treadmill->on_update_fms_callback(treadmill, StoppedOrPausedByTheUser, &stopped);
+  }
 }
 
 void treadmill_finish_program(treadmill_t *treadmill) { treadmill_finish_training(treadmill); }
@@ -79,7 +97,6 @@ int treadmill_set_speed(treadmill_t *treadmill, const uint16_t speed) {
   if (speed > 0 && speed < treadmill->config.speed.min) return 0;
   treadmill->training.speed = speed;
   treadmill->training.pace = treadmill_calculate_pace(treadmill);
-
   treadmill->aux.speed_target = speed;
 
   // todo: refactor
@@ -93,6 +110,14 @@ int treadmill_set_speed(treadmill_t *treadmill, const uint16_t speed) {
     }
   }
 
+  // if (treadmill->on_speed_changed_callback) {
+  //   treadmill->on_speed_changed_callback(treadmill, speed);
+  // }
+
+  if (treadmill->on_update_fms_callback) {
+    treadmill->on_update_fms_callback(treadmill, TargetSpeedChanged, &speed);
+  }
+
   return 1;
 }
 
@@ -102,6 +127,10 @@ int treadmill_set_incline(treadmill_t *treadmill, const int16_t incline) {
   if (treadmill->training.incline != incline) {
     treadmill->aux.incline_changed_time_ms = treadmill->get_time_ms();
     treadmill->training.incline = incline;
+
+    if (treadmill->on_update_fms_callback) {
+      treadmill->on_update_fms_callback(treadmill, TargetInclineChanged, &incline);
+    }
   }
   return 1;
 }
@@ -230,8 +259,9 @@ int treadmill_send_ftms_data(treadmill_t *treadmill) {
   uint16_t flags = 0x0000;
   flags |= TD_TOTAL_DISTANCE_PRESENT;
   flags |= TD_INCLINATION_RAMP_ANGLE_SETTING_PRESENT;
+  flags |= TD_ELEVATION_GAIN_PRESENT;
   flags |= TD_EXPENDED_ENERGY_PRESENT;
-  flags |= TD_HEART_RATE_PRESENT;
+  // flags |= TD_HEART_RATE_PRESENT;
   flags |= TD_ELAPSED_TIME_PRESENT;
 
   buffer[bindex++] = BLE_PROTOCOL_MESSAGE_START;
@@ -250,6 +280,11 @@ int treadmill_send_ftms_data(treadmill_t *treadmill) {
   if (flags & TD_INCLINATION_RAMP_ANGLE_SETTING_PRESENT) {
     flat_bin_to_ascii_16(buffer, &bindex, BUFSIZE, inclination);
     flat_bin_to_ascii_16(buffer, &bindex, BUFSIZE, 0x7fff);
+  }
+
+  if (flags & TD_ELEVATION_GAIN_PRESENT) {
+    flat_bin_to_ascii_16(buffer, &bindex, BUFSIZE, 0xffff);
+    flat_bin_to_ascii_16(buffer, &bindex, BUFSIZE, 0xffff);
   }
 
   if (flags & TD_EXPENDED_ENERGY_PRESENT) {

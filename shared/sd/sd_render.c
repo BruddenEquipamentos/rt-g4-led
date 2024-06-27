@@ -94,7 +94,7 @@ static void render_training_data(treadmill_t *treadmill) {
   if (treadmill->hw.handgrip.state == HEARTRATE_HG_INITING) {
     sd_set_bpm_detected(&sd_bpm);
     sd_blink(&sd_bpm, treadmill->get_time_ms(), 500);
-  } else {
+  } else {    
     sd_set_bpm(&sd_bpm, treadmill->training.bpm);
   }
 }
