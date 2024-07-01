@@ -53,6 +53,7 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
+void MX_I2C2_Init(void);
 
 /* USER CODE BEGIN EFP */
 
@@ -73,8 +74,8 @@ void Error_Handler(void);
 #define BK_RODA_GPIO_Port GPIOA
 #define HRM_ADC_Pin GPIO_PIN_5
 #define HRM_ADC_GPIO_Port GPIOA
-#define HRM_DIG_Pin GPIO_PIN_7
-#define HRM_DIG_GPIO_Port GPIOA
+#define RESET_N_Pin GPIO_PIN_7
+#define RESET_N_GPIO_Port GPIOA
 #define CMD_Pin GPIO_PIN_0
 #define CMD_GPIO_Port GPIOB
 #define I_FREQ_Pin GPIO_PIN_1
@@ -97,12 +98,9 @@ void Error_Handler(void);
 #define TS10_GPIO_Port GPIOC
 #define TS11_Pin GPIO_PIN_7
 #define TS11_GPIO_Port GPIOC
-#define TP1_Pin GPIO_PIN_10
-#define TP1_GPIO_Port GPIOA
-#define TP2_Pin GPIO_PIN_11
-#define TP2_GPIO_Port GPIOA
-#define TP3_Pin GPIO_PIN_12
-#define TP3_GPIO_Port GPIOA
+#define INT_SC_Pin GPIO_PIN_10
+#define INT_SC_GPIO_Port GPIOA
+#define INT_SC_EXTI_IRQn EXTI4_15_IRQn
 #define TS00_Pin GPIO_PIN_15
 #define TS00_GPIO_Port GPIOA
 #define TS01_Pin GPIO_PIN_0

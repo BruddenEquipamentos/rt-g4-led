@@ -109,6 +109,28 @@ void HardFault_Handler(void)
 /******************************************************************************/
 
 /**
+  * @brief This function handles EXTI line 4 to 15 interrupts.
+  */
+void EXTI4_15_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI4_15_IRQn 0 */
+	if (__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_10) != RESET)
+	{
+		// Clear the EXTI line 7 pending bit
+		__HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_10);
+		ext_i2c_kbd_irq();
+		// Handle the interrupt for PA7
+		// Your code to handle the interrupt
+
+	}
+  /* USER CODE END EXTI4_15_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(INT_SC_Pin);
+  /* USER CODE BEGIN EXTI4_15_IRQn 1 */
+
+  /* USER CODE END EXTI4_15_IRQn 1 */
+}
+
+/**
   * @brief This function handles DMA1 channel 1 interrupt.
   */
 void DMA1_Channel1_IRQHandler(void)

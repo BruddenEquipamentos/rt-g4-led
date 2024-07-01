@@ -5,8 +5,9 @@
 #include "digits.h"
 #include "dm/dm.h"
 #include "main.h"
-#include "sd/sd.h"
-#include "sd/sd_render.h"
+#include "../shared/treadmill.h"
+//#include "sd/sd.h"
+#include "../shared/sd/sd_render.h"
 
 #define DISPLAY_ADDRESS_WRITE 0xD0
 #define DISPLAY_ADDRESS_READ 0xD1
@@ -285,16 +286,15 @@ void display_update(void) {
         }
       }
       render_display(&display_five, page_buffer);
-
       render_display(&display_six, page_buffer);
-    } else {
-      display_five.sd = &sd_program;
-      display_six.sd = &sd_pace;
-      render_display_pace(sdhw_pace, page_buffer);
-      render_display_program(sdhw_program, page_buffer);
-      render_display_bpm(sdhw_bpm, page_buffer);
-      render_display_incline(sdhw_incline, page_buffer);
-    }
+	} else {
+	  display_five.sd = &sd_program;
+	  display_six.sd = &sd_pace;
+	  render_display_pace(sdhw_pace, page_buffer);
+	  render_display_program(sdhw_program, page_buffer);
+	  render_display_bpm(sdhw_bpm, page_buffer);
+	  render_display_incline(sdhw_incline, page_buffer);
+}
 
 
 
