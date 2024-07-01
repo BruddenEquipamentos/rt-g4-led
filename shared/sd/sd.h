@@ -80,5 +80,6 @@ void sd_set_text(sd_t *sd, const char *text);
 void sd_set_program_text(sd_t *sd, const int program_number);
 
 void sd_set_bpm(sd_t *sd, const uint8_t bpm);
+void sd_set_bpm_detected(sd_t *sd);
 
 #endif

@@ -83,16 +83,16 @@ static void program_calories_key_press(treadmill_t *treadmill, const kbd_key_t k
 
 static uint32_t get_speed_from_shortcut_speed_key(const kbd_key_t key) {
   switch (key) {
-    case KEY_SPEED_5:
+    case KEY_SPEED_6:
       return 500;
       break;
-    case KEY_SPEED_8:
+    case KEY_SPEED_9:
       return 800;
       break;
-    case KEY_SPEED_11:
+    case KEY_SPEED_12:
       return 1100;
       break;
-    case KEY_SPEED_14:
+    case KEY_SPEED_15:
       return 1400;
       break;
     default:;
@@ -150,10 +150,10 @@ static void program_hiit_key_press(treadmill_t *treadmill, const kbd_key_t key) 
           break;
       }
       break;
-    case KEY_SPEED_5:
-    case KEY_SPEED_8:
-    case KEY_SPEED_11:
-    case KEY_SPEED_14:
+    case KEY_SPEED_6:
+    case KEY_SPEED_9:
+    case KEY_SPEED_12:
+    case KEY_SPEED_15:
       switch (treadmill->program.param_index) {
         case 1:
           treadmill->program.p_hiit.speed_t1 = get_speed_from_shortcut_speed_key(key);
@@ -190,8 +190,8 @@ void program_walk_30min_key_press(treadmill_t *treadmill, const kbd_key_t key) {
       if (treadmill->program.p_walk_30min.target_speed - treadmill->config.speed.step >= PROGRAM_WALK_30MIN_MIN_SPEED)
         treadmill->program.p_walk_30min.target_speed -= treadmill->config.speed.step;
       break;
-    case KEY_SPEED_5:
-    case KEY_SPEED_8:
+    case KEY_SPEED_6:
+    case KEY_SPEED_9:
       treadmill->program.p_walk_30min.target_speed = get_speed_from_shortcut_speed_key(key);
       break;
     case KEY_INCLINE_INCREMENT:

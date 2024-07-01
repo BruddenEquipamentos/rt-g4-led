@@ -61,7 +61,8 @@ int ble_serial_read(uint8_t *buffer, int max_length) {
 }
 
 int ble_serial_open(void) {
-  const char *portname = "/dev/tty.usbmodemL10021951";
+  // const char *portname = "/dev/tty.usbmodemL10021951";
+  const char *portname = "/dev/tty.usbserial-AI04I2DW";
   fd = open(portname, O_RDWR | O_NOCTTY | O_SYNC | O_NONBLOCK);
   if (fd < 0) {
     fprintf(stderr, "Error opening %s: %s\n", portname, strerror(errno));

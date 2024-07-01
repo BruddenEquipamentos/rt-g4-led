@@ -7,8 +7,6 @@
       "label": "Build",
       "type": "shell",
       "command": "cd ${workspaceFolder}/desktop/build && cmake --build .",
-      // "command": "make",
-      // "args":["-C", "${workspaceFolder}/desktop"],
       "group": {
         "kind": "build",
         "isDefault": true

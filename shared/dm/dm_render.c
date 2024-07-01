@@ -48,35 +48,6 @@ static void dm_render_time(treadmill_t *treadmill) {
       int h = dm_get_height_for_speed(treadmill->aux.average_history[i].average_speed);
       dm_render_column_with_height(i, h, 0, 0);
     }
-
-    // int current_column = 0;
-    // if (treadmill->training.total_seconds > 0)
-    //   current_column = (15 * treadmill->training.seconds) / treadmill->training.total_seconds;
-    // else
-    //   current_column = (treadmill->training.seconds / 60) % 16;
-
-    // get height of current speed for current column
-    // int height = dm_get_height_for_speed(treadmill->training.speed);
-
-    // for (int i = 0; i < 16; i++) {
-    //   if (i == current_column) {
-    //     dm_render_column_with_height(i, height, treadmill->get_time_ms(), 800);
-    //   } else {
-    //     int h = dm_get_height_for_speed(treadmill->aux.average_history[i].average_speed);
-    //     dm_render_column_with_height(i, h, 0, 0);
-    //   }
-
-    // // First Implementation
-    // if (i == current_column) {
-    //   dm_render_column_with_height(i, height, treadmill->get_time_ms(), 800);
-    // } else if (i < current_column ) {
-    //   // get from history average
-    //   int h = dm_get_height_for_speed(treadmill->aux.average_history[i].average_speed);
-    //   dm_render_column_with_height(i, h, 0, 0);
-    // }
-    // else {
-    //   dm_render_column_with_height(i, 0, 0, 0);
-    // }
   }
 }
 
@@ -104,11 +75,17 @@ void dm_render(treadmill_t *treadmill) {
       }
       default:;
     }
-  }
-
-  treadmill->previous_scene = treadmill->scene;
+  }  
 
   switch (treadmill->scene) {
+    case SCENE_INIT: {
+      dm_render_line(4);
+      dm_render_line(3);
+      dm_render_line(2);
+      dm_render_line(1);
+      dm_render_line(0);
+      break;
+    }
     case SCENE_IDLE: {
       if (treadmill->config.modbus) {
         dm_render_mb_param_value(treadmill);
@@ -129,8 +106,16 @@ void dm_render(treadmill_t *treadmill) {
           if (treadmill->aux.incline_changed_time_ms &&
               treadmill->get_time_ms() - treadmill->aux.incline_changed_time_ms <= 2000) {
             char text[16];
-            sprintf(text, "%1d.%1d%%", treadmill->training.incline / 10, treadmill->training.incline % 10);
-            dm_render_text(text, 16);
+//            sprintf(text, "%1d.%1d%%", treadmill->training.incline / 10, treadmill->training.incline % 10);
+            sprintf(text, "%1d%%", treadmill->training.incline / 10);
+
+            int length = dm_compute_length(text);
+            if (length < 16) {
+            	dm_render_text(text, 8 + length/2);
+            } else {
+            	dm_render_text(text, 16);
+            }
+
             return;
           }
         }

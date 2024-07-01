@@ -55,10 +55,10 @@ enum key  get_key_pressed(void) {
     if (treadmill_has_incline(pTreadmill)) {
         READ_KEYS_STATE(kPtr, COL4, ROW5, KEY_STOP);      // 1
         READ_KEYS_STATE(kPtr, COL2, ROW0, KEY_SPEED_DECREMENT); // 2
-        READ_KEYS_STATE(kPtr, COL1, ROW0, KEY_SPEED_5);   // 3
-        READ_KEYS_STATE(kPtr, COL0, ROW0, KEY_SPEED_8);   // 4
-        READ_KEYS_STATE(kPtr, COL0, ROW1, KEY_SPEED_11)   // 5
-        READ_KEYS_STATE(kPtr, COL0, ROW2, KEY_SPEED_14);  // 6
+        READ_KEYS_STATE(kPtr, COL1, ROW0, KEY_SPEED_6);   // 3
+        READ_KEYS_STATE(kPtr, COL0, ROW0, KEY_SPEED_9);   // 4
+        READ_KEYS_STATE(kPtr, COL0, ROW1, KEY_SPEED_12)   // 5
+        READ_KEYS_STATE(kPtr, COL0, ROW2, KEY_SPEED_15);  // 6
         READ_KEYS_STATE(kPtr, COL2, ROW1, KEY_SPEED_INCREMENT); // 7
         READ_KEYS_STATE(kPtr, COL1, ROW2, KEY_START);     // 8
         READ_KEYS_STATE(kPtr, COL4, ROW4, KEY_PROGRAM);   // 9
@@ -75,10 +75,10 @@ enum key  get_key_pressed(void) {
 //        READ_KEYS_STATE(kPtr, COL2, ROW0, KEY_SPEED_DECREMENT); // 2
         READ_KEYS_STATE(kPtr, COL5, ROW3, KEY_SPEED_DECREMENT);   // 2
 
-        READ_KEYS_STATE(kPtr, COL1, ROW0, KEY_SPEED_5);   // 3
-        READ_KEYS_STATE(kPtr, COL0, ROW0, KEY_SPEED_8);   // 4
-        READ_KEYS_STATE(kPtr, COL0, ROW1, KEY_SPEED_11)   // 5
-        READ_KEYS_STATE(kPtr, COL0, ROW2, KEY_SPEED_14);  // 6
+        READ_KEYS_STATE(kPtr, COL1, ROW0, KEY_SPEED_6);   // 3
+        READ_KEYS_STATE(kPtr, COL0, ROW0, KEY_SPEED_9);   // 4
+        READ_KEYS_STATE(kPtr, COL0, ROW1, KEY_SPEED_12)   // 5
+        READ_KEYS_STATE(kPtr, COL0, ROW2, KEY_SPEED_15);  // 6
         READ_KEYS_STATE(kPtr, COL2, ROW1, KEY_SPEED_INCREMENT); // 7
         READ_KEYS_STATE(kPtr, COL1, ROW2, KEY_START);     // 8
         READ_KEYS_STATE(kPtr, COL4, ROW4, KEY_PROGRAM);   // 9

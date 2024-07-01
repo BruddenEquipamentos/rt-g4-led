@@ -137,6 +137,15 @@ void sd_set_bpm(sd_t *sd, const uint8_t bpm) {
   sd_set_value(sd, bpm);
 }
 
+void sd_set_bpm_detected(sd_t *sd) {
+  sd->dot = SD_DOT_NO_DOT;
+  sd->digit[3] = DIGIT_EMPTY;
+  sd->digit[2] = DIGIT_MIDDLE;
+  sd->digit[1] = DIGIT_MIDDLE;
+  sd->digit[0] = DIGIT_MIDDLE;
+  snprintf(sd->text, 8, "---");
+}
+
 inline void sd_set_visible(sd_t *sd, const bool visible) {
   if (visible)
     sd->flag |= SD_FLAG_VISIBLE;

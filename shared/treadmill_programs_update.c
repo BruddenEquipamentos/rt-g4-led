@@ -36,10 +36,11 @@ static void update_program_hiit(treadmill_t *treadmill) {
   treadmill->training.total_seconds = treadmill->program.p_hiit.seconds;
   treadmill->training.remaining_seconds = treadmill->training.total_seconds - treadmill->training.seconds;
 
-  if ((treadmill->training.seconds / 60) & 1) {
-    treadmill->training.speed = treadmill->program.p_hiit.speed_t2;
+  if ((treadmill->training.seconds / 60) & 1) {    
+    treadmill_set_speed(treadmill, treadmill->program.p_hiit.speed_t2);    
+
   } else {
-    treadmill->training.speed = treadmill->program.p_hiit.speed_t1;
+    treadmill_set_speed(treadmill, treadmill->program.p_hiit.speed_t1);
   }
 
   if (treadmill->training.seconds >= treadmill->program.p_hiit.seconds) {
@@ -63,11 +64,12 @@ static void update_program_walk_30min(treadmill_t *treadmill) {
     else if (treadmill->training.seconds < 30 * 60)
       calculated_speed -= 200;
 
-    if (calculated_speed < treadmill->config.speed.min)
-      treadmill->training.speed = treadmill->config.speed.min;
-    else
-      treadmill->training.speed = (uint16_t)calculated_speed;
-
+    if (calculated_speed < treadmill->config.speed.min) {
+      treadmill_set_speed(treadmill, treadmill->config.speed.min);
+    } 
+    else {
+      treadmill_set_speed(treadmill, calculated_speed);      
+    }
   } else {
     treadmill_finish_program(treadmill);
   }

@@ -64,7 +64,6 @@ static void render_training_data(treadmill_t *treadmill) {
   sd_set_min_sec(&sd_pace, treadmill->training.pace);
   sd_set_kcal(&sd_kcal, treadmill->training.kcal / 1000);
   sd_set_incline(&sd_incline, treadmill->training.incline);
-  sd_set_bpm(&sd_bpm, treadmill->training.bpm);
 
   // TODO: refactor
   if (treadmill->scene == SCENE_TRAINING && treadmill->aux.speed_reached != treadmill->aux.speed_target) {
@@ -78,9 +77,9 @@ static void render_training_data(treadmill_t *treadmill) {
 
   if (treadmill->scene == SCENE_REPORT) {
     // on report show average speed
-    uint32_t cm_sec = (treadmill->training.meters*100 / treadmill->training.seconds);
-    uint32_t speed = ((cm_sec * 36)/10); // 333 * 36 = 1198
-    uint32_t speed_mod = speed%10;
+    uint32_t cm_sec = (treadmill->training.meters * 100 / treadmill->training.seconds);
+    uint32_t speed = ((cm_sec * 36) / 10);  // 333 * 36 = 1198
+    uint32_t speed_mod = speed % 10;
     if (speed_mod >= 5) speed = speed + (10 - speed_mod);
     sd_set_kmh(&sd_speed, speed);
   }
@@ -93,7 +92,10 @@ static void render_training_data(treadmill_t *treadmill) {
   }
 
   if (treadmill->hw.handgrip.state == HEARTRATE_HG_INITING) {
-    sd_blink(&sd_bpm, treadmill->get_time_ms(), 1000);
+    sd_set_bpm_detected(&sd_bpm);
+    sd_blink(&sd_bpm, treadmill->get_time_ms(), 500);
+  } else {    
+    sd_set_bpm(&sd_bpm, treadmill->training.bpm);
   }
 }
 
@@ -179,13 +181,27 @@ static void render_config_data(treadmill_t *treadmill) {
       break;
     }
     case CONFIG_OPTION_TOTAL_DISTANCE: {
+      if ((treadmill->total.distance_in_meters / 1000)/10000) {
+    	  sd_set_visible(&sd_program, true);
+    	  sd_set_value(&sd_program, (treadmill->total.distance_in_meters / 1000) / 10000);
+      }
+
       sd_set_visible(&sd_pace, true);
-      sd_set_value(&sd_pace, treadmill->total.distance_in_meters / 1000);
+      sd_set_value(&sd_pace, (treadmill->total.distance_in_meters / 1000) % 10000);
+
+      sd_program.flag = SD_FLAG_PAD_LEADING_ZERO;
       break;
     }
     case CONFIG_OPTION_TOTAL_HOURS: {
+      if ((treadmill->total.time_in_seconds / 3600) / 10000) {
+    	sd_set_visible(&sd_program, true);
+ 	    sd_set_value(&sd_program, (treadmill->total.time_in_seconds / 3600) / 10000);
+      }
+
       sd_set_visible(&sd_pace, true);
-      sd_set_value(&sd_pace, treadmill->total.time_in_seconds / 3600);
+      sd_set_value(&sd_pace, (treadmill->total.time_in_seconds / 3600) % 10000);
+
+      sd_program.flag = SD_FLAG_PAD_LEADING_ZERO;
       break;
     }
     case CONFIG_OPTION_BLE_STATE: {
@@ -211,13 +227,30 @@ void sd_render(treadmill_t *treadmill) {
   sd_render_all_visible(true);
   switch (treadmill->scene) {
     case SCENE_INIT: {
-      sd_set_visible(&sd_program, false);
-      render_training_data(treadmill);
+      sd_set_value_to_all(8888);
+      sd_render_all_visible(true);
+      // sd_set_visible(&sd_program, false);
+      // render_training_data(treadmill);
       break;
     }
     case SCENE_IDLE: {
+
+      // extern int run_test;
+      // extern int test_count;
+      // if (run_test == 1) {
+      //   sd_set_value_to_all(run_test);
+      // } else if (run_test == 2) {
+      //   sd_set_value_to_all(test_count);
+      // } else if (run_test == 3) {
+      //   sd_set_value_to_all(run_test);
+      // } else {
+      //   sd_set_visible(&sd_program, false);
+      //   render_training_data(treadmill);
+      // }
+
       sd_set_visible(&sd_program, false);
       render_training_data(treadmill);
+      
       break;
     }
     case SCENE_EMERGENCY: {
@@ -267,15 +300,15 @@ void sd_render(treadmill_t *treadmill) {
     default:;
   }
 
-//   static uint32_t t = 0;
-//   static uint32_t seconds = 0;
-//   static uint32_t value = 0;
-//   if (treadmill->get_time_ms() - t >= 1000) {
-//     seconds = (seconds + 1) % 10;
-//     value = seconds * 1000 + seconds * 100 + seconds * 10 + seconds;
-//     t = treadmill->get_time_ms();
-//   }
-//   sd_set_value_to_all(value);
-//   sd_render_all_visible(true);
-//   sd_render_all_no_pad();
+  //   static uint32_t t = 0;
+  //   static uint32_t seconds = 0;
+  //   static uint32_t value = 0;
+  //   if (treadmill->get_time_ms() - t >= 1000) {
+  //     seconds = (seconds + 1) % 10;
+  //     value = seconds * 1000 + seconds * 100 + seconds * 10 + seconds;
+  //     t = treadmill->get_time_ms();
+  //   }
+  //   sd_set_value_to_all(value);
+  //   sd_render_all_visible(true);
+  //   sd_render_all_no_pad();
 }
