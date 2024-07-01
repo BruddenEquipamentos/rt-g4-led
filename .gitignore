@@ -10,3 +10,4 @@ main
 build/
 *.dat
 .vscode/
+*.launch
