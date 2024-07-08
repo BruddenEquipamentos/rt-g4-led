@@ -1,3 +1,10 @@
+## Jul 08, 2024
+
+- Version 1.0.1 - External keyboard compatibility added for all keys
+- Added new programs RT G4: walk 8 mins, 200kcal burn
+- Added UI/UX scope documents (rt_led/documents)
+- TODO: confirm design choices on programs; add new messages on dot matrix; (extra) inverter model auto-config
+
 ## Feb 10, 2023
 
 - Refactored NVM.
