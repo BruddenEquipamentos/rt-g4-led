@@ -5,6 +5,7 @@
 static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_STOP:
+    case KEY_EXT_KBD_STOP:
       treadmill_pause_training(treadmill);
       break;
     case KEY_SPEED_INCREMENT:
@@ -27,38 +28,34 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
         treadmill_speed_decrement(treadmill);
       }
       break;
-    case KEY_INCLINE_INCREMENT:
+    case KEY_EXT_KBD_INCLINE_INC:
       treadmill_incline_increment(treadmill);
       break;
-    case KEY_INCLINE_DECREMENT:
+    case KEY_EXT_KBD_INCLINE_DEC:
       treadmill_incline_decrement(treadmill);
       break;
-    case KEY_SPEED_6:
+    case KEY_EXT_KBD_SPEED_6:
       // treadmill_set_bpm_value(treadmill, 40);
       treadmill_set_speed(treadmill, 600);
       break;
-    case KEY_SPEED_9:
+    case KEY_EXT_KBD_SPEED_9:
       // treadmill_set_bpm_value(treadmill, treadmill->training.bpm - 10);
       treadmill_set_speed(treadmill, 900);
       break;
-    case KEY_SPEED_12:
+    case KEY_EXT_KBD_SPEED_12:
       // treadmill_set_bpm_value(treadmill, treadmill->training.bpm + 10);
       treadmill_set_speed(treadmill, 1200);
       break;
-    case KEY_SPEED_15:
-      treadmill_set_speed(treadmill, 1500);
+    case KEY_EXT_KBD_SPEED_15:
+    treadmill_set_speed(treadmill, 1500);
       break;
     case KEY_INCLINE_3:
-      treadmill_set_incline(treadmill, 30);
       break;
     case KEY_INCLINE_6:
-      treadmill_set_incline(treadmill, 60);
       break;
     case KEY_INCLINE_9:
-      treadmill_set_incline(treadmill, 90);
       break;
     case KEY_INCLINE_12:
-      treadmill_set_incline(treadmill, 120);
       break;
     case KEY_PROGRAM: {
       if (treadmill->config.modbus) {

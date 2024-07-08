@@ -5,7 +5,7 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
     case KEY_START:
       treadmill_close_report(treadmill);
       break;
-    case KEY_STOP:
+    case KEY_EXT_KBD_STOP:
       treadmill_close_report(treadmill);
       break;
     default:;

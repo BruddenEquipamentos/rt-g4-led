@@ -135,6 +135,16 @@ static void render_training_data_program(treadmill_t *treadmill) {
       sd_set_min_sec(&sd_time, remaining_seconds);
       break;
     }
+    case PROGRAM_WALK_08MIN: {
+      uint32_t remaining_seconds = (8 * 60) - treadmill->training.seconds;
+      sd_set_min_sec(&sd_time, remaining_seconds);
+      break;
+    }
+    case PROGRAM_200K_CALORIES: {
+      uint32_t remaining_kcal = treadmill->program.p_calories.kcal - treadmill->training.kcal / 1000;
+      sd_set_value(&sd_kcal, remaining_kcal);
+      break;
+    }
     default:
       render_training_data(treadmill);
   }

@@ -18,6 +18,8 @@ typedef enum program_id {
   PROGRAM_WALK_30MIN,
   PROGRAM_FAT_BURN,
   PROGRAM_SUPER_CARDIO,
+  PROGRAM_WALK_08MIN,
+  PROGRAM_200K_CALORIES,
   PROGRAM_TOTALS,
 } program_id_t;
 
@@ -39,6 +41,12 @@ typedef enum program_id {
 #define PROGRAM_CALORIES_MAX_CALORIES (9000)
 #define PROGRAM_CALORIES_INC_CALORIES_STEP (50)
 
+// 200 kcal
+#define PROGRAM_200K_CALORIES_DEFAULT_CALORIES (200)
+#define PROGRAM_200K_CALORIES_MIN_CALORIES (200)
+#define PROGRAM_200K_CALORIES_MAX_CALORIES (9000)
+#define PROGRAM_200K_CALORIES_INC_CALORIES_STEP (200)
+
 // hiit
 #define PROGRAM_HIIT_DEFAULT_SECONDS (10 * 60)  // 10 min
 #define PROGRAM_HIIT_DEFAULT_SPEED_T1 (300)     // 3.0 km/h
@@ -51,6 +59,11 @@ typedef enum program_id {
 #define PROGRAM_WALK_30MIN_DEFAULT_TARGET_SPEED (600)
 #define PROGRAM_WALK_30MIN_MIN_SPEED (300)
 #define PROGRAM_WALK_30MIN_MAX_SPEED (800)
+
+// walk 08 min
+#define PROGRAM_WALK_08MIN_DEFAULT_TARGET_SPEED (500)
+#define PROGRAM_WALK_08MIN_MIN_SPEED (160)
+#define PROGRAM_WALK_08MIN_MAX_SPEED (1800)
 
 // fat burn
 #define PROGRAM_FAT_BURN_DEFAULT_TIME (10 * 60)  // 10 min
@@ -84,6 +97,10 @@ struct p_calories {
   uint32_t kcal;
 };
 
+struct p_200k_calories {
+  uint32_t kcal;
+};
+
 struct p_hiit {
   uint32_t seconds_t1;
   uint32_t seconds_t2;
@@ -94,6 +111,10 @@ struct p_hiit {
 };
 
 struct p_walk_30min {
+  uint32_t target_speed;
+};
+
+struct p_walk_08min {
   uint32_t target_speed;
 };
 

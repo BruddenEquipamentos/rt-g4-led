@@ -1318,7 +1318,7 @@ static void handle_key_press(void) {
   static uint8_t slow_repeat_count = 0;
   pressed = get_key_pressed();
 
-  if (handle_combined_or_single_key_press((KEY_START | KEY_STOP), KEY_CONFIG, pressed, &previous, &key_tick)) {
+  if (handle_combined_or_single_key_press((KEY_START | KEY_EXT_KBD_STOP), KEY_CONFIG, pressed, &previous, &key_tick)) {
     return;
   }
 

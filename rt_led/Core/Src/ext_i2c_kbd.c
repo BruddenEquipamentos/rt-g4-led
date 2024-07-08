@@ -234,11 +234,11 @@ void handle_key(uint8_t key) {
         break;
     }
     case 0x0F: {
-        treadmill_key_press(pTreadmill, KEY_PROGRAM);
+        treadmill_key_press(pTreadmill, KEY_CONFIG);
         break;
     }
     case 0x10: {
-        treadmill_key_press(pTreadmill, KEY_CONFIG);
+        treadmill_key_press(pTreadmill, KEY_PROGRAM);
         break;
     }
     default:

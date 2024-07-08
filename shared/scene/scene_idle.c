@@ -10,12 +10,30 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
     case KEY_START:
       treadmill_start_training_countdown(treadmill);
       break;
-    case KEY_PROGRAM: {
+    case KEY_PROGRAM: { // + key
       if (treadmill->config.modbus) {
         treadmill_set_next_mb_parameter(treadmill);
       } else {
         treadmill_program(treadmill);
       }
+      break;
+    }
+    case KEY_INCLINE_6: { // 30 min program key
+      treadmill->program.id = PROGRAM_WALK_30MIN; // program 5
+      program_load_default_value(treadmill);
+      treadmill_set_scene(treadmill, SCENE_PROGRAM);
+      break;
+    }
+    case KEY_INCLINE_9: { // 200 kcal program key
+      treadmill->program.id = PROGRAM_200K_CALORIES; // program 8
+      program_load_default_value(treadmill);
+      treadmill_set_scene(treadmill, SCENE_PROGRAM);
+      break;
+    }
+    case KEY_INCLINE_12: { // warmup program key
+      treadmill->program.id = PROGRAM_WALK_08MIN; // program 9
+      program_load_default_value(treadmill);
+      treadmill_set_scene(treadmill, SCENE_PROGRAM);
       break;
     }
     case KEY_CONFIG: {

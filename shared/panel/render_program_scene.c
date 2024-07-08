@@ -32,6 +32,16 @@ static void render_program_calories(treadmill_t *treadmill) {
   sd_blink(&sd_kcal, treadmill->get_time_ms(), BLINK_INTERVAL);
 }
 
+/////// new program
+static void render_program_200k_calories(treadmill_t *treadmill) {
+  sd_set_visible(&sd_program, true);
+  sd_set_program_text(&sd_program, treadmill->program.id);
+
+  sd_set_visible(&sd_kcal, true);
+  sd_set_value(&sd_kcal, treadmill->program.p_200k_calories.kcal);
+  sd_blink(&sd_kcal, treadmill->get_time_ms(), BLINK_INTERVAL);
+}
+
 static void render_program_hiit(treadmill_t *treadmill) {
   sd_set_visible(&sd_program, true);
   sd_set_program_text(&sd_program, treadmill->program.id);
@@ -69,6 +79,18 @@ static void render_program_walk_30min(treadmill_t *treadmill) {
   sd_set_visible(&sd_speed, true);
   sd_set_min_sec(&sd_time, 30 * 60);
   sd_set_kmh(&sd_speed, treadmill->program.p_walk_30min.target_speed);
+  sd_blink(&sd_speed, treadmill->get_time_ms(), BLINK_INTERVAL);
+}
+
+/// new program
+static void render_program_walk_08min(treadmill_t *treadmill) {
+  sd_set_visible(&sd_program, true);
+  sd_set_program_text(&sd_program, treadmill->program.id);
+
+  sd_set_visible(&sd_time, true);
+  sd_set_visible(&sd_speed, true);
+  sd_set_min_sec(&sd_time, 8 * 60);
+  sd_set_kmh(&sd_speed, treadmill->program.p_walk_08min.target_speed);
   sd_blink(&sd_speed, treadmill->get_time_ms(), BLINK_INTERVAL);
 }
 
@@ -125,6 +147,8 @@ render_program_callback_t render_programs[] = {
     {.program = PROGRAM_WALK_30MIN, .render = render_program_walk_30min},
     {.program = PROGRAM_FAT_BURN, .render = render_program_fat_burn},
     {.program = PROGRAM_SUPER_CARDIO, .render = render_program_super_cardio},
+    {.program = PROGRAM_WALK_08MIN, .render = render_program_walk_08min},
+    {.program = PROGRAM_200K_CALORIES, .render = render_program_200k_calories}
 };
 
 void render_program_scene(treadmill_t *treadmill) {
