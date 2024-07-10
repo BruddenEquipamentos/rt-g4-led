@@ -47,12 +47,17 @@ void dm_render_text(char *text, int frame) {
   }
 }
 
-void dm_render_text_animated(char *text, const uint32_t ms_per_frame, const uint32_t ms) {
+int dm_render_text_animated(char *text, const uint32_t ms_per_frame, const uint32_t ms) {
   frametime = ms_per_frame;
   dm_tick(ms);
   int length = dm_compute_length(text);
   dm_render_text(text, frame);
-  if (frame > length + 16) frame = 0;
+  // if (frame > length + 16) frame = 0;
+  if (frame > length + 16) {
+    frame = 0;
+    return 1;
+  }
+  return 0;
 }
 
 void dm_clear_buffer(void) {
@@ -101,4 +106,49 @@ void dm_render_line(int line) {
 void dm_render_number(int decimal) {
   dm_clear_buffer();
   dm_render_to_buffer(dm_number(decimal), 6);
+}
+
+struct dm_buffer{
+  uint16_t data[5];
+};
+
+struct dm_buffer dm_lines_buffer[4] = {  
+    {.data = {
+        0b0000011111100000,
+        0b0000111111110000,
+        0b0000000000000000,
+        0b0000000000000000,
+        0b0000000000000000,
+    }},
+    {.data = {
+        0b0000000000000000,
+        0b0000111111110000,
+        0b0001111111111000,
+        0b0000000000000000,
+        0b0000000000000000,
+    }},
+    {.data = {
+        0b0000000000000000,
+        0b0000000000000000,
+        0b0001111111111000,
+        0b0011111111111100,
+        0b0000000000000000,
+    }},
+    {.data = {
+        0b0000000000000000,
+        0b0000000000000000,
+        0b0000000000000000,
+        0b0000000000000000,
+        0b1111111111111111,
+    }},
+};
+
+void dm_render_lines(uint32_t ms_per_frame, uint32_t ms) {
+  frametime = ms_per_frame;
+  dm_tick(ms);
+  if (frame < 4) {
+    memcpy(dm_buffer, dm_lines_buffer[frame].data, sizeof(uint16_t)*5);  
+  } else {
+    frame = 0;    
+  }  
 }

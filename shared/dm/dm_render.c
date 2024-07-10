@@ -38,6 +38,24 @@ static int dm_get_height_for_speed(const uint16_t speed) {
     return heights[4];
 }
 
+//// frametime capture
+static int dm_get_frame_from_speed(const uint16_t speed) {
+  static const uint16_t speeds[6] = {300, 600, 900, 1200, 1500, 1800};
+  static const int frames[6] = {600, 480, 430, 300, 270, 100};
+  if (speed < speeds[0])
+    return frames[0];
+  else if (speed < speeds[1])
+    return frames[1];
+  else if (speed < speeds[2])
+    return frames[2];
+  else if (speed < speeds[3])
+    return frames[3];  
+  else if (speed < speeds[4])
+    return frames[4];
+  else
+    return frames[5];
+}
+
 static void dm_render_time(treadmill_t *treadmill) {
   int height = dm_get_height_for_speed(treadmill->training.speed);
 
@@ -49,6 +67,25 @@ static void dm_render_time(treadmill_t *treadmill) {
       dm_render_column_with_height(i, h, 0, 0);
     }
   }
+}
+
+/// new version for walk programs (30 min and 08 min) ---- needs rework
+static void dm_render_time_new(treadmill_t *treadmill) {
+  int height = dm_get_height_for_speed(treadmill->training.speed);
+
+  for (int i = 0; i < 16; i++) {
+    if (i == treadmill->aux.average_history_index) {
+      dm_render_column_with_height(i, height, treadmill->get_time_ms(), 800);
+    } else {
+      int h = dm_get_height_for_speed(treadmill->aux.average_history[i].average_speed);
+      dm_render_column_with_height(i, h, 0, 0);
+    }
+  }
+}
+
+/// new render for calorie programs (normal and 200kcal)
+void dm_render_calories(treadmill_t *treadmill) {
+  return;
 }
 
 void dm_render(treadmill_t *treadmill) {
@@ -64,18 +101,21 @@ void dm_render(treadmill_t *treadmill) {
     return;
   }
 
-  if (treadmill->scene != treadmill->previous_scene) {
+  if (treadmill->scene != treadmill->previous_scene) { ///// comment this func
     switch (treadmill->scene) {
       case SCENE_PAUSED: {
-        dm_reset_frame();
+        // dm_reset_frame();
         break;
       }
       case SCENE_REPORT: {
-        dm_reset_frame();
+        // dm_reset_frame();
+        break; /////
       }
       default:;
     }
   }  
+
+  treadmill->previous_scene = treadmill->scene; ////added
 
   switch (treadmill->scene) {
     case SCENE_INIT: {
@@ -86,11 +126,12 @@ void dm_render(treadmill_t *treadmill) {
       dm_render_line(0);
       break;
     }
-    case SCENE_IDLE: {
+    case SCENE_IDLE: { /////// new message
       if (treadmill->config.modbus) {
         dm_render_mb_param_value(treadmill);
       } else {
         dm_clear_buffer();
+        dm_render_text_animated("APERTE START OU ESCOLHA UM PROGRAMA", 100, treadmill->get_time_ms());
       }
       break;
     }
@@ -115,7 +156,6 @@ void dm_render(treadmill_t *treadmill) {
             } else {
             	dm_render_text(text, 16);
             }
-
             return;
           }
         }
@@ -130,7 +170,27 @@ void dm_render(treadmill_t *treadmill) {
             dm_render_time(treadmill);
           }
         } else {
-          dm_render_time(treadmill);
+          switch (treadmill->program.id) {
+            case PROGRAM_NONE: { /// render lines according to training speed
+              uint32_t velocidade = dm_get_frame_from_speed(treadmill->training.speed);
+              dm_render_lines(velocidade, treadmill->get_time_ms());            
+              break;
+            }
+            case PROGRAM_200K_CALORIES: /// percentage of calorie target completion
+            case PROGRAM_CALORIES: {
+              dm_render_calories(treadmill);
+              break;
+            }
+            case PROGRAM_WALK_30MIN:   /// dm_render_time modified (without blank dots)
+            case PROGRAM_WALK_08MIN: { 
+              dm_render_time_new(treadmill);
+              break;
+            }
+
+            default:
+              dm_render_time(treadmill);
+              break;
+          }
         }
       }
       break;
@@ -201,12 +261,57 @@ void dm_render(treadmill_t *treadmill) {
           dm_render_text("TEST", 16);
           break;
         }  // TEST
+        case CONFIG_OPTION_MAX_TIME: {
+          dm_render_text("TMP", 16);
+          break;
+        }  // TMP
         default:;
       }
       break;
     }
     case SCENE_PROGRAM: {
-      dm_render_text("PROG", 16);
+      // dm_render_text("PROG", 16);
+      switch(treadmill->program.id){
+        case PROGRAM_TIME:{
+          dm_render_text_animated("TEMPO", 100, treadmill->get_time_ms());
+          break;
+        }
+        case PROGRAM_DISTANCE:{
+          dm_render_text("DIST", 14);
+          break;
+        }
+        case PROGRAM_CALORIES:{
+          dm_render_text("CAL", 13);
+          break;
+        }
+        case PROGRAM_HIIT:{
+          dm_render_text("HIIT", 13);
+          break;
+        }
+        case PROGRAM_WALK_30MIN:{
+          dm_render_text_animated("30 MIN", 100, treadmill->get_time_ms());
+          break;
+        }
+        case PROGRAM_FAT_BURN:{
+          dm_render_text("MOD", 13);
+          break;
+        }
+        case PROGRAM_SUPER_CARDIO:{
+          dm_render_text("VIG", 13);
+          break;
+        }
+        case PROGRAM_WALK_08MIN:{
+          dm_render_text_animated("8 MIN", 100, treadmill->get_time_ms());
+          break;
+        }
+        case PROGRAM_200K_CALORIES:{
+          dm_render_text_animated("200 CAL", 100, treadmill->get_time_ms());
+          break;
+        }
+        default:
+          dm_render_text("PROG", 16);
+          break;
+      }
       break;
     }
     case SCENE_REPORT: {

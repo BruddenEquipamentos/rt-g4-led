@@ -23,6 +23,13 @@ typedef enum program_id {
   PROGRAM_TOTALS,
 } program_id_t;
 
+///////// new params quick mode
+#define MAX_TIME_ON_TREADMILL_LOWER (60 * 3)
+// #define MAX_TIME_ON_TREADMILL_UPPER (120 * 60)
+#define DEFAULT_TIME_ON_TREADMILL (60 * 99) // 99 min
+// #define DEFAULT_TIME_ON_TREADMILL NULL
+
+
 // 99 minutes
 #define PROGRAM_TIME_DEFAULT_TIME (60 * 5)
 #define PROGRAM_TIME_MIN_TIME (60 * 3)

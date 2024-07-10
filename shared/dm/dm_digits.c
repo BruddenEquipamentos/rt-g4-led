@@ -387,6 +387,18 @@ const digit_t dm_x = {
     }
 };
 
+/// new digit
+const digit_t dm_exclamation = {
+    .cols = 1,
+    .data = {
+        0b1,
+        0b1,
+        0b1,
+        0b0,
+        0b1,
+    }
+};
+
 const digit_t dm_B = {
     .cols = 3,
     .data = {
@@ -493,6 +505,7 @@ digit_map_t dm_map[] = {
     {.ch='W', .dm=&dm_W},
     {.ch='X', .dm=&dm_X},
     {.ch='x', .dm=&dm_x},
+    {.ch='!', .dm=&dm_exclamation},
     {.ch='.', .dm=&dm_dot},
     {.ch=';', .dm=&dm_bpm_pointer},
 };

@@ -4,7 +4,6 @@
 
 static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
-    case KEY_STOP:
     case KEY_EXT_KBD_STOP:
       treadmill_pause_training(treadmill);
       break;
@@ -14,7 +13,14 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
             treadmill->config.speed.max) {
           treadmill->program.p_walk_30min.target_speed += treadmill->config.speed.step;
         }
-      } else {
+      }
+      if (treadmill->program.id == PROGRAM_WALK_08MIN) { //////////// new program
+        if (treadmill->program.p_walk_08min.target_speed + treadmill->config.speed.step <=
+            treadmill->config.speed.max) {
+          treadmill->program.p_walk_08min.target_speed += treadmill->config.speed.step;
+        }
+      }
+      else {
         treadmill_speed_increment(treadmill);
       }
       break;
@@ -24,7 +30,14 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
             treadmill->config.speed.min) {
           treadmill->program.p_walk_30min.target_speed -= treadmill->config.speed.step;
         }
-      } else {
+      } 
+      if (treadmill->program.id == PROGRAM_WALK_08MIN) { /////////// new program
+        if ((int)treadmill->program.p_walk_08min.target_speed - treadmill->config.speed.step >=
+            treadmill->config.speed.min) {
+          treadmill->program.p_walk_08min.target_speed -= treadmill->config.speed.step;
+        }
+      }      
+      else {
         treadmill_speed_decrement(treadmill);
       }
       break;
@@ -47,7 +60,7 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
       treadmill_set_speed(treadmill, 1200);
       break;
     case KEY_EXT_KBD_SPEED_15:
-    treadmill_set_speed(treadmill, 1500);
+      treadmill_set_speed(treadmill, 1500);
       break;
     case KEY_INCLINE_3:
       break;

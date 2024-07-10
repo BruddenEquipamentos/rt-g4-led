@@ -152,6 +152,7 @@ typedef struct treadmill {
     uint32_t lub_distance_m;
     int modbus;
     int test;
+    int max_time; /////// maximum time on quick mode
 
     char nsu[22];
     char nsp[22];  // legado

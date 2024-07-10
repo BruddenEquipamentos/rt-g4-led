@@ -11,6 +11,13 @@ typedef struct program_training_callback {
   void (*update)(treadmill_t *treadmill);
 } program_training_callback_t;
 
+/////// new update
+static void update_program_none(treadmill_t *treadmill) {
+  if ((treadmill->config.max_time >= MAX_TIME_ON_TREADMILL_LOWER) && treadmill->training.seconds >= treadmill->config.max_time) {
+    treadmill_finish_program(treadmill);
+  }
+}
+
 static void update_program_time(treadmill_t *treadmill) {
   treadmill->training.total_seconds = treadmill->program.p_time.seconds;
   treadmill->training.remaining_seconds = treadmill->training.total_seconds - treadmill->training.seconds;
@@ -89,17 +96,18 @@ static void update_program_walk_08min(treadmill_t *treadmill) {
 
   if (treadmill->training.seconds < 8 * 60) {
     int calculated_speed = (int)treadmill->program.p_walk_08min.target_speed;
-    int variable_speed = (int)(0.2*treadmill->program.p_walk_08min.target_speed);
-    if (treadmill->training.seconds < 2 * 60){}
-
+    int variable_speed = (int)(0.2)*calculated_speed;
+    if (treadmill->training.seconds < 2 * 60){
+        // calculated_speed = (int)treadmill->program.p_walk_08min.target_speed;
+    }
     else if ((treadmill->training.seconds >= 2 * 60) && (treadmill->training.seconds < 3 * 60))
-      calculated_speed += calculated_speed + variable_speed; // 20% increase speed
+      calculated_speed += variable_speed; // 20% increase speed
     else if ((treadmill->training.seconds >= 3 * 60) && (treadmill->training.seconds < 5 * 60))
-      calculated_speed -= calculated_speed + variable_speed; // 20% decrease speed
+      calculated_speed -= variable_speed; // 20% decrease speed
     else if ((treadmill->training.seconds >= 5 * 60) && (treadmill->training.seconds < 6 * 60))
-      calculated_speed += calculated_speed + variable_speed; // 20% increase speed
+      calculated_speed += variable_speed; // 20% increase speed
     else if (treadmill->training.seconds >= 7 * 60)
-      calculated_speed -= calculated_speed + variable_speed; // 20% decrease speed
+      calculated_speed -= variable_speed; // 20% decrease speed
 
     if (calculated_speed < treadmill->config.speed.min) {
       treadmill_set_speed(treadmill, treadmill->config.speed.min);
@@ -227,7 +235,7 @@ static void update_program_super_cardio(treadmill_t *treadmill) {
 }
 
 program_training_callback_t program_training_callbacks[] = {
-    {.id = PROGRAM_NONE, .update = NULL},
+    {.id = PROGRAM_NONE, .update = update_program_none}, //////// time limit
     {.id = PROGRAM_TIME, .update = update_program_time},
     {.id = PROGRAM_DISTANCE, .update = update_program_distance},
     {.id = PROGRAM_CALORIES, .update = update_program_calories},

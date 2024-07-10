@@ -95,7 +95,7 @@ static void change_config_lub(treadmill_t *treadmill, const kbd_key_t key) {
         treadmill->config.lub_param_km -= RT_LED_LUB_MIN_DISTANCE;
       else
         treadmill->config.lub_param_km = RT_LED_LUB_MAX_DISTANCE;
-
+        
       break;
     }
     default:;
@@ -124,6 +124,29 @@ static void change_config_test(treadmill_t *treadmill, const kbd_key_t key) {
       break;
     }
     default:;
+  }
+}
+
+/////// new config
+static void change_config_max_time(treadmill_t *treadmill, const kbd_key_t key) {
+  switch (key) {
+    case KEY_SPEED_INCREMENT: {
+      if (treadmill->config.max_time + PROGRAM_TIME_INC_TIME_STEP <= DEFAULT_TIME_ON_TREADMILL)
+        treadmill->config.max_time += PROGRAM_TIME_INC_TIME_STEP;
+      else
+        treadmill->config.max_time = MAX_TIME_ON_TREADMILL_LOWER;
+      break;
+    }
+    case KEY_SPEED_DECREMENT: {
+      if (treadmill->config.max_time - PROGRAM_TIME_INC_TIME_STEP >= MAX_TIME_ON_TREADMILL_LOWER)
+        treadmill->config.max_time -= PROGRAM_TIME_INC_TIME_STEP;
+      else
+        treadmill->config.max_time = MAX_TIME_ON_TREADMILL_LOWER;
+      break;
+    }
+    default:
+      treadmill->config.max_time = 0;
+      break;
   }
 }
 
@@ -159,6 +182,10 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
         }
         case CONFIG_OPTION_TEST: {
           change_config_test(treadmill, key);
+          break;
+        }
+        case CONFIG_OPTION_MAX_TIME: {
+          change_config_max_time(treadmill, key);
           break;
         }
       }

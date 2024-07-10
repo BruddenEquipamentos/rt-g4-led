@@ -23,7 +23,7 @@ void dm_print_buffer(void);
 
 void dm_render_number(int decimal);
 void dm_render_text(char *text, int frame);
-void dm_render_text_animated(char *text, const uint32_t ms_per_frame,
+int dm_render_text_animated(char *text, const uint32_t ms_per_frame,
                              const uint32_t ms);
 
 extern void (*_dm_update)(const uint16_t dot_matrix[5]);
@@ -35,5 +35,7 @@ const digit_t *dm_number(const int number);
 void dm_render_line(int line);
 void dm_render_line_column(int line, int column);
 void dm_render_column_with_height(int col, int height, uint32_t current_ms, uint32_t blink_ms);
+
+void dm_render_lines(uint32_t ms_per_frame, uint32_t ms);
 
 #endif

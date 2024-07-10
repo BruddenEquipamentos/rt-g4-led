@@ -228,6 +228,11 @@ static void render_config_data(treadmill_t *treadmill) {
       sd_set_value(&sd_pace, treadmill->config.test);
       break;
     }
+    case CONFIG_OPTION_MAX_TIME: {
+      sd_set_visible(&sd_time, true);
+      sd_set_min_sec(&sd_time, treadmill->config.max_time);
+      break;
+    }
     default:
       sd_set_visible(&sd_pace, false);
   }

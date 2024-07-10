@@ -9,7 +9,7 @@
 
 #define MAJOR 1
 #define MINOR 0
-#define REVISION 1 ////
+#define REVISION 2 ////
 
 extern uint16_t fw_version;
 
@@ -26,6 +26,7 @@ typedef enum scene_config_option {
   CONFIG_OPTION_BLE_STATE,       // S/BL
   CONFIG_OPTION_MODBUS,          // MBUS
   CONFIG_OPTION_TEST,            // TEST
+  CONFIG_OPTION_MAX_TIME,        // TEMP
   CONFIG_OPTION_TOTAL
 } scene_config_option_t;
 
