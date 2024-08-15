@@ -40,7 +40,10 @@ void treadmill_pause_training(treadmill_t *treadmill) {
 void treadmill_reset_training(treadmill_t *treadmill) {
   memset(&treadmill->training, 0x00, sizeof(struct training));
   memset(&treadmill->aux, 0x00, sizeof(struct aux));
-  treadmill->on_update_fms_callback(treadmill, Reset, NULL);
+  if (treadmill->on_update_fms_callback != NULL) {
+	  treadmill->on_update_fms_callback(treadmill, Reset, NULL);
+  }
+
 }
 
 void treadmill_resume_training(treadmill_t *treadmill) {  
