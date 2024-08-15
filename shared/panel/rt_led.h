@@ -9,7 +9,7 @@
 
 #define MAJOR 2
 #define MINOR 0
-#define REVISION 3
+#define REVISION 4
 
 extern uint16_t fw_version;
 
@@ -42,7 +42,7 @@ typedef enum rt_led_weight_range {
 } rt_led_weight_range_t;
 
 typedef enum rt_led_lub_params {
-  RT_LED_LUB_MIN_DISTANCE = 100,
+  RT_LED_LUB_MIN_DISTANCE = 0,
   RT_LED_LUB_MAX_DISTANCE = 9900,
   RT_LED_LUB_DEFAULT_DISTANCE = 1000,
   RT_LED_LUB_STEP_DISTANCE = 100,
