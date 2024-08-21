@@ -12,6 +12,7 @@ typedef enum dm_text_position {
 } dm_text_position_t;
 
 void dm_reset_frame(void);
+void dm_reset_frame_messages(void); ///
 
 void dm_update(void);
 void dm_clear_buffer(void);

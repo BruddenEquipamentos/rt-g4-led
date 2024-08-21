@@ -6,6 +6,7 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
       treadmill_resume_training(treadmill);
       break;
     case KEY_EXT_KBD_STOP:
+      dm_reset_frame(); ////////
       treadmill_finish_training(treadmill);
       break;
     case KEY_SPEED_INCREMENT:

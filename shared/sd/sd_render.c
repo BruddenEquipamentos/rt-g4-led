@@ -13,6 +13,7 @@ incline ... bpm
 distance time speed
 calories pace bpm
 */
+extern int report_state;
 
 sd_t sd_distance = {.flag = SD_FLAG_VISIBLE};
 sd_t sd_time = {.flag = SD_FLAG_VISIBLE};
@@ -57,6 +58,7 @@ static void sd_set_value_to_all(const uint32_t value) {
 }
 
 #include <stdio.h>  // TODO: refactor
+
 static void render_training_data(treadmill_t *treadmill) {
   sd_set_km_m(&sd_distance, treadmill->training.meters);
   sd_set_min_sec(&sd_time, treadmill->training.seconds);
@@ -70,19 +72,42 @@ static void render_training_data(treadmill_t *treadmill) {
     sd_blink(&sd_speed, treadmill->get_time_ms(), 500);
   }
 
-  if (treadmill->scene == SCENE_PAUSED || treadmill->scene == SCENE_REPORT) {
-    sd_set_min_sec(&sd_pace, treadmill->training.pace_total_seconds / treadmill->training.seconds);
-    sd_set_bpm(&sd_bpm, treadmill->training.bpm_average);
+  if (treadmill->scene == SCENE_PAUSED) {
+    sd_set_min_sec(&sd_pace, 0);
+    sd_set_kmh(&sd_speed, 0);
   }
 
-  if (treadmill->scene == SCENE_REPORT) {
-    // on report show average speed
-    uint32_t cm_sec = (treadmill->training.meters * 100 / treadmill->training.seconds);
-    uint32_t speed = ((cm_sec * 36) / 10);  // 333 * 36 = 1198
-    uint32_t speed_mod = speed % 10;
-    if (speed_mod >= 5) speed = speed + (10 - speed_mod);
-    sd_set_kmh(&sd_speed, speed);
-  }
+  // if (treadmill->scene == SCENE_REPORT) { //////////////////////////////
+  //   sd_set_min_sec(&sd_pace, treadmill->training.pace_total_seconds / treadmill->training.seconds);
+  //   sd_set_bpm(&sd_bpm, treadmill->training.bpm_average);
+  //   // on report show average speed
+  //   uint32_t cm_sec = (treadmill->training.meters * 100 / treadmill->training.seconds);
+  //   uint32_t speed = ((cm_sec * 36) / 10);  // 333 * 36 = 1198
+  //   uint32_t speed_mod = speed % 10;
+  //   if (speed_mod >= 5) speed = speed + (10 - speed_mod);
+  //   sd_set_kmh(&sd_speed, speed);
+  // }
+    if (treadmill->scene == SCENE_REPORT) {
+      switch (report_state) {
+        case 0:
+          uint32_t speed_max = treadmill->training.speed_max;
+          sd_set_kmh(&sd_speed, speed_max);
+          sd_set_min_sec(&sd_pace, treadmill->training.pace_max);
+          sd_set_bpm(&sd_bpm, treadmill->training.bpm_max);
+          break;
+        case 1:
+          uint32_t cm_sec = (treadmill->training.meters * 100 / treadmill->training.seconds);
+          uint32_t speed = ((cm_sec * 36) / 10);  // 333 * 36 = 1198
+          uint32_t speed_mod = speed % 10;
+          if (speed_mod >= 5) speed = speed + (10 - speed_mod);
+          sd_set_kmh(&sd_speed, speed);
+          sd_set_min_sec(&sd_pace, treadmill->training.pace_total_seconds / treadmill->training.seconds);
+          sd_set_bpm(&sd_bpm, treadmill->training.bpm_average);        
+          break;
+        default:
+          break;
+      }
+    }
 
   if (treadmill->config.modbus) {
     sd_set_visible(&sd_program, true);
@@ -100,9 +125,14 @@ static void render_training_data(treadmill_t *treadmill) {
 }
 
 static void render_training_data_program(treadmill_t *treadmill) {
+  if (treadmill->scene == SCENE_PAUSED) {
+    sd_set_min_sec(&sd_pace, 0);
+    sd_set_kmh(&sd_speed, 0);
+  }
   switch (treadmill->program.id) {
     case PROGRAM_TIME: {
-      sd_set_min_sec(&sd_time, treadmill->training.remaining_seconds);
+      uint32_t remaining_seconds =  treadmill->program.p_time.seconds - treadmill->training.seconds;
+      sd_set_min_sec(&sd_time, remaining_seconds);
       break;
     }
     case PROGRAM_DISTANCE: {
@@ -141,12 +171,13 @@ static void render_training_data_program(treadmill_t *treadmill) {
       break;
     }
     case PROGRAM_200K_CALORIES: {
-      uint32_t remaining_kcal = treadmill->program.p_calories.kcal - treadmill->training.kcal / 1000;
+      uint32_t remaining_kcal = treadmill->program.p_200k_calories.kcal - treadmill->training.kcal / 1000;
       sd_set_value(&sd_kcal, remaining_kcal);
       break;
     }
     default:
       render_training_data(treadmill);
+      break;
   }
 }
 
@@ -179,11 +210,11 @@ static void render_config_data(treadmill_t *treadmill) {
       break;
     }
 
-    case CONFIG_OPTION_LUB: {
-      sd_set_visible(&sd_pace, true);
-      sd_set_value(&sd_pace, treadmill->config.lub_param_km);
-      break;
-    }
+    // case CONFIG_OPTION_LUB: { // no more versions with lub
+    //   sd_set_visible(&sd_pace, true);
+    //   sd_set_value(&sd_pace, treadmill->config.lub_param_km);
+    //   break;
+    // }
 
     case CONFIG_OPTION_VER: {
       sd_set_visible(&sd_pace, true);
@@ -230,7 +261,13 @@ static void render_config_data(treadmill_t *treadmill) {
     }
     case CONFIG_OPTION_MAX_TIME: {
       sd_set_visible(&sd_time, true);
-      sd_set_min_sec(&sd_time, treadmill->config.max_time);
+      if (treadmill->config.max_time < MAX_TIME_ON_TREADMILL_LOWER){
+        sd_set_text(&sd_time, "----");
+        sd_blink(&sd_time, treadmill->get_time_ms(), 800);
+      }
+      else{
+        sd_set_min_sec(&sd_time, treadmill->config.max_time);
+      }
       break;
     }
     default:
@@ -272,15 +309,15 @@ void sd_render(treadmill_t *treadmill) {
       sd_render_all_visible(false);
       break;
     }
-    case SCENE_LUB: {
-      sd_render_all_visible(false);
-      sd_set_visible(&sd_distance, true);
-      sd_set_value(&sd_distance, (uint32_t)treadmill_calculate_lub_distance_remaining(treadmill));  // in km
-      if (treadmill->key_pressed_tick > 0 && treadmill->key_pressed_tick != 0xffffffff) {
-        sd_blink(&sd_distance, treadmill->get_time_ms(), 1000);
-      }
-      break;
-    }
+    // case SCENE_LUB: {
+    //   sd_render_all_visible(false);
+    //   sd_set_visible(&sd_distance, true);
+    //   sd_set_value(&sd_distance, (uint32_t)treadmill_calculate_lub_distance_remaining(treadmill));  // in km
+    //   if (treadmill->key_pressed_tick > 0 && treadmill->key_pressed_tick != 0xffffffff) {
+    //     sd_blink(&sd_distance, treadmill->get_time_ms(), 1000);
+    //   }
+    //   break;
+    // }
     case SCENE_CONFIG: {
       sd_set_visible(&sd_program, false);
       render_config_data(treadmill);
@@ -304,7 +341,7 @@ void sd_render(treadmill_t *treadmill) {
     }
     case SCENE_PAUSED: {
       sd_set_visible(&sd_program, false);
-      render_training_data(treadmill);
+      render_training_data_program(treadmill);
       break;
     }
     case SCENE_REPORT: {

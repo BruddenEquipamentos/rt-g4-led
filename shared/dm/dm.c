@@ -31,6 +31,11 @@ void dm_reset_frame(void) {
   frametick = 0;
 }
 
+void dm_reset_frame_messages(void) {
+  frame = 7;
+  frametick = 0;
+}
+
 void dm_update(void) {
   if (_dm_update != 0) _dm_update(dm_buffer);
 }
@@ -53,8 +58,8 @@ int dm_render_text_animated(char *text, const uint32_t ms_per_frame, const uint3
   int length = dm_compute_length(text);
   dm_render_text(text, frame);
   // if (frame > length + 16) frame = 0;
-  if (frame > length + 16) {
-    frame = 0;
+  if ((frame > length + 16)) {
+    frame = 0;//////
     return 1;
   }
   return 0;

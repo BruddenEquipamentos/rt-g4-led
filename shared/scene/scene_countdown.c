@@ -1,11 +1,10 @@
 #include "scene.h"
+#include "../shared/dm/dm.h"
 
 static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
-    case KEY_STOP:
-      treadmill_abort_countdown(treadmill);
-      break;
     case KEY_EXT_KBD_STOP:
+      dm_reset_frame();
       treadmill_abort_countdown(treadmill);
       break;
     default:;

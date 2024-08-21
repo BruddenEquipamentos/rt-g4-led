@@ -14,10 +14,15 @@ const digit_t dm_space = {
 const digit_t dm_percentage = {
     .cols=5,
     .data={
+        // 0b11001,
+        // 0b10010,
+        // 0b00100,
+        // 0b01001,
+        // 0b10011,
         0b11001,
-        0b10010,
+        0b11010,
         0b00100,
-        0b01001,
+        0b01011,
         0b10011,
     }
 };
@@ -27,7 +32,7 @@ const digit_t dm_hyphen = {
     .data={
         0b000,
         0b000,
-        0b111,
+        0b111, 
         0b000,
         0b000,
     }
@@ -468,7 +473,7 @@ const digit_t dm_bpm_decrease = {
 digit_map_t dm_map[] = {
     {.ch=' ', .dm=&dm_space},
     {.ch='%', .dm=&dm_percentage},
-    //{.ch='-', .dm=&dm_hyphen},
+    {.ch='*', .dm=&dm_hyphen},
     {.ch='/', .dm=&dm_slash},
     {.ch='@', .dm=&dm_heart},
     {.ch='+', .dm=&dm_bpm_increase},

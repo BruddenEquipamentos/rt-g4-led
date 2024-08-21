@@ -33,7 +33,7 @@ typedef enum key {
   KEY_EXT_KBD_SPEED_DEC,      // 0x03
   KEY_EXT_KBD_STOP,           // 0x09
   
-  KEY_EXT_KBD_START,          
+  KEY_EXT_KBD_START,        
 
   KEY_LAST = 0xFFFFFFFF,
 } kbd_key_t ;

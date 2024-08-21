@@ -24,10 +24,8 @@ typedef enum program_id {
 } program_id_t;
 
 ///////// new params quick mode
-#define MAX_TIME_ON_TREADMILL_LOWER (60 * 3)
-// #define MAX_TIME_ON_TREADMILL_UPPER (120 * 60)
-#define DEFAULT_TIME_ON_TREADMILL (60 * 99) // 99 min
-// #define DEFAULT_TIME_ON_TREADMILL NULL
+#define MAX_TIME_ON_TREADMILL_LOWER (60 * 7)
+#define DEFAULT_TIME_ON_TREADMILL (60 * 90) // 90 min
 
 
 // 99 minutes
@@ -44,9 +42,9 @@ typedef enum program_id {
 
 // kcal
 #define PROGRAM_CALORIES_DEFAULT_CALORIES (100)
-#define PROGRAM_CALORIES_MIN_CALORIES (50)
+#define PROGRAM_CALORIES_MIN_CALORIES (10) // 50
 #define PROGRAM_CALORIES_MAX_CALORIES (9000)
-#define PROGRAM_CALORIES_INC_CALORIES_STEP (50)
+#define PROGRAM_CALORIES_INC_CALORIES_STEP (5) //50
 
 // 200 kcal
 #define PROGRAM_200K_CALORIES_DEFAULT_CALORIES (200)
@@ -55,12 +53,13 @@ typedef enum program_id {
 #define PROGRAM_200K_CALORIES_INC_CALORIES_STEP (200)
 
 // hiit
-#define PROGRAM_HIIT_DEFAULT_SECONDS (10 * 60)  // 10 min
+#define PROGRAM_HIIT_DEFAULT_SECONDS (5 * 60)  // 5 min
 #define PROGRAM_HIIT_DEFAULT_SPEED_T1 (300)     // 3.0 km/h
-#define PROGRAM_HIIT_DEFAULT_SPEED_T2 (700)     // 7.0 km/h
-#define PROGRAM_HIIT_MAX_TIME (60 * 60)
-#define PROGRAM_HIIT_TIME_STEP (60)
-#define PROGRAM_HIIT_MIN_TIME (3 * 60)
+#define PROGRAM_HIIT_DEFAULT_SPEED_T2 (300)     // 3.0 km/h
+#define PROGRAM_HIIT_MIN_TIME (0.5 * 60)  ///////////// 30s
+#define PROGRAM_HIIT_MAX_TIME (10 * 60) 
+#define PROGRAM_HIIT_TIME_STEP (0.5 * 60)  //// 30 s step
+// #define PROGRAM_HIIT_MIN_TIME (3 * 60)
 
 // walk 30 min
 #define PROGRAM_WALK_30MIN_DEFAULT_TARGET_SPEED (600)
@@ -69,8 +68,8 @@ typedef enum program_id {
 
 // walk 08 min
 #define PROGRAM_WALK_08MIN_DEFAULT_TARGET_SPEED (500)
-#define PROGRAM_WALK_08MIN_MIN_SPEED (160)
-#define PROGRAM_WALK_08MIN_MAX_SPEED (1800)
+#define PROGRAM_WALK_08MIN_MIN_SPEED (120)
+#define PROGRAM_WALK_08MIN_MAX_SPEED (1500)
 
 // fat burn
 #define PROGRAM_FAT_BURN_DEFAULT_TIME (10 * 60)  // 10 min

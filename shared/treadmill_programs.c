@@ -5,6 +5,10 @@
 #include "treadmill.h"
 #include "treadmill_action.h"
 
+#include "dm/dm_render.h"
+
+extern int render_finished;
+
 char *programs_name[] = {
     "PROGRAM_NONE", "PROGRAM_TIME",       "PROGRAM_DISTANCE", "PROGRAM_CALORIES",
     "PROGRAM_HIIT", "PROGRAM_WALK_30MIN", "PROGRAM_FAT_BURN", "PROGRAM_SUPER_CARDIO", "PROGRAM_WALK_08MIN", "PROGRAM_200K_CALORIES"
@@ -27,24 +31,28 @@ static void program_time_key_press(treadmill_t *treadmill, const kbd_key_t key) 
         treadmill->program.p_time.seconds -= PROGRAM_TIME_INC_TIME_STEP;
       break;
     case KEY_INCLINE_6: { // 30 min program key
+      dm_reset_frame_messages();
       treadmill->program.id = PROGRAM_WALK_30MIN; // program 8
       program_load_default_value(treadmill);
       treadmill_set_scene(treadmill, SCENE_PROGRAM);
       break;
     }
     case KEY_INCLINE_9: { // 200 kcal program key
+      dm_reset_frame_messages();
       treadmill->program.id = PROGRAM_200K_CALORIES; // program 8
       program_load_default_value(treadmill);
       treadmill_set_scene(treadmill, SCENE_PROGRAM);
       break;
     }
     case KEY_INCLINE_12: { // warmup program key
+      dm_reset_frame_messages();
       treadmill->program.id = PROGRAM_WALK_08MIN; // program 9
       program_load_default_value(treadmill);
       treadmill_set_scene(treadmill, SCENE_PROGRAM);
       break;
     }
     case KEY_PROGRAM:
+      render_finished = 0; /////////////
       treadmill_next_program(treadmill);
       break;
     default:;
@@ -68,24 +76,28 @@ static void program_distance_key_press(treadmill_t *treadmill, const kbd_key_t k
         treadmill->program.p_distance.meters -= PROGRAM_DISTANCE_INC_DISTANCE_STEP;
       break;
     case KEY_INCLINE_6: { // 30 min program key
+      dm_reset_frame_messages();
       treadmill->program.id = PROGRAM_WALK_30MIN; // program 8
       program_load_default_value(treadmill);
       treadmill_set_scene(treadmill, SCENE_PROGRAM);
       break;
     }
     case KEY_INCLINE_9: { // 200 kcal program key
+      dm_reset_frame_messages();
       treadmill->program.id = PROGRAM_200K_CALORIES; // program 8
       program_load_default_value(treadmill);
       treadmill_set_scene(treadmill, SCENE_PROGRAM);
       break;
     }
     case KEY_INCLINE_12: { // warmup program key
+      dm_reset_frame_messages();
       treadmill->program.id = PROGRAM_WALK_08MIN; // program 9
       program_load_default_value(treadmill);
       treadmill_set_scene(treadmill, SCENE_PROGRAM);
       break;
     }
     case KEY_PROGRAM:
+      render_finished = 0; /////////////
       treadmill_next_program(treadmill);
       break;
     default:;
@@ -111,24 +123,28 @@ static void program_calories_key_press(treadmill_t *treadmill, const kbd_key_t k
         treadmill->program.p_calories.kcal -= PROGRAM_CALORIES_INC_CALORIES_STEP;
       break;
     case KEY_INCLINE_6: { // 30 min program key
+      dm_reset_frame_messages();
       treadmill->program.id = PROGRAM_WALK_30MIN; // program 8
       program_load_default_value(treadmill);
       treadmill_set_scene(treadmill, SCENE_PROGRAM);
       break;
     }
     case KEY_INCLINE_9: { // 200 kcal program key
+      dm_reset_frame_messages();
       treadmill->program.id = PROGRAM_200K_CALORIES; // program 8
       program_load_default_value(treadmill);
       treadmill_set_scene(treadmill, SCENE_PROGRAM);
       break;
     }
     case KEY_INCLINE_12: { // warmup program key
+      dm_reset_frame_messages();
       treadmill->program.id = PROGRAM_WALK_08MIN; // program 9
       program_load_default_value(treadmill);
       treadmill_set_scene(treadmill, SCENE_PROGRAM);
       break;
     }
     case KEY_PROGRAM:
+      render_finished = 0; /////////////
       treadmill_next_program(treadmill);
       break;
     default:;
@@ -145,36 +161,35 @@ static void program_200k_calories_key_press(treadmill_t *treadmill, const kbd_ke
       treadmill_exit_program(treadmill);
       break;
     case KEY_SPEED_INCREMENT:
-    case KEY_SPEED_DECREMENT:
+      if ((int)treadmill->program.p_200k_calories.kcal + (int)PROGRAM_200K_CALORIES_INC_CALORIES_STEP <=
+          PROGRAM_200K_CALORIES_MAX_CALORIES)
+        treadmill->program.p_200k_calories.kcal += PROGRAM_200K_CALORIES_INC_CALORIES_STEP;
       break;
-    // case KEY_SPEED_INCREMENT:
-    //   if ((int)treadmill->program.p_200k_calories.kcal + (int)PROGRAM_200K_CALORIES_INC_CALORIES_STEP <=
-    //       PROGRAM_200K_CALORIES_MAX_CALORIES)
-    //     treadmill->program.p_200k_calories.kcal += PROGRAM_200K_CALORIES_INC_CALORIES_STEP;
-    //   break;
-    // case KEY_SPEED_DECREMENT:
-    //   if ((int)treadmill->program.p_200k_calories.kcal - (int)PROGRAM_200K_CALORIES_INC_CALORIES_STEP >=
-    //       PROGRAM_200K_CALORIES_MIN_CALORIES)
-    //     treadmill->program.p_200k_calories.kcal -= PROGRAM_200K_CALORIES_INC_CALORIES_STEP;
-    //   break;
+    case KEY_SPEED_DECREMENT:
+      if ((int)treadmill->program.p_200k_calories.kcal - (int)PROGRAM_200K_CALORIES_INC_CALORIES_STEP >=
+          PROGRAM_200K_CALORIES_MIN_CALORIES)
+        treadmill->program.p_200k_calories.kcal -= PROGRAM_200K_CALORIES_INC_CALORIES_STEP;
+      break;
 
     case KEY_INCLINE_6: { // 30 min program key
+      dm_reset_frame_messages();
       treadmill->program.id = PROGRAM_WALK_30MIN; // program 5
       program_load_default_value(treadmill);
       treadmill_set_scene(treadmill, SCENE_PROGRAM);
       break;
     }
     case KEY_INCLINE_9: { // 200 kcal program key
-      treadmill_exit_program(treadmill);
       break;
     }
     case KEY_INCLINE_12: { // warmup program key
+      dm_reset_frame_messages();
       treadmill->program.id = PROGRAM_WALK_08MIN; // program 9
       program_load_default_value(treadmill);
       treadmill_set_scene(treadmill, SCENE_PROGRAM);
       break;
     }
     case KEY_PROGRAM:
+      render_finished = 0; /////////////
       treadmill_next_program(treadmill);
       break;
     default:;
@@ -211,40 +226,56 @@ static void program_hiit_key_press(treadmill_t *treadmill, const kbd_key_t key) 
           treadmill->program.param_index++;
           break;
         case 2:
+          treadmill->program.param_index++;
+          break;
+        case 3:
           treadmill_start_program(treadmill);
           break;
       }
       break;
     case KEY_EXT_KBD_STOP:
+      render_finished = 0; ////////////////
       treadmill_exit_program(treadmill);
       break;
     case KEY_SPEED_INCREMENT:
       switch (treadmill->program.param_index) {
         case 0:
-          if (treadmill->program.p_hiit.seconds + PROGRAM_HIIT_TIME_STEP <= PROGRAM_HIIT_MAX_TIME)
-            treadmill->program.p_hiit.seconds += PROGRAM_HIIT_TIME_STEP;
+          if (treadmill->program.p_hiit.seconds_t1 + PROGRAM_HIIT_TIME_STEP <= PROGRAM_HIIT_MAX_TIME){
+            treadmill->program.p_hiit.seconds_t1 += PROGRAM_HIIT_TIME_STEP;
+          }
           break;
         case 1:
-          if (treadmill->program.p_hiit.speed_t1 + treadmill->config.speed.step <= treadmill->config.speed.max)
+          if (treadmill->program.p_hiit.speed_t1 + treadmill->config.speed.step <= treadmill->config.speed.max){
             treadmill->program.p_hiit.speed_t1 += treadmill->config.speed.step;
+          }
           break;
         case 2:
-          if (treadmill->program.p_hiit.speed_t2 + treadmill->config.speed.step <= treadmill->config.speed.max)
+          if (treadmill->program.p_hiit.seconds_t2 + PROGRAM_HIIT_TIME_STEP <= PROGRAM_HIIT_MAX_TIME){
+            treadmill->program.p_hiit.seconds_t2 += PROGRAM_HIIT_TIME_STEP;
+          }
+          break;
+        case 3:
+          if (treadmill->program.p_hiit.speed_t2 + treadmill->config.speed.step <= treadmill->config.speed.max){
             treadmill->program.p_hiit.speed_t2 += treadmill->config.speed.step;
+          }
           break;
       }
       break;
     case KEY_SPEED_DECREMENT:
       switch (treadmill->program.param_index) {
         case 0:
-          if (treadmill->program.p_hiit.seconds - PROGRAM_HIIT_TIME_STEP >= PROGRAM_HIIT_MIN_TIME)
-            treadmill->program.p_hiit.seconds -= PROGRAM_HIIT_TIME_STEP;
+          if (treadmill->program.p_hiit.seconds_t1 - PROGRAM_HIIT_TIME_STEP >= PROGRAM_HIIT_MIN_TIME)
+            treadmill->program.p_hiit.seconds_t1 -= PROGRAM_HIIT_TIME_STEP;
           break;
         case 1:
           if (treadmill->program.p_hiit.speed_t1 - treadmill->config.speed.step >= treadmill->config.speed.min)
             treadmill->program.p_hiit.speed_t1 -= treadmill->config.speed.step;
           break;
         case 2:
+          if (treadmill->program.p_hiit.seconds_t2 - PROGRAM_HIIT_TIME_STEP >= PROGRAM_HIIT_MIN_TIME)
+            treadmill->program.p_hiit.seconds_t2 -= PROGRAM_HIIT_TIME_STEP;
+          break;
+        case 3:
           if (treadmill->program.p_hiit.speed_t2 - treadmill->config.speed.step >= treadmill->config.speed.min)
             treadmill->program.p_hiit.speed_t2 -= treadmill->config.speed.step;
           break;
@@ -268,24 +299,28 @@ static void program_hiit_key_press(treadmill_t *treadmill, const kbd_key_t key) 
     case KEY_INCLINE_DECREMENT:
       break;
     case KEY_INCLINE_6: { // 30 min program key
+      dm_reset_frame_messages();
       treadmill->program.id = PROGRAM_WALK_30MIN; // program 8
       program_load_default_value(treadmill);
       treadmill_set_scene(treadmill, SCENE_PROGRAM);
       break;
     }
     case KEY_INCLINE_9: { // 200 kcal program key
+      dm_reset_frame_messages();
       treadmill->program.id = PROGRAM_200K_CALORIES; // program 8
       program_load_default_value(treadmill);
       treadmill_set_scene(treadmill, SCENE_PROGRAM);
       break;
     }
     case KEY_INCLINE_12: { // warmup program key
+      dm_reset_frame_messages();
       treadmill->program.id = PROGRAM_WALK_08MIN; // program 9
       program_load_default_value(treadmill);
       treadmill_set_scene(treadmill, SCENE_PROGRAM);
       break;
     }
     case KEY_PROGRAM:
+      render_finished = 0; /////////////
       treadmill_next_program(treadmill);
       break;
     default:;
@@ -314,22 +349,24 @@ void program_walk_30min_key_press(treadmill_t *treadmill, const kbd_key_t key) {
     case KEY_INCLINE_DECREMENT:
       break;
     case KEY_INCLINE_6: { // 30 min program key
-      treadmill_exit_program(treadmill);
       break;
     }
     case KEY_INCLINE_9: { // 200 kcal program key
+      dm_reset_frame_messages();
       treadmill->program.id = PROGRAM_200K_CALORIES; // program 8
       program_load_default_value(treadmill);
       treadmill_set_scene(treadmill, SCENE_PROGRAM);
       break;
     }
     case KEY_INCLINE_12: { // warmup program key
+      dm_reset_frame_messages();
       treadmill->program.id = PROGRAM_WALK_08MIN; // program 9
       program_load_default_value(treadmill);
       treadmill_set_scene(treadmill, SCENE_PROGRAM);
       break;
     }
     case KEY_PROGRAM:
+      render_finished = 0; /////////////
       treadmill_next_program(treadmill);
       break;
     default:;
@@ -359,22 +396,24 @@ void program_walk_08min_key_press(treadmill_t *treadmill, const kbd_key_t key) {
     case KEY_INCLINE_DECREMENT:
       break;
     case KEY_INCLINE_6: { // 30 min program key
+      dm_reset_frame_messages();
       treadmill->program.id = PROGRAM_WALK_30MIN; // program 5
       program_load_default_value(treadmill);
       treadmill_set_scene(treadmill, SCENE_PROGRAM);
       break;
     }
     case KEY_INCLINE_9: { // 200 kcal program key
+      dm_reset_frame_messages();
       treadmill->program.id = PROGRAM_200K_CALORIES; // program 8
       program_load_default_value(treadmill);
       treadmill_set_scene(treadmill, SCENE_PROGRAM);
       break;
     }
     case KEY_INCLINE_12: { // warmup program key
-      treadmill_exit_program(treadmill);
       break;
     }
     case KEY_PROGRAM:
+      render_finished = 0; /////////////
       treadmill_next_program(treadmill);
       break;
     default:;
@@ -428,24 +467,28 @@ static void program_fat_burn_key_press(treadmill_t *treadmill, const kbd_key_t k
     case KEY_INCLINE_DECREMENT:
       break;
     case KEY_INCLINE_6: { // 30 min program key
+      dm_reset_frame_messages();
       treadmill->program.id = PROGRAM_WALK_30MIN; // program 8
       program_load_default_value(treadmill);
       treadmill_set_scene(treadmill, SCENE_PROGRAM);
       break;
     }
     case KEY_INCLINE_9: { // 200 kcal program key
+      dm_reset_frame_messages();
       treadmill->program.id = PROGRAM_200K_CALORIES; // program 8
       program_load_default_value(treadmill);
       treadmill_set_scene(treadmill, SCENE_PROGRAM);
       break;
     }
     case KEY_INCLINE_12: { // warmup program key
+      dm_reset_frame_messages();
       treadmill->program.id = PROGRAM_WALK_08MIN; // program 9
       program_load_default_value(treadmill);
       treadmill_set_scene(treadmill, SCENE_PROGRAM);
       break;
     }
     case KEY_PROGRAM:
+      render_finished = 0; /////////////
       treadmill_next_program(treadmill);
       break;
     default:;
@@ -501,24 +544,28 @@ static void program_super_cardio_key_press(treadmill_t *treadmill, const kbd_key
     case KEY_INCLINE_DECREMENT:
       break;
     case KEY_INCLINE_6: { // 30 min program key
+      dm_reset_frame_messages();
       treadmill->program.id = PROGRAM_WALK_30MIN; // program 8
       program_load_default_value(treadmill);
       treadmill_set_scene(treadmill, SCENE_PROGRAM);
       break;
     }
     case KEY_INCLINE_9: { // 200 kcal program key
+      dm_reset_frame_messages();
       treadmill->program.id = PROGRAM_200K_CALORIES; // program 8
       program_load_default_value(treadmill);
       treadmill_set_scene(treadmill, SCENE_PROGRAM);
       break;
     }
     case KEY_INCLINE_12: { // warmup program key
+      dm_reset_frame_messages();
       treadmill->program.id = PROGRAM_WALK_08MIN; // program 9
       program_load_default_value(treadmill);
       treadmill_set_scene(treadmill, SCENE_PROGRAM);
       break;
     }
     case KEY_PROGRAM:
+      render_finished = 0; /////////////
       treadmill_next_program(treadmill);
       break;
     default:;
@@ -554,9 +601,9 @@ void program_load_default_value(treadmill_t *treadmill) {
       break;
     }
     case PROGRAM_HIIT: {
-      treadmill->program.p_hiit.seconds = PROGRAM_HIIT_DEFAULT_SECONDS;
-      treadmill->program.p_hiit.seconds_t1 = 0;
-      treadmill->program.p_hiit.seconds_t2 = 0;
+      treadmill->program.p_hiit.seconds_t1 = PROGRAM_HIIT_DEFAULT_SECONDS;
+      treadmill->program.p_hiit.seconds_t2 = PROGRAM_HIIT_DEFAULT_SECONDS;
+      treadmill->program.p_hiit.seconds = (5 * treadmill->program.p_hiit.seconds_t1) + (5 * treadmill->program.p_hiit.seconds_t2);
       treadmill->program.p_hiit.speed_t1 = PROGRAM_HIIT_DEFAULT_SPEED_T1;
       treadmill->program.p_hiit.speed_t2 = PROGRAM_HIIT_DEFAULT_SPEED_T2;
       break;

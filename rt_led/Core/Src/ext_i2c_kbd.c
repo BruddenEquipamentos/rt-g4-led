@@ -109,7 +109,7 @@ void ext_i2c_kbd_handler(void) {
 
             // TODO: refactor
             uint32_t interval = 300;
-            if (read_buffer[0] == 5 || read_buffer[0] == 8) {
+            if (read_buffer[0] == 5 || read_buffer[0] == 8) { 
                 // incline increment / decrement
                 if (repeat_presses_count < 3) {
                     interval = 150;
@@ -117,16 +117,19 @@ void ext_i2c_kbd_handler(void) {
                     interval = 50;
                 }
             } else if (read_buffer[0] == 3 || read_buffer[0] == 6) {
-
-                ext_kbd_state = EXT_KBD_STATE_IDLE;
-
-                // // speed increment / decrement
-                // if (repeat_presses_count < 3) {
-                //     interval = 150;
-                // } else {
-                //     interval = 50;
-                // }
-                // // todo: limit the increment time window
+                extern treadmill_t *pTreadmill;
+                if (pTreadmill->scene == SCENE_PROGRAM){ /////////// ok
+                    // speed increment / decrement
+                    if (repeat_presses_count < 3) {
+                        interval = 150;
+                    } else {
+                        interval = 50;
+                    }
+                // todo: limit the increment time window
+                }
+                else{
+                    ext_kbd_state = EXT_KBD_STATE_IDLE;
+                }
             }
 
             if (HAL_GetTick() - repeat_tick >= interval) {

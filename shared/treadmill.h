@@ -15,6 +15,8 @@
 #define NVM_U32_LUB_DISTANCE 0x0005
 #define NVM_U8_AGE 0x0006
 #define NVM_U32_LUB_DISTANCE_PARAM 0x0007
+#define NVM_U32_MAX_TIME_PARAM 0x0008 /////////////////// SAVE MAX TIME CONFIG
+
 
 // Exemplo de NSU "818790500000007067703"
 #define NVM_NS_MAX_LENGTH (22)
@@ -97,9 +99,11 @@ typedef struct treadmill {
     uint32_t kcal;
 
     uint16_t speed;
+    uint16_t speed_max; /////////////
     int16_t incline;
 
     uint16_t pace;
+    uint16_t pace_max; ///////////////
     uint8_t bpm;
 
     uint32_t pace_total_seconds;
@@ -111,6 +115,7 @@ typedef struct treadmill {
     uint32_t bpm_total;
     uint32_t bpm_count;
     uint32_t bpm_average;
+    uint32_t bpm_max;
   } training;
 
   // TODO: refactor this struct
@@ -173,6 +178,7 @@ typedef struct treadmill {
     uint32_t meters;
     int16_t incline;
     uint32_t ms;
+    uint32_t max_time;
   } countdown;
 
   struct debug {

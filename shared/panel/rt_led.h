@@ -9,7 +9,7 @@
 
 #define MAJOR 1
 #define MINOR 0
-#define REVISION 2 ////
+#define REVISION 5 ////
 
 extern uint16_t fw_version;
 
@@ -19,7 +19,7 @@ typedef enum scene_config_option {
   CONFIG_OPTION_UNIT,            // UNT
   CONFIG_OPTION_WEIGHT,          // WGT
   CONFIG_OPTION_MA,              // MA
-  CONFIG_OPTION_LUB,             // LUB
+  // CONFIG_OPTION_LUB,             // LUB
   CONFIG_OPTION_VER,             // VER
   CONFIG_OPTION_TOTAL_DISTANCE,  // TD
   CONFIG_OPTION_TOTAL_HOURS,     // THR

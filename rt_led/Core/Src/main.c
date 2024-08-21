@@ -106,7 +106,7 @@ osTimerId beepTimerHandle;
 treadmill_t treadmill;
 treadmill_t *pTreadmill = &treadmill;
 
-uint8_t __new_display = 0;
+uint8_t __new_display = 0; 
 
 volatile uint8_t _huart3_buffer[2] = {0};
 /* USER CODE END PV */
@@ -1161,18 +1161,18 @@ static inline void bpm_read_handler(void) {
     }
   }
   {
-    // RODA
-    if (treadmill.scene == SCENE_TRAINING) {
-      if (ICCapturedWheelLastTick == 0)
-        ICCapturedWheelLastTick = HAL_GetTick();
-      else if (HAL_GetTick() - ICCapturedWheelLastTick >= 5000) {
-       treadmill_stop_procedure(&treadmill);
-       treadmill_set_dm_message(&treadmill, "ERRO RODA", 3000, 0);
-       ICCapturedWheelLastTick = 0;
-      }
-    } else {
-    	ICCapturedWheelLastTick = 0;
-    }
+    // RODA //////////////
+    // if (treadmill.scene == SCENE_TRAINING) {
+    //   if (ICCapturedWheelLastTick == 0)
+    //     ICCapturedWheelLastTick = HAL_GetTick();
+    //   else if (HAL_GetTick() - ICCapturedWheelLastTick >= 5000) {
+    //    treadmill_stop_procedure(&treadmill);
+    //    treadmill_set_dm_message(&treadmill, "ERRO RODA", 3000, 0);
+    //    ICCapturedWheelLastTick = 0;
+    //   }
+    // } else {
+    // 	ICCapturedWheelLastTick = 0;
+    // }
   }
 }
 
@@ -1219,54 +1219,126 @@ void StartDefaultTask(void const * argument)
 static void handle_shortcut_keys(void) {
   static uint32_t debounce = 0;
 #define SHORTCUT_ACKED (0xffffffff)
-  if (treadmill.scene != SCENE_TRAINING) return;
+  if (treadmill.scene != SCENE_TRAINING){
+    if (HAL_GPIO_ReadPin(INC_MINUS_GPIO_Port, INC_MINUS_Pin) == GPIO_PIN_RESET) {
+      if (debounce == 0) debounce = HAL_GetTick();
+      if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
+        debounce = SHORTCUT_ACKED;
 
-  if (HAL_GPIO_ReadPin(SP_MINUS_GPIO_Port, SP_MINUS_Pin) == GPIO_PIN_RESET) {
-    if (debounce == 0) debounce = HAL_GetTick();
-    if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
-      debounce = SHORTCUT_ACKED;
+        // changed behavior - start
+        treadmill_key_press(&treadmill, KEY_START);
+        treadmill.hw.beep(BEEP_KEYPRESS_ACK);
+      }
 
-      int speed = (int)treadmill.training.speed - 100;
-      if (speed < treadmill.config.speed.min) speed = treadmill.config.speed.min;
-
-      treadmill_set_speed(&treadmill, (uint16_t)speed);
-      treadmill.hw.beep(BEEP_KEYPRESS_ACK);
+    } else if (HAL_GPIO_ReadPin(INC_PLUS_GPIO_Port, INC_PLUS_Pin) == GPIO_PIN_RESET) {
+      if (debounce == 0) debounce = HAL_GetTick();
+      if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
+        debounce = SHORTCUT_ACKED;
+        // changed behavior - stop 
+        treadmill_key_press(&treadmill, KEY_EXT_KBD_STOP);
+        treadmill.hw.beep(BEEP_KEYPRESS_ACK);
+      }
     }
-
-  } else if (HAL_GPIO_ReadPin(SP_PLUS_GPIO_Port, SP_PLUS_Pin) == GPIO_PIN_RESET) {
-    if (debounce == 0) debounce = HAL_GetTick();
-    if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
-      debounce = SHORTCUT_ACKED;
-
-      int speed = (int)treadmill.training.speed + 100;
-      if (speed > treadmill.config.speed.max) speed = treadmill.config.speed.max;
-      treadmill_set_speed(&treadmill, (uint16_t)speed);
-      treadmill.hw.beep(BEEP_KEYPRESS_ACK);
+    else{
+      debounce = 0;
     }
+  }
+  else {
+    if (HAL_GPIO_ReadPin(SP_MINUS_GPIO_Port, SP_MINUS_Pin) == GPIO_PIN_RESET) {
+      if (debounce == 0) debounce = HAL_GetTick();
+      if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
+        debounce = SHORTCUT_ACKED;
 
-  } else if (HAL_GPIO_ReadPin(INC_MINUS_GPIO_Port, INC_MINUS_Pin) == GPIO_PIN_RESET) {
-    if (debounce == 0) debounce = HAL_GetTick();
-    if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
-      debounce = SHORTCUT_ACKED;
+        //////////////////////////////////////////////////////////////
 
-      int incline = (int)treadmill.training.incline - treadmill.config.incline.step;
-      if (incline < treadmill.config.incline.min) incline = treadmill.config.incline.min;
-      treadmill_set_incline(&treadmill, incline);
-      treadmill.hw.beep(BEEP_KEYPRESS_ACK);
+        if (treadmill.program.id == PROGRAM_WALK_30MIN) {
+          if ((int)treadmill.program.p_walk_30min.target_speed - 100 >=
+              treadmill.config.speed.min) {
+            treadmill.program.p_walk_30min.target_speed -= 100;
+          }
+        } 
+        else if (treadmill.program.id == PROGRAM_WALK_08MIN) { /////////// new program
+          if ((int)treadmill.program.p_walk_08min.target_speed - 100 >=
+              treadmill.config.speed.min) {
+            treadmill.program.p_walk_08min.target_speed -= 100;
+          }
+          else{
+            treadmill.program.p_walk_08min.target_speed = treadmill.config.speed.min;
+          }
+        }      
+        //////////////////////////////////////////////////////////////
+
+        else{
+          int speed = (int)treadmill.training.speed - 100; ///////////
+          if (speed < treadmill.config.speed.min) speed = treadmill.config.speed.min;
+          treadmill_set_speed(&treadmill, (uint16_t)speed);
+        }
+
+        // int speed = (int)treadmill.training.speed - 100; ///////////
+
+        // if (speed < treadmill.config.speed.min) speed = treadmill.config.speed.min;
+
+        // treadmill_set_speed(&treadmill, (uint16_t)speed);
+        treadmill.hw.beep(BEEP_KEYPRESS_ACK);
+      }
+
+    } else if (HAL_GPIO_ReadPin(SP_PLUS_GPIO_Port, SP_PLUS_Pin) == GPIO_PIN_RESET) {
+      if (debounce == 0) debounce = HAL_GetTick();
+      if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
+        debounce = SHORTCUT_ACKED;
+
+        //////////////////////////////////////////////////////////////
+        if (treadmill.program.id == PROGRAM_WALK_30MIN) {
+          if (treadmill.program.p_walk_30min.target_speed + 100 <=
+              treadmill.config.speed.max) {
+            treadmill.program.p_walk_30min.target_speed += 100;
+          }
+        }
+        else if (treadmill.program.id == PROGRAM_WALK_08MIN) { //////////// new program
+          if (treadmill.program.p_walk_08min.target_speed + 100 <=
+              treadmill.config.speed.max) {
+            treadmill.program.p_walk_08min.target_speed += 100;
+            if (treadmill.program.p_walk_08min.target_speed > treadmill.config.speed.max){ ///////
+              treadmill.program.p_walk_08min.target_speed = treadmill.config.speed.max;
+            }
+          }
+        }
+        //////////////////////////////////////////////////////////////
+
+        else{
+          int speed = (int)treadmill.training.speed + 100; ///////////
+          if (speed > treadmill.config.speed.max) speed = treadmill.config.speed.max;
+          treadmill_set_speed(&treadmill, (uint16_t)speed);
+        }
+        // int speed = (int)treadmill.training.speed + 100; ///////////
+
+        // if (speed > treadmill.config.speed.max) speed = treadmill.config.speed.max;
+        // treadmill_set_speed(&treadmill, (uint16_t)speed);
+        treadmill.hw.beep(BEEP_KEYPRESS_ACK);
+      }
+
+    } else if (HAL_GPIO_ReadPin(INC_MINUS_GPIO_Port, INC_MINUS_Pin) == GPIO_PIN_RESET) {
+      if (debounce == 0) debounce = HAL_GetTick();
+      if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
+        debounce = SHORTCUT_ACKED;
+
+        // changed behavior - start
+        treadmill_key_press(&treadmill, KEY_START);
+        treadmill.hw.beep(BEEP_KEYPRESS_ACK);
+      }
+
+    } else if (HAL_GPIO_ReadPin(INC_PLUS_GPIO_Port, INC_PLUS_Pin) == GPIO_PIN_RESET) {
+      if (debounce == 0) debounce = HAL_GetTick();
+      if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
+        debounce = SHORTCUT_ACKED;
+        // changed behavior - stop 
+                treadmill_key_press(&treadmill, KEY_EXT_KBD_STOP);
+        treadmill.hw.beep(BEEP_KEYPRESS_ACK);
+      }
+
+    } else {
+      debounce = 0;
     }
-
-  } else if (HAL_GPIO_ReadPin(INC_PLUS_GPIO_Port, INC_PLUS_Pin) == GPIO_PIN_RESET) {
-    if (debounce == 0) debounce = HAL_GetTick();
-    if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
-      debounce = SHORTCUT_ACKED;
-      int incline = (int)treadmill.training.incline + treadmill.config.incline.step;
-      if (incline > treadmill.config.incline.max) incline = treadmill.config.incline.max;
-      treadmill_set_incline(&treadmill, incline);
-      treadmill.hw.beep(BEEP_KEYPRESS_ACK);
-    }
-
-  } else {
-    debounce = 0;
   }
 }
 
@@ -1386,66 +1458,66 @@ void BeepTask(void const * argument)
       HAL_TIM_PWM_Stop(&htim16, TIM_CHANNEL_1);
       switch (beep) {
         case BEEP_KEYPRESS_ACK: {
-          TIM16->CNT = 0;
-          TIM16->PSC = 120;
-          TIM16->ARR = 40;
-          TIM16->CCR2 = 10;
-          HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
-          osTimerStart(beepTimerHandle, pdMS_TO_TICKS(100));
+          // TIM16->CNT = 0;
+          // TIM16->PSC = 120;
+          // TIM16->ARR = 40;
+          // TIM16->CCR2 = 10;
+          // HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
+          // osTimerStart(beepTimerHandle, pdMS_TO_TICKS(100));
           break;
         }
         case BEEP_KEYPRESS_NAK: {
-          TIM16->CNT = 0;
-          TIM16->PSC = 600;
-          TIM16->ARR = 40;
-          TIM16->CCR2 = 20;
-          HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
-          osTimerStart(beepTimerHandle, pdMS_TO_TICKS(100));
+          // TIM16->CNT = 0;
+          // TIM16->PSC = 600;
+          // TIM16->ARR = 40;
+          // TIM16->CCR2 = 20;
+          // HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
+          // osTimerStart(beepTimerHandle, pdMS_TO_TICKS(100));
           break;
         }
         case BEEP_COUNTDOWN_COUNT: {
-          TIM16->CNT = 0;
-          TIM16->PSC = 120 * 2;
-          TIM16->ARR = 40;
-          TIM16->CCR2 = 20;
-          HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
-          osTimerStart(beepTimerHandle, pdMS_TO_TICKS(250));
+          // TIM16->CNT = 0;
+          // TIM16->PSC = 120 * 2;
+          // TIM16->ARR = 40;
+          // TIM16->CCR2 = 20;
+          // HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
+          // osTimerStart(beepTimerHandle, pdMS_TO_TICKS(250));
           break;
         }
         case BEEP_COUNTDOWN_END: {
-          TIM16->CNT = 0;
-          TIM16->PSC = 110 * 2;
-          TIM16->ARR = 40;
-          TIM16->CCR2 = 20;
-          HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
-          osTimerStart(beepTimerHandle, pdMS_TO_TICKS(500));
+          // TIM16->CNT = 0;
+          // TIM16->PSC = 110 * 2;
+          // TIM16->ARR = 40;
+          // TIM16->CCR2 = 20;
+          // HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
+          // osTimerStart(beepTimerHandle, pdMS_TO_TICKS(500));
           break;
         }
         case BEEP_REST: {
-          TIM16->CNT = 0;
-          TIM16->PSC = 120;
-          TIM16->ARR = 40;
-          TIM16->CCR2 = 2;
-          HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
-          osTimerStart(beepTimerHandle, pdMS_TO_TICKS(50));
+          // TIM16->CNT = 0;
+          // TIM16->PSC = 120;
+          // TIM16->ARR = 40;
+          // TIM16->CCR2 = 2;
+          // HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
+          // osTimerStart(beepTimerHandle, pdMS_TO_TICKS(50));
           break;
         }
         case BEEP_PROGRAM_FINISHED: {
-          TIM16->CNT = 0;
-          TIM16->PSC = 110;
-          TIM16->ARR = 40;
-          TIM16->CCR2 = 20;
-          HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
-          osTimerStart(beepTimerHandle, pdMS_TO_TICKS(500));
+          // TIM16->CNT = 0;
+          // TIM16->PSC = 110;
+          // TIM16->ARR = 40;
+          // TIM16->CCR2 = 20;
+          // HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
+          // osTimerStart(beepTimerHandle, pdMS_TO_TICKS(500));
           break;
         }
         case BEEP_EMERGENCY: {
-          TIM16->CNT = 0;
-          TIM16->PSC = 110;
-          TIM16->ARR = 40;
-          TIM16->CCR2 = 20;
-          HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
-          osTimerStart(beepTimerHandle, pdMS_TO_TICKS(1000));
+          // TIM16->CNT = 0;
+          // TIM16->PSC = 110;
+          // TIM16->ARR = 40;
+          // TIM16->CCR2 = 20;
+          // HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
+          // osTimerStart(beepTimerHandle, pdMS_TO_TICKS(1000));
           break;
         }
       }

@@ -6,7 +6,13 @@
 #include "treadmill_programs.h"
 #include "ble/ble_protocol/ble_ftms_treadmill.h"
 
+#include "../shared/dm/dm.h"
+extern int completed_goal;
+
+int report_state = 0; // alternate between avg and max value on report
+
 void treadmill_start_training_countdown(treadmill_t *treadmill) {
+  completed_goal = 0;
   treadmill->countdown.value = START_TRAINING_COUNTDOWN_VALUE;
   treadmill->countdown.ms = 0;
   treadmill_set_scene(treadmill, SCENE_COUNTDOWN);
@@ -16,6 +22,13 @@ void treadmill_start_training(treadmill_t *treadmill) {
   memset(&treadmill->training, 0x00, sizeof(struct training));
   treadmill->training.ms = treadmill->ms;
 
+  //////////////////// max pace max speed max bpm
+  treadmill->training.bpm_max = 0;
+  treadmill->training.speed_max = 0;
+  treadmill->training.pace_max = 5000;
+
+  //////////////////// max pace max speed max bpm
+
   treadmill_set_scene(treadmill, SCENE_TRAINING);
   if (treadmill->on_update_fms_callback) {
     treadmill->on_update_fms_callback(treadmill, StartedOrResumedByTheUser, NULL);
@@ -24,7 +37,10 @@ void treadmill_start_training(treadmill_t *treadmill) {
   treadmill_set_speed(treadmill, treadmill->config.speed.min);  
 }
 
-void treadmill_abort_countdown(treadmill_t *treadmill) { treadmill_set_scene(treadmill, SCENE_IDLE); }
+void treadmill_abort_countdown(treadmill_t *treadmill) { 
+  treadmill_exit_program(treadmill); ///////////////
+  treadmill_set_scene(treadmill, SCENE_IDLE); 
+}
 
 void treadmill_pause_training(treadmill_t *treadmill) {
   treadmill_clear_dm_message(treadmill);  
@@ -48,6 +64,12 @@ void treadmill_reset_training(treadmill_t *treadmill) {
 void treadmill_resume_training(treadmill_t *treadmill) {  
   treadmill->training.ms = treadmill->ms;
   treadmill_set_scene(treadmill, SCENE_TRAINING);
+  ////////////////// return to 1.2 km/h
+  if (treadmill->program.id == PROGRAM_WALK_08MIN){
+    treadmill->program.p_walk_08min.target_speed = (int)treadmill->config.speed.min;
+  }
+  ////////////////// return to 1.2 km/h
+
   if (treadmill->on_update_fms_callback) {
     treadmill->on_update_fms_callback(treadmill, StartedOrResumedByTheUser, NULL);
   }
@@ -58,13 +80,17 @@ void treadmill_finish_training(treadmill_t *treadmill) {
   treadmill_clear_dm_message(treadmill);
   treadmill_set_speed(treadmill, 0);
   treadmill_set_scene(treadmill, SCENE_REPORT);
+  report_state = 0; ///////////////////////////
   if (treadmill->on_update_fms_callback) {
     uint8_t stopped = 0x01;
     treadmill->on_update_fms_callback(treadmill, StoppedOrPausedByTheUser, &stopped);
   }
 }
 
-void treadmill_finish_program(treadmill_t *treadmill) { treadmill_finish_training(treadmill); }
+void treadmill_finish_program(treadmill_t *treadmill) { 
+  dm_reset_frame();
+  treadmill_finish_training(treadmill); 
+}
 
 static void treadmill_save_training(treadmill_t *treadmill) {
   treadmill->total.distance_in_meters += treadmill->training.meters;
@@ -160,8 +186,10 @@ void treadmill_program(treadmill_t *treadmill) {
 void treadmill_next_program(treadmill_t *treadmill) {
   if (treadmill->program.id + 1 >= PROGRAM_TOTALS)
     treadmill->program.id = 1;
-  else
+  else{
     treadmill->program.id++;
+  }
+  dm_reset_frame_messages();
   treadmill->program.param_index = 0;
   program_load_default_value(treadmill);
 }
@@ -169,6 +197,7 @@ void treadmill_next_program(treadmill_t *treadmill) {
 void treadmill_exit_program(treadmill_t *treadmill) {
   memset(&treadmill->program, 0x00, sizeof(struct program));
   treadmill_set_scene(treadmill, SCENE_IDLE);
+  dm_reset_frame_messages(); /////////////
 }
 
 void treadmill_start_program(treadmill_t *treadmill) {
@@ -225,7 +254,7 @@ int treadmill_save_total_time(treadmill_t *treadmill, uint32_t total_time_in_sec
 
 int treadmill_start_or_resume(treadmill_t *treadmill) {
   // todo: implementation
-  if (treadmill->scene == SCENE_IDLE || treadmill->scene == SCENE_LUB) {
+  if (treadmill->scene == SCENE_IDLE) {
     treadmill_start_training_countdown(treadmill);
   } else if (treadmill->scene == SCENE_PAUSED) {
     treadmill_resume_training(treadmill);
@@ -317,6 +346,9 @@ void treadmill_set_bpm_read(treadmill_t *treadmill) { treadmill->hw.handgrip.sta
 void treadmill_set_bpm_value(treadmill_t *treadmill, uint8_t bpm) {
   treadmill->hw.handgrip.state = HEARTRATE_HG_READING;
   treadmill->training.bpm = bpm;
+  if (treadmill->training.bpm >= treadmill->training.bpm_max){ //////////////////// bpm max
+    treadmill->training.bpm_max = treadmill->training.bpm;
+  }
 }
 
 void treadmill_set_bpm_stop(treadmill_t *treadmill) {

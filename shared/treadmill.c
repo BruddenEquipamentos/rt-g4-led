@@ -46,8 +46,8 @@ void treadmill_set_scene(treadmill_t *treadmill, treadmill_scene_t scene) {
   treadmill->previous_scene = treadmill->scene;
   treadmill->scene = scene;
   treadmill->scene_tick = treadmill->get_time_ms();
-  treadmill->idle_tick = treadmill->get_time_ms();  
-
+  treadmill->idle_tick = treadmill->get_time_ms();
+  
   // if (treadmill->on_state_changed_callback) {
   //   treadmill->on_state_changed_callback(treadmill, scene);
   // }
@@ -143,19 +143,19 @@ void treadmill_load_config(treadmill_t *treadmill) {
     treadmill->config.weight = DEFAULT_WEIGHT_IN_KG;
   }
 
-  uint32_t lub_param_in_km = 0;
-  if (nvm.NVM_ReadVariable32bits(NVM_U32_LUB_DISTANCE_PARAM, &lub_param_in_km)) {
-    treadmill->config.lub_param_km = lub_param_in_km;
-  } else {
-    treadmill->config.lub_param_km = DEFAULT_LUB_DISTANCE_PARAM;
-  }
+  // uint32_t lub_param_in_km = 0;
+  // if (nvm.NVM_ReadVariable32bits(NVM_U32_LUB_DISTANCE_PARAM, &lub_param_in_km)) {
+  //   treadmill->config.lub_param_km = lub_param_in_km;
+  // } else {
+  //   treadmill->config.lub_param_km = DEFAULT_LUB_DISTANCE_PARAM;
+  // }
 
-  uint32_t lub_distance_in_m = 0;
-  if (nvm.NVM_ReadVariable32bits(NVM_U32_LUB_DISTANCE, &lub_distance_in_m)) {
-    treadmill->config.lub_distance_m = lub_distance_in_m;
-  } else {
-    treadmill->config.lub_distance_m = treadmill->total.distance_in_meters;
-  }
+  // uint32_t lub_distance_in_m = 0;
+  // if (nvm.NVM_ReadVariable32bits(NVM_U32_LUB_DISTANCE, &lub_distance_in_m)) {
+  //   treadmill->config.lub_distance_m = lub_distance_in_m;
+  // } else {
+  //   treadmill->config.lub_distance_m = treadmill->total.distance_in_meters;
+  // }
 
   uint8_t age_in_years = 0;
   if (nvm.NVM_ReadVariable8bits(NVM_U8_AGE, &age_in_years)) {
@@ -163,6 +163,13 @@ void treadmill_load_config(treadmill_t *treadmill) {
   } else {
     treadmill->config.age = DEFAULT_AGE;
   }
+
+  uint32_t max_time_on_treadmill = 0;
+  if (nvm.NVM_ReadVariable32bits(NVM_U32_MAX_TIME_PARAM, &max_time_on_treadmill)) {
+    treadmill->config.max_time = max_time_on_treadmill;
+  } else {
+    treadmill->config.max_time = 0;
+  } /////// max time config
 
   char ns[22];
   if (nvm.NVM_ReadString(NVM_NSU_START_ADDRESS, (uint8_t *)ns, 22)) {
@@ -189,11 +196,14 @@ void treadmill_save_config(treadmill_t *treadmill) {
   if (treadmill->previous_config.weight != treadmill->config.weight) {
     nvm.NVM_WriteVariable8bits(NVM_U8_WEIGHT, treadmill->config.weight);
   }
-  if (treadmill->previous_config.lub_param_km != treadmill->config.lub_param_km) {
-    nvm.NVM_WriteVariable32bits(NVM_U32_LUB_DISTANCE_PARAM, treadmill->config.lub_param_km);
-  }
+  // if (treadmill->previous_config.lub_param_km != treadmill->config.lub_param_km) {
+  //   nvm.NVM_WriteVariable32bits(NVM_U32_LUB_DISTANCE_PARAM, treadmill->config.lub_param_km);
+  // }
   if (treadmill->previous_config.age != treadmill->config.age) {
     nvm.NVM_WriteVariable8bits(NVM_U8_AGE, treadmill->config.age);
+  }
+  if (treadmill->previous_config.max_time != treadmill->config.max_time) {  ////// config max time
+    nvm.NVM_WriteVariable32bits(NVM_U32_MAX_TIME_PARAM, treadmill->config.max_time);
   }
 }
 

@@ -41,22 +41,22 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
         treadmill_speed_decrement(treadmill);
       }
       break;
-    case KEY_EXT_KBD_INCLINE_INC:
+    case KEY_INCLINE_INCREMENT:
       treadmill_incline_increment(treadmill);
       break;
-    case KEY_EXT_KBD_INCLINE_DEC:
+    case KEY_INCLINE_DECREMENT:
       treadmill_incline_decrement(treadmill);
       break;
     case KEY_EXT_KBD_SPEED_6:
-      // treadmill_set_bpm_value(treadmill, 40);
+      // treadmill_set_bpm_value(treadmill, 40); //debug
       treadmill_set_speed(treadmill, 600);
       break;
     case KEY_EXT_KBD_SPEED_9:
-      // treadmill_set_bpm_value(treadmill, treadmill->training.bpm - 10);
+      // treadmill_set_bpm_value(treadmill, treadmill->training.bpm - 10); //debug
       treadmill_set_speed(treadmill, 900);
       break;
     case KEY_EXT_KBD_SPEED_12:
-      // treadmill_set_bpm_value(treadmill, treadmill->training.bpm + 10);
+      // treadmill_set_bpm_value(treadmill, treadmill->training.bpm + 10); //debug
       treadmill_set_speed(treadmill, 1200);
       break;
     case KEY_EXT_KBD_SPEED_15:
@@ -89,7 +89,46 @@ static uint32_t treadmill_calculate_speed(uint32_t dm, uint32_t seconds) {
   return speed / 10;
 }
 
+// calculate minimum time to change maximum variables speed pace bpm
+uint32_t max_var_tick = 0;
+
 static void update(treadmill_t *treadmill) {
+
+  //////////////////// IHRSA
+  // if (treadmill->get_time_ms() - treadmill->scene_tick < 10 * 1000) {
+  //   treadmill_set_speed(treadmill, 120);
+  //   // treadmill->scene_tick = treadmill->get_time_ms();
+  // }
+  // if (treadmill->get_time_ms() - treadmill->scene_tick >= 10 * 1000) {
+  //   treadmill_set_speed(treadmill, 300);
+  //   // treadmill->scene_tick = treadmill->get_time_ms();
+  // }
+  // if (treadmill->get_time_ms() - treadmill->scene_tick >= 15 * 1000) {
+  //   treadmill_set_speed(treadmill, 600);
+  //   // treadmill->scene_tick = treadmill->get_time_ms();
+  // }
+  // if (treadmill->get_time_ms() - treadmill->scene_tick >= 25 * 1000) {
+  //   treadmill_set_speed(treadmill, 900);
+  //   // treadmill->scene_tick = treadmill->get_time_ms();
+  // }
+  // if (treadmill->get_time_ms() - treadmill->scene_tick >= 35 * 1000) {
+  //   treadmill_set_speed(treadmill, 1200);
+  //   // treadmill->scene_tick = treadmill->get_time_ms();
+  // }
+  // if (treadmill->get_time_ms() - treadmill->scene_tick >= 45 * 1000) {
+  //   treadmill_set_speed(treadmill, 1500);
+  //   // treadmill->scene_tick = treadmill->get_time_ms();
+  // }
+  // if ((treadmill->get_time_ms() - treadmill->scene_tick) > (45 * 1000) && (treadmill->get_time_ms() - treadmill->scene_tick) < (60 * 1000)) {
+  //   treadmill_set_speed(treadmill, 1800);
+  //   // treadmill->scene_tick = treadmill->get_time_ms();
+  // }
+  // if (treadmill->get_time_ms() - treadmill->scene_tick >= 60 * 1000) {
+  //   treadmill_finish_training(treadmill);
+  //   treadmill->scene_tick = treadmill->get_time_ms();
+  // }
+  //////////////////// IHRSA
+
   if (treadmill->ms - treadmill->training.ms >= 1000) {
     treadmill->training.ms = treadmill->ms;
 
@@ -112,6 +151,9 @@ static void update(treadmill_t *treadmill) {
       treadmill->training.bpm_total += treadmill->training.bpm;
       treadmill->training.bpm_count++;
       treadmill->training.bpm_average = treadmill->training.bpm_total / treadmill->training.bpm_count;
+      if (treadmill->training.bpm > treadmill->training.bpm_max){
+        treadmill->training.bpm_max = treadmill->training.bpm;
+      }
     }
 
     {
@@ -150,6 +192,18 @@ static void update(treadmill_t *treadmill) {
       }
     }
   }
+
+  /// 10 seconds mininum is working for max value. 
+  /// However, we need to cut max value in calculation of average speed and pace
+  // max pace and speed calculation //////////////////////////////////// 
+  if ((treadmill->training.pace < treadmill->training.pace_max) && (treadmill->training.pace > 0)){
+    // if ((treadmill->training.seconds - max_var_tick) >= (10)){ // 10 seconds minimum
+    treadmill->training.pace_max = treadmill->training.pace;
+    treadmill->training.speed_max = treadmill->training.speed;
+    // max_var_tick = treadmill->training.seconds;
+    // }
+  }////////////////////////////////////
+
   // handle program specific things
   treadmill_scene_training_programs_update(treadmill);
 }

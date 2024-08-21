@@ -127,21 +127,27 @@ static void change_config_test(treadmill_t *treadmill, const kbd_key_t key) {
   }
 }
 
-/////// new config
+/////// new config MAX TIME
 static void change_config_max_time(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_SPEED_INCREMENT: {
-      if (treadmill->config.max_time + PROGRAM_TIME_INC_TIME_STEP <= DEFAULT_TIME_ON_TREADMILL)
-        treadmill->config.max_time += PROGRAM_TIME_INC_TIME_STEP;
-      else
+      if (treadmill->config.max_time == 0){
         treadmill->config.max_time = MAX_TIME_ON_TREADMILL_LOWER;
+      }
+      else{
+        if (treadmill->config.max_time + PROGRAM_TIME_INC_TIME_STEP <= DEFAULT_TIME_ON_TREADMILL)
+          treadmill->config.max_time += PROGRAM_TIME_INC_TIME_STEP;
+        else {
+          treadmill->config.max_time = 0;
+        }
+      }
       break;
     }
     case KEY_SPEED_DECREMENT: {
       if (treadmill->config.max_time - PROGRAM_TIME_INC_TIME_STEP >= MAX_TIME_ON_TREADMILL_LOWER)
         treadmill->config.max_time -= PROGRAM_TIME_INC_TIME_STEP;
       else
-        treadmill->config.max_time = MAX_TIME_ON_TREADMILL_LOWER;
+        treadmill->config.max_time = 0;
       break;
     }
     default:
@@ -172,10 +178,10 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
           change_config_weight(treadmill, key);
           break;
         }
-        case CONFIG_OPTION_LUB: {
-          change_config_lub(treadmill, key);
-          break;
-        }
+        // case CONFIG_OPTION_LUB: {
+        //   change_config_lub(treadmill, key);
+        //   break;
+        // }
         case CONFIG_OPTION_MODBUS: {
           change_config_modbus(treadmill, key);
           break;

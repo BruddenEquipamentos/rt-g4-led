@@ -6,6 +6,10 @@
 
 #include <stddef.h>
 
+#include "../shared/dm/dm.h"
+
+int completed_goal = 0;
+
 typedef struct program_training_callback {
   program_id_t id;
   void (*update)(treadmill_t *treadmill);
@@ -13,7 +17,7 @@ typedef struct program_training_callback {
 
 /////// new update
 static void update_program_none(treadmill_t *treadmill) {
-  if ((treadmill->config.max_time >= MAX_TIME_ON_TREADMILL_LOWER) && treadmill->training.seconds >= treadmill->config.max_time) {
+  if ((treadmill->config.max_time != 0) && treadmill->training.seconds >= treadmill->config.max_time){
     treadmill_finish_program(treadmill);
   }
 }
@@ -23,18 +27,21 @@ static void update_program_time(treadmill_t *treadmill) {
   treadmill->training.remaining_seconds = treadmill->training.total_seconds - treadmill->training.seconds;
 
   if (treadmill->training.seconds >= treadmill->program.p_time.seconds) {
+    completed_goal = 1;
     treadmill_finish_program(treadmill);
   }
 }
 
 static void update_program_distance(treadmill_t *treadmill) {
   if (treadmill->training.meters >= treadmill->program.p_distance.meters) {
+    completed_goal = 1;
     treadmill_finish_program(treadmill);
   }
 }
 
 static void update_program_calories(treadmill_t *treadmill) {
   if ((treadmill->training.kcal / 1000) >= treadmill->program.p_calories.kcal) {
+    completed_goal = 1;
     treadmill_finish_program(treadmill);
   }
 }
@@ -42,6 +49,7 @@ static void update_program_calories(treadmill_t *treadmill) {
 ////// new program
 static void update_program_200k_calories(treadmill_t *treadmill) {
   if ((treadmill->training.kcal / 1000) >= treadmill->program.p_200k_calories.kcal) {
+    completed_goal = 1;
     treadmill_finish_program(treadmill);
   }
 }
@@ -56,27 +64,36 @@ static void update_program_hiit(treadmill_t *treadmill) {
   } else {
     treadmill_set_speed(treadmill, treadmill->program.p_hiit.speed_t1);
   }
+ /////////////////////// new functions
+
 
   if (treadmill->training.seconds >= treadmill->program.p_hiit.seconds) {
+    completed_goal = 1;
     treadmill_finish_program(treadmill);
   }
 }
+
+int v1, v2, v3, v4, v5, v6 = 0;
 
 static void update_program_walk_30min(treadmill_t *treadmill) {
   treadmill->training.total_seconds = (30 * 60);
   treadmill->training.remaining_seconds = treadmill->training.total_seconds - treadmill->training.seconds;
 
   if (treadmill->training.seconds < 30 * 60) {
-    int calculated_speed = (int)treadmill->program.p_walk_30min.target_speed;
+    int calculated_speed = treadmill->program.p_walk_30min.target_speed;
+
     if (treadmill->training.seconds < 5 * 60)
       calculated_speed -= 200;
-    else if (treadmill->training.seconds < 10 * 60)
+    else if (treadmill->training.seconds < 10 * 60){
       calculated_speed -= 100;
+    }
     else if (treadmill->training.seconds < 20 * 60) {
-    } else if (treadmill->training.seconds < 25 * 60)
+    } else if (treadmill->training.seconds < 25 * 60){
       calculated_speed -= 100;
-    else if (treadmill->training.seconds < 30 * 60)
+    }
+    else if (treadmill->training.seconds < 30 * 60){
       calculated_speed -= 200;
+    }
 
     if (calculated_speed < treadmill->config.speed.min) {
       treadmill_set_speed(treadmill, treadmill->config.speed.min);
@@ -85,37 +102,77 @@ static void update_program_walk_30min(treadmill_t *treadmill) {
       treadmill_set_speed(treadmill, calculated_speed);      
     }
   } else {
+    completed_goal = 1;
     treadmill_finish_program(treadmill);
   }
+}
+
+static int round_speed_update(int num){
+  int soma = 0;
+  if (num % 10 >= 5){
+    soma = 10;
+  }
+  else{ 
+    soma = 0;
+  }
+  num = num/10;
+  num *= 10;
+  num += soma;
+  return num;
 }
 
 /////////////////// new program
 static void update_program_walk_08min(treadmill_t *treadmill) {
   treadmill->training.total_seconds = (8 * 60);
   treadmill->training.remaining_seconds = treadmill->training.total_seconds - treadmill->training.seconds;
+  
+  int v1, v2, v3, v4, v5 = 0;
 
   if (treadmill->training.seconds < 8 * 60) {
-    int calculated_speed = (int)treadmill->program.p_walk_08min.target_speed;
-    int variable_speed = (int)(0.2)*calculated_speed;
-    if (treadmill->training.seconds < 2 * 60){
-        // calculated_speed = (int)treadmill->program.p_walk_08min.target_speed;
-    }
-    else if ((treadmill->training.seconds >= 2 * 60) && (treadmill->training.seconds < 3 * 60))
-      calculated_speed += variable_speed; // 20% increase speed
-    else if ((treadmill->training.seconds >= 3 * 60) && (treadmill->training.seconds < 5 * 60))
-      calculated_speed -= variable_speed; // 20% decrease speed
-    else if ((treadmill->training.seconds >= 5 * 60) && (treadmill->training.seconds < 6 * 60))
-      calculated_speed += variable_speed; // 20% increase speed
-    else if (treadmill->training.seconds >= 7 * 60)
-      calculated_speed -= variable_speed; // 20% decrease speed
 
-    if (calculated_speed < treadmill->config.speed.min) {
-      treadmill_set_speed(treadmill, treadmill->config.speed.min);
+    v1 = (int)treadmill->program.p_walk_08min.target_speed;
+    v2 = round_speed_update(v1 * 120/100);
+    v3 = round_speed_update(v2 * 83/100);
+    v4 = round_speed_update(v3 * 120/100);
+    v5 = round_speed_update(v4 * 83/100);
+
+    if (treadmill->training.seconds < 2 * 60){
+      treadmill_set_speed(treadmill, v1);
     } 
-    else {
-      treadmill_set_speed(treadmill, calculated_speed);      
+    else if ((treadmill->training.seconds >= 2 * 60) && (treadmill->training.seconds < 3 * 60)){
+      if (v2 < treadmill->config.speed.min) {
+        treadmill_set_speed(treadmill, treadmill->config.speed.min);
+      } 
+      else {
+        treadmill_set_speed(treadmill, v2);
+      }
+    }
+    else if ((treadmill->training.seconds >= 3 * 60) && (treadmill->training.seconds < 5 * 60)){
+      if (v3 < treadmill->config.speed.min) {
+        treadmill_set_speed(treadmill, treadmill->config.speed.min);
+      } 
+      else {
+        treadmill_set_speed(treadmill, v3);
+      }
+    }
+    else if ((treadmill->training.seconds >= 5 * 60) && (treadmill->training.seconds < 6 * 60)){
+      if (v4 < treadmill->config.speed.min) {
+        treadmill_set_speed(treadmill, treadmill->config.speed.min);
+      } 
+      else {
+        treadmill_set_speed(treadmill, v4);
+      }
+    }
+    else if (treadmill->training.seconds >= 6 * 60){
+      if (v5 < treadmill->config.speed.min) {
+        treadmill_set_speed(treadmill, treadmill->config.speed.min);
+      } 
+      else {
+        treadmill_set_speed(treadmill, v5);
+      }
     }
   } else {
+    completed_goal = 1;
     treadmill_finish_program(treadmill);
   }
 }

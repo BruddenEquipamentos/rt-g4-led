@@ -6,7 +6,7 @@
 #define BLINK_INTERVAL (1000)
 
 static void render_program_time(treadmill_t *treadmill) {
-  sd_set_visible(&sd_program, true);
+  // sd_set_visible(&sd_program, true);
   sd_set_program_text(&sd_program, treadmill->program.id);
 
   sd_set_visible(&sd_time, true);
@@ -15,7 +15,7 @@ static void render_program_time(treadmill_t *treadmill) {
 }
 
 static void render_program_distance(treadmill_t *treadmill) {
-  sd_set_visible(&sd_program, true);
+  // sd_set_visible(&sd_program, true);
   sd_set_program_text(&sd_program, treadmill->program.id);
 
   sd_set_visible(&sd_distance, true);
@@ -24,7 +24,7 @@ static void render_program_distance(treadmill_t *treadmill) {
 }
 
 static void render_program_calories(treadmill_t *treadmill) {
-  sd_set_visible(&sd_program, true);
+  // sd_set_visible(&sd_program, true);
   sd_set_program_text(&sd_program, treadmill->program.id);
 
   sd_set_visible(&sd_kcal, true);
@@ -34,7 +34,7 @@ static void render_program_calories(treadmill_t *treadmill) {
 
 /////// new program
 static void render_program_200k_calories(treadmill_t *treadmill) {
-  sd_set_visible(&sd_program, true);
+  // sd_set_visible(&sd_program, true);
   sd_set_program_text(&sd_program, treadmill->program.id);
 
   sd_set_visible(&sd_kcal, true);
@@ -43,28 +43,34 @@ static void render_program_200k_calories(treadmill_t *treadmill) {
 }
 
 static void render_program_hiit(treadmill_t *treadmill) {
-  sd_set_visible(&sd_program, true);
+  // sd_set_visible(&sd_program, true);
   sd_set_program_text(&sd_program, treadmill->program.id);
 
   switch (treadmill->program.param_index) {
-    case 0: {  // TIME
+    case 0: {  // TIME 1
       sd_set_visible(&sd_time, true);
-      sd_set_min_sec(&sd_time, treadmill->program.p_hiit.seconds);
+      sd_set_min_sec(&sd_time, treadmill->program.p_hiit.seconds_t1);
       sd_blink(&sd_time, treadmill->get_time_ms(), BLINK_INTERVAL);
       break;
     }
     case 1: {  // SPD1
       sd_set_visible(&sd_time, true);
       sd_set_visible(&sd_speed, true);
-      sd_set_min_sec(&sd_time, treadmill->program.p_hiit.seconds);
+      sd_set_min_sec(&sd_time, treadmill->program.p_hiit.seconds_t1);
       sd_set_kmh(&sd_speed, treadmill->program.p_hiit.speed_t1);
       sd_blink(&sd_speed, treadmill->get_time_ms(), BLINK_INTERVAL);
       break;
     }
-    case 2: {  // SPD2
+    case 2: {  // TIME 2
+      sd_set_visible(&sd_time, true);
+      sd_set_min_sec(&sd_time, treadmill->program.p_hiit.seconds_t2);
+      sd_blink(&sd_time, treadmill->get_time_ms(), BLINK_INTERVAL);
+      break;
+    }
+    case 3: {  // SPD2
       sd_set_visible(&sd_time, true);
       sd_set_visible(&sd_speed, true);
-      sd_set_min_sec(&sd_time, treadmill->program.p_hiit.seconds);
+      sd_set_min_sec(&sd_time, treadmill->program.p_hiit.seconds_t2);
       sd_set_kmh(&sd_speed, treadmill->program.p_hiit.speed_t2);
       sd_blink(&sd_speed, treadmill->get_time_ms(), BLINK_INTERVAL);
     }
@@ -72,7 +78,7 @@ static void render_program_hiit(treadmill_t *treadmill) {
 }
 
 static void render_program_walk_30min(treadmill_t *treadmill) {
-  sd_set_visible(&sd_program, true);
+  // sd_set_visible(&sd_program, true);
   sd_set_program_text(&sd_program, treadmill->program.id);
 
   sd_set_visible(&sd_time, true);
@@ -84,7 +90,7 @@ static void render_program_walk_30min(treadmill_t *treadmill) {
 
 /// new program
 static void render_program_walk_08min(treadmill_t *treadmill) {
-  sd_set_visible(&sd_program, true);
+  // sd_set_visible(&sd_program, true);
   sd_set_program_text(&sd_program, treadmill->program.id);
 
   sd_set_visible(&sd_time, true);
@@ -95,7 +101,7 @@ static void render_program_walk_08min(treadmill_t *treadmill) {
 }
 
 static void render_program_fat_burn(treadmill_t *treadmill) {
-  sd_set_visible(&sd_program, true);
+  // sd_set_visible(&sd_program, true);
   sd_set_program_text(&sd_program, treadmill->program.id);
 
   switch (treadmill->program.param_index) {
@@ -115,7 +121,7 @@ static void render_program_fat_burn(treadmill_t *treadmill) {
 }
 
 static void render_program_super_cardio(treadmill_t *treadmill) {
-  sd_set_visible(&sd_program, true);
+  // sd_set_visible(&sd_program, true);
   sd_set_program_text(&sd_program, treadmill->program.id);
 
   switch (treadmill->program.param_index) {
