@@ -1,3 +1,8 @@
+## Aug 28, 2024
+
+- Version 1.0.6 - All programs working
+- TODO: add configuration: number of intervals - HIIT program; add Gymkit behavior when connected to the watch
+
 ## Jul 08, 2024
 
 - Version 1.0.1 - External keyboard compatibility added for all keys
