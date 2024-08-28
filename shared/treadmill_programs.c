@@ -603,7 +603,7 @@ void program_load_default_value(treadmill_t *treadmill) {
     case PROGRAM_HIIT: {
       treadmill->program.p_hiit.seconds_t1 = PROGRAM_HIIT_DEFAULT_SECONDS;
       treadmill->program.p_hiit.seconds_t2 = PROGRAM_HIIT_DEFAULT_SECONDS;
-      treadmill->program.p_hiit.seconds = (5 * treadmill->program.p_hiit.seconds_t1) + (5 * treadmill->program.p_hiit.seconds_t2);
+      treadmill->program.p_hiit.seconds = treadmill->training.total_seconds;
       treadmill->program.p_hiit.speed_t1 = PROGRAM_HIIT_DEFAULT_SPEED_T1;
       treadmill->program.p_hiit.speed_t2 = PROGRAM_HIIT_DEFAULT_SPEED_T2;
       break;

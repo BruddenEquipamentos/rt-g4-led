@@ -53,9 +53,9 @@ typedef enum program_id {
 #define PROGRAM_200K_CALORIES_INC_CALORIES_STEP (200)
 
 // hiit
-#define PROGRAM_HIIT_DEFAULT_SECONDS (5 * 60)  // 5 min
+#define PROGRAM_HIIT_DEFAULT_SECONDS (1 * 60)  // 5 min
 #define PROGRAM_HIIT_DEFAULT_SPEED_T1 (300)     // 3.0 km/h
-#define PROGRAM_HIIT_DEFAULT_SPEED_T2 (300)     // 3.0 km/h
+#define PROGRAM_HIIT_DEFAULT_SPEED_T2 (700)     // 7.0 km/h
 #define PROGRAM_HIIT_MIN_TIME (0.5 * 60)  ///////////// 30s
 #define PROGRAM_HIIT_MAX_TIME (10 * 60) 
 #define PROGRAM_HIIT_TIME_STEP (0.5 * 60)  //// 30 s step

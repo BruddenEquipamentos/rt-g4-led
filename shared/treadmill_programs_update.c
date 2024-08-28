@@ -55,25 +55,49 @@ static void update_program_200k_calories(treadmill_t *treadmill) {
 }
 
 static void update_program_hiit(treadmill_t *treadmill) {
+  treadmill->program.p_hiit.seconds = (5 * treadmill->program.p_hiit.seconds_t1) + (5 * treadmill->program.p_hiit.seconds_t2);
   treadmill->training.total_seconds = treadmill->program.p_hiit.seconds;
   treadmill->training.remaining_seconds = treadmill->training.total_seconds - treadmill->training.seconds;
 
-  if ((treadmill->training.seconds / 60) & 1) {    
-    treadmill_set_speed(treadmill, treadmill->program.p_hiit.speed_t2);    
-
-  } else {
-    treadmill_set_speed(treadmill, treadmill->program.p_hiit.speed_t1);
-  }
- /////////////////////// new functions
-
-
-  if (treadmill->training.seconds >= treadmill->program.p_hiit.seconds) {
-    completed_goal = 1;
-    treadmill_finish_program(treadmill);
-  }
+//////////////////////////////////////////////////////////////////////////////
+if ((treadmill->training.seconds < treadmill->program.p_hiit.seconds_t1)){
+  treadmill_set_speed(treadmill, treadmill->program.p_hiit.speed_t1);
+}  
+else if (treadmill->training.seconds < (treadmill->program.p_hiit.seconds_t1 + treadmill->program.p_hiit.seconds_t2)){
+  treadmill_set_speed(treadmill, treadmill->program.p_hiit.speed_t2);
+}
+else if (treadmill->training.seconds < ((2 * treadmill->program.p_hiit.seconds_t1) + treadmill->program.p_hiit.seconds_t2)){
+  treadmill_set_speed(treadmill, treadmill->program.p_hiit.speed_t1);
+}
+else if (treadmill->training.seconds < ((2 * treadmill->program.p_hiit.seconds_t1) + (2 * treadmill->program.p_hiit.seconds_t2))){
+  treadmill_set_speed(treadmill, treadmill->program.p_hiit.speed_t2);
+}
+else if (treadmill->training.seconds < ((3 * treadmill->program.p_hiit.seconds_t1) + (2 * treadmill->program.p_hiit.seconds_t2))){
+  treadmill_set_speed(treadmill, treadmill->program.p_hiit.speed_t1);
+}
+else if (treadmill->training.seconds < ((3 * treadmill->program.p_hiit.seconds_t1) + (3 * treadmill->program.p_hiit.seconds_t2))){
+  treadmill_set_speed(treadmill, treadmill->program.p_hiit.speed_t2);
+}
+else if (treadmill->training.seconds < ((4 * treadmill->program.p_hiit.seconds_t1) + (3 * treadmill->program.p_hiit.seconds_t2))){
+  treadmill_set_speed(treadmill, treadmill->program.p_hiit.speed_t1);
+}
+else if (treadmill->training.seconds < ((4 * treadmill->program.p_hiit.seconds_t1) + (4 * treadmill->program.p_hiit.seconds_t2))){
+  treadmill_set_speed(treadmill, treadmill->program.p_hiit.speed_t2);
+}
+else if (treadmill->training.seconds < ((5 * treadmill->program.p_hiit.seconds_t1) + (4 * treadmill->program.p_hiit.seconds_t2))){
+  treadmill_set_speed(treadmill, treadmill->program.p_hiit.speed_t1);
+}
+else if (treadmill->training.seconds >= ((5 * treadmill->program.p_hiit.seconds_t1) + (4 * treadmill->program.p_hiit.seconds_t2))){
+  treadmill_set_speed(treadmill, treadmill->program.p_hiit.speed_t2);
 }
 
-int v1, v2, v3, v4, v5, v6 = 0;
+//////////////////////////////////////////////////////////////
+
+if (treadmill->training.seconds >= treadmill->program.p_hiit.seconds) {
+  completed_goal = 1;
+  treadmill_finish_program(treadmill);
+}
+}
 
 static void update_program_walk_30min(treadmill_t *treadmill) {
   treadmill->training.total_seconds = (30 * 60);

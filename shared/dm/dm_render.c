@@ -441,9 +441,6 @@ void dm_render(treadmill_t *treadmill) {
           }
           case PROGRAM_200K_CALORIES: /// percentage of calorie target completion
             int meta_50per = treadmill->program.p_200k_calories.kcal / 2;
-
-            // int meta_100per = treadmill->program.p_200k_calories.kcal;
-
             if ((treadmill->training.kcal / 1000) >= (meta_50per) && (treadmill->training.kcal / 1000) <= (meta_50per + 2)) {
               dm_render_text_animated("50% DA META", 70, treadmill->get_time_ms());
             }
@@ -460,6 +457,11 @@ void dm_render(treadmill_t *treadmill) {
             }
             break;
           }
+          // case PROGRAM_HIIT: { ///////////////////redo
+          //   uint32_t velocidade = dm_get_frame_from_speed(treadmill->training.speed);
+          //   dm_render_lines(velocidade, treadmill->get_time_ms());     
+          //   break;
+          // }
           case PROGRAM_FAT_BURN:
           case PROGRAM_SUPER_CARDIO: {
             if (treadmill->training.bpm == 0) {

@@ -127,14 +127,37 @@ int treadmill_set_speed(treadmill_t *treadmill, const uint16_t speed) {
   treadmill->training.pace = treadmill_calculate_pace(treadmill);
   treadmill->aux.speed_target = speed;
 
-  // todo: refactor
+  // todo: refactor ///////////////////////////// hiit refactor
   if (treadmill->training.seconds > 0 && speed > 0) {
-    if (treadmill->program.id == PROGRAM_HIIT) {
-      if ((treadmill->training.seconds / 60) & 1) {
-        treadmill->program.p_hiit.speed_t2 = speed;
-      } else {
-        treadmill->program.p_hiit.speed_t1 = speed;
-      }
+    if ((treadmill->training.seconds < treadmill->program.p_hiit.seconds_t1)){
+      treadmill->program.p_hiit.speed_t1 = speed;
+    }  
+    else if (treadmill->training.seconds < (treadmill->program.p_hiit.seconds_t1 + treadmill->program.p_hiit.seconds_t2)){
+      treadmill->program.p_hiit.speed_t2 = speed;
+    }
+    else if (treadmill->training.seconds < ((2 * treadmill->program.p_hiit.seconds_t1) + treadmill->program.p_hiit.seconds_t2)){
+      treadmill->program.p_hiit.speed_t1 = speed;
+    }
+    else if (treadmill->training.seconds < ((2 * treadmill->program.p_hiit.seconds_t1) + (2 * treadmill->program.p_hiit.seconds_t2))){
+      treadmill->program.p_hiit.speed_t2 = speed;
+    }
+    else if (treadmill->training.seconds < ((3 * treadmill->program.p_hiit.seconds_t1) + (2 * treadmill->program.p_hiit.seconds_t2))){
+      treadmill->program.p_hiit.speed_t1 = speed;
+    }
+    else if (treadmill->training.seconds < ((3 * treadmill->program.p_hiit.seconds_t1) + (3 * treadmill->program.p_hiit.seconds_t2))){
+      treadmill->program.p_hiit.speed_t2 = speed;
+    }
+    else if (treadmill->training.seconds < ((4 * treadmill->program.p_hiit.seconds_t1) + (3 * treadmill->program.p_hiit.seconds_t2))){
+      treadmill->program.p_hiit.speed_t1 = speed;
+    }
+    else if (treadmill->training.seconds < ((4 * treadmill->program.p_hiit.seconds_t1) + (4 * treadmill->program.p_hiit.seconds_t2))){
+      treadmill->program.p_hiit.speed_t2 = speed;
+    }
+    else if (treadmill->training.seconds < ((5 * treadmill->program.p_hiit.seconds_t1) + (4 * treadmill->program.p_hiit.seconds_t2))){
+      treadmill->program.p_hiit.speed_t1 = speed;
+    }
+    else if (treadmill->training.seconds >= ((5 * treadmill->program.p_hiit.seconds_t1) + (4 * treadmill->program.p_hiit.seconds_t2))){
+      treadmill->program.p_hiit.speed_t2 = speed;
     }
   }
 
