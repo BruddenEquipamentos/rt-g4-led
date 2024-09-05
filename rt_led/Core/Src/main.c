@@ -194,7 +194,9 @@ int ble_uart_read(uint8_t *buffer, int max_length) {
   return i;
 }
 
-int ble_uart_write(const uint8_t *data, int length) { return HAL_UART_Transmit(&huart3, data, length, 100) == HAL_OK; }
+int ble_uart_write(const uint8_t *data, int length) {
+	return HAL_UART_Transmit(&huart3, data, length, 100) == HAL_OK;
+}
 
 void ble_hw_reset(void) {
   HAL_GPIO_WritePin(CMD_GPIO_Port, CMD_Pin, GPIO_PIN_RESET);
@@ -1421,6 +1423,14 @@ void beepTimerCallback(void const * argument)
   * @param  htim : TIM handle
   * @retval None
   */
+#define ALPHA 32
+static uint16_t lowPassFilter(uint16_t newSample, uint16_t prevFiltered) {
+	uint32_t temp = (uint32_t)prevFiltered * (256 - ALPHA) + (uint32_t)newSample * ALPHA;
+	return (uint16_t)(temp >> 8);
+}
+
+uint16_t current_adc_value = 0;
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   /* USER CODE BEGIN Callback 0 */
@@ -1432,78 +1442,166 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE BEGIN Callback 1 */
   else if (htim->Instance == TIM6) {    
 
+    if (pTreadmill == NULL) return;
+
 	if (HAL_GPIO_ReadPin(LO_MINUS_GPIO_Port, LO_MINUS_Pin) == GPIO_PIN_SET ||
 	  HAL_GPIO_ReadPin(LO_PLUS_GPIO_Port, LO_PLUS_Pin) == GPIO_PIN_SET) {
 	  return;
 	}
 
-	if (uwTick - adc_peak_tick >= 1000) {
-		adc_peak_delta = adc_peak_high - adc_peak_low;
-		adc_peak_delta_average  = (adc_peak_delta_average*4 + adc_peak_delta)/5;
-		adc_peak_low = adc_average_n;
-		adc_peak_high = 0;
-		adc_peak_tick = uwTick;
-	} else {
-		if (adc_below_average) {
-		  if (adc_hrm < adc_peak_low) {
-			  adc_peak_low = adc_hrm;
-		  }
-		} else {
-		  if (adc_hrm > adc_peak_high) {
-			  adc_peak_high = adc_hrm;
+
+	static uint32_t t = 0;
+	t = uwTick;
+
+	static uint16_t max_recent_adc = 0;
+	static uint16_t min_recent_adc = 0xffff;
+	static uint16_t dynamic_threshold = 0;
+	static uint16_t dynamic_threshold_min = 0;
+	static uint32_t _tick = 0;
+
+	static uint16_t filteredSample = 0;
+	filteredSample = lowPassFilter(adc_hrm, filteredSample);
+	current_adc_value = filteredSample;
+
+	// Initialize or reset the max and min ADC values
+	if (_tick == 0) {
+	  max_recent_adc = 0;
+	  min_recent_adc = 0xffff;
+	}
+
+	_tick++;
+
+	// Update max and min ADC values based on the current reading
+	if (current_adc_value > max_recent_adc) {
+	  max_recent_adc = current_adc_value;
+	}
+
+	if (current_adc_value < min_recent_adc) {
+	  min_recent_adc = current_adc_value;
+	}
+
+	// Recalculate the dynamic thresholds every 2000 ticks
+	if (_tick >= 1500) {
+	  if (max_recent_adc >= min_recent_adc) {
+		  dynamic_threshold = max_recent_adc - ((max_recent_adc - min_recent_adc) / 3);
+		  dynamic_threshold_min = min_recent_adc + ((max_recent_adc - min_recent_adc) / 4);
+	  }
+	  _tick = 0;
+	}
+
+	// Beat detection logic using dynamic thresholds
+	if (dynamic_threshold && current_adc_value > dynamic_threshold && adc_below_average) {
+	  adc_new_beat = HAL_GetTick();
+	  uint32_t diff = adc_new_beat - adc_old_beat;
+	  adc_below_average = 0;
+
+	  if (diff < 250) {
+		// BPM > 240 bpm
+	  } else {
+		uint32_t current_bpm = 60000 / diff;
+
+		uint32_t bpm_totals = 0;
+		for (int i = 0; i < BPM_BUFFER_READS; ++i) {
+		  bpm_totals += bpm_buffer_reads[i];
+		}
+		bpm_current_value = bpm_totals / BPM_BUFFER_READS;
+
+		bpm_buffer_reads[bpm_buffer_index] = ((bpm_current_value * 1) + current_bpm) / 2;
+		bpm_buffer_index = (bpm_buffer_index + 1) % BPM_BUFFER_READS;
+
+		adc_old_beat = adc_new_beat;
+
+		// if not reading PolarBPM, use Handgrip
+		if (PolarBPM == 0 && adc_new_beat - adc_delay_tick_ms > 2000) {
+		  if (bpm_current_value < 40) {
+			treadmill_set_bpm_read(pTreadmill);
+		  } else {
+			treadmill_set_bpm_value(pTreadmill, (uint8_t)bpm_current_value);
 		  }
 		}
+	  }
+	} else if (current_adc_value < dynamic_threshold_min) {
+	  adc_below_average = 1;
 	}
 
-	uint32_t threshold = adc_average_n + ADC_THRESHOLD;
-	if (adc_peak_delta_average < adc_peak_high && adc_peak_delta_average >= threshold) {
-		threshold = adc_peak_delta_average / 3;
-	}
 
-    adc_average = ((adc_average * 255) + (adc_hrm * 1000)) / 256;
-    adc_average_n = adc_average / 1000;
-
-    if (adc_hrm > (adc_average_n + ADC_THRESHOLD) && adc_below_average) {
-      adc_new_beat = HAL_GetTick();
-      uint32_t diff = adc_new_beat - adc_old_beat;
-      adc_below_average = 0;
-
-      if (diff < 250) {
-        // BPM > 240 bpm
-      } else {
-
-  	    if (adc_hrm > adc_peak_high) {
-		  adc_peak_high = adc_hrm;
-	    }
-
-        uint32_t current_bpm = 60000 / diff;
-
-        uint32_t bpm_totals = 0;
-        for (int i = 0; i < BPM_BUFFER_READS; ++i) {
-          bpm_totals += bpm_buffer_reads[i];
-        }
-
-        bpm_current_value = bpm_totals / BPM_BUFFER_READS;
-
-        bpm_buffer_reads[bpm_buffer_index] = ((bpm_current_value * 1) + current_bpm) / 2;
-        bpm_buffer_index = (bpm_buffer_index + 1) % BPM_BUFFER_READS;
-
-        adc_old_beat = adc_new_beat;
-
-        // if not reading PolarBPM, use Handgrip
-        if (PolarBPM == 0 && adc_new_beat - adc_delay_tick_ms > 2000) {
-          if (bpm_current_value < 40) {
-            treadmill_set_bpm_read(&treadmill);
-          } else {
-            treadmill_set_bpm_value(&treadmill, (uint8_t)bpm_current_value);
-          }
-
-        }
-
-      }
-    } else if (adc_hrm < adc_average_n) {
-      adc_below_average = 1;
-    }
+//	if (HAL_GPIO_ReadPin(LO_MINUS_GPIO_Port, LO_MINUS_Pin) == GPIO_PIN_SET ||
+//	  HAL_GPIO_ReadPin(LO_PLUS_GPIO_Port, LO_PLUS_Pin) == GPIO_PIN_SET) {
+//	  return;
+//	}
+//
+//	if (uwTick - adc_peak_tick >= 1000) {
+//		adc_peak_delta = adc_peak_high - adc_peak_low;
+//		adc_peak_delta_average  = (adc_peak_delta_average*4 + adc_peak_delta)/5;
+//		adc_peak_low = adc_average_n;
+//		adc_peak_high = 0;
+//		adc_peak_tick = uwTick;
+//	} else {
+//		if (adc_below_average) {
+//		  if (adc_hrm < adc_peak_low) {
+//			  adc_peak_low = adc_hrm;
+//		  }
+//		} else {
+//		  if (adc_hrm > adc_peak_high) {
+//			  adc_peak_high = adc_hrm;
+//		  }
+//		}
+//	}
+//
+//	uint32_t threshold = adc_average_n + ADC_THRESHOLD;
+//	if (adc_peak_delta_average < adc_peak_high && adc_peak_delta_average >= threshold) {
+//		threshold = adc_peak_delta_average / 3;
+//	}
+//
+//    adc_average = ((adc_average * 255) + (adc_hrm * 1000)) / 256;
+//    adc_average_n = adc_average / 1000;
+//
+//    if (adc_hrm > (adc_average_n + ADC_THRESHOLD) && adc_below_average) {
+//      adc_new_beat = HAL_GetTick();
+//      uint32_t diff = adc_new_beat - adc_old_beat;
+//      adc_below_average = 0;
+//
+//      if (diff < 250) {
+//        // BPM > 240 bpm
+//      } else {
+//
+//  	    if (adc_hrm > adc_peak_high) {
+//		  adc_peak_high = adc_hrm;
+//	    }
+//
+//        uint32_t current_bpm = 60000 / diff;
+//
+//        uint32_t bpm_totals = 0;
+//        for (int i = 0; i < BPM_BUFFER_READS; ++i) {
+//          bpm_totals += bpm_buffer_reads[i];
+//        }
+//
+//        bpm_current_value = bpm_totals / BPM_BUFFER_READS;
+//
+//        bpm_buffer_reads[bpm_buffer_index] = ((bpm_current_value * 1) + current_bpm) / 2;
+//        bpm_buffer_index = (bpm_buffer_index + 1) % BPM_BUFFER_READS;
+//
+//        adc_old_beat = adc_new_beat;
+//
+//        // if not reading PolarBPM, use Handgrip
+//        if (PolarBPM == 0 && adc_new_beat - adc_delay_tick_ms > 2000) {
+//          if (bpm_current_value < 40) {
+//            treadmill_set_bpm_read(&treadmill);
+//          } else {
+//            treadmill_set_bpm_value(&treadmill, (uint8_t)bpm_current_value);
+//          }
+//
+//        }
+//
+//      }
+//    } else if (adc_hrm < adc_average_n) {
+//      adc_below_average = 1;
+//    }
+//  }
+//	static char str[16];
+//    snprintf(str, 16, "%d,%d\n", current_adc_value, adc_hrm);
+//    snprintf(str, 16, "%d\n", current_adc_value);
+//    HAL_UART_Transmit(&huart3, str, strlen(str), 100);
   }
   /* USER CODE END Callback 1 */
 }
