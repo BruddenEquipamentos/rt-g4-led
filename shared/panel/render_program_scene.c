@@ -73,6 +73,15 @@ static void render_program_hiit(treadmill_t *treadmill) {
       sd_set_min_sec(&sd_time, treadmill->program.p_hiit.seconds_t2);
       sd_set_kmh(&sd_speed, treadmill->program.p_hiit.speed_t2);
       sd_blink(&sd_speed, treadmill->get_time_ms(), BLINK_INTERVAL);
+      break;
+    }
+    case 4: {  // SERIES
+      char text[5];
+      snprintf(text, 5, "%04d", treadmill->program.p_hiit.series);
+      sd_set_text(&sd_program, text);
+      sd_set_visible(&sd_program, true);
+      sd_blink(&sd_program, treadmill->get_time_ms(), BLINK_INTERVAL);
+      break;
     }
   }
 }

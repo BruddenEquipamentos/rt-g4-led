@@ -6,16 +6,24 @@
 #include "../treadmill_motor_modbus.h"
 #include "dm.h"
 
-// #include "../sd/sd_render.h"
+#include "../sd/sd_render.h"
 
+#include "treadmill_programs.h"
+#include "treadmill_programs_update.h" /////////////////
+
+// aux variables
 unsigned long end_tick = 0;
-
-extern int report_state; ///////
-extern int completed_goal; ////////
-int report_aux = 0;
 int render_finished = 0;
-int report_goal = 0; ///////////////////////
- 
+int report_goal = 0; 
+
+// extern variables
+extern uint16_t on_interval; 
+extern int report_state; 
+extern int completed_goal; 
+extern interval_t hiit_intervals[20];
+extern uint8_t aux_teste;
+extern int incline_limit_reached;
+
 static int dm_blink(const uint32_t update_time_ms, const uint32_t blink_interval_ms) {
   static uint32_t dm_blink_time_ms = 0;
   if (blink_interval_ms == 0) return 0;
@@ -51,7 +59,8 @@ static int dm_get_height_for_speed(const uint16_t speed) {
 //// frametime capture
 static int dm_get_frame_from_speed(const uint16_t speed) {
   static const uint16_t speeds[6] = {300, 600, 900, 1200, 1500, 1800};
-  static const int frames[6] = {600, 480, 430, 300, 270, 100};
+  // static const int frames[6] = {600, 480, 430, 300, 270, 100};
+  static const int frames[6] = {500, 400, 350, 300, 250, 100};
   if (speed < speeds[0])
     return frames[0];
   else if (speed < speeds[1])
@@ -93,6 +102,40 @@ static void dm_render_default(treadmill_t *treadmill) {
     else{ //do nothing on future dots
     }
   }
+}
+
+uint16_t hiit_speeds[20] = {0};
+
+void dm_render_hiit(treadmill_t *treadmill, uint16_t interval, interval_t *hiit_intervals) {
+
+  int height = dm_get_height_for_speed(treadmill->training.speed);
+  hiit_speeds[interval] = height;
+
+  if (interval <= 15){
+    if (treadmill->training.seconds <= hiit_intervals[interval].seconds) {
+      dm_render_column_with_height(interval, height, treadmill->get_time_ms(), 800);
+    }
+    for (int i = 0; i < interval; i++){
+      dm_render_column_with_height(i, hiit_speeds[i], treadmill->get_time_ms(), 0);
+    }
+  }
+  else if (interval > 15) {
+    dm_reset_frame();
+    if (treadmill->training.seconds <= hiit_intervals[interval].seconds) {
+      int dm_interval = interval - 16;
+      // dm_render_column_with_height((interval - 16), height, treadmill->get_time_ms(), 800);
+      dm_render_column_with_height((dm_interval), height, treadmill->get_time_ms(), 800);
+      for (int i = 0; i < 4; i++){
+        if (i < dm_interval){
+          dm_render_column_with_height(i, hiit_speeds[i + 16], treadmill->get_time_ms(), 0);
+        }
+        else if (i == dm_interval){
+          dm_render_column_with_height(i, hiit_speeds[i + 16], treadmill->get_time_ms(), 800);
+        }
+        else{}
+      }
+    }
+  } 
 }
 
 /// new version for walk program (30 min) ////////////
@@ -363,6 +406,33 @@ void dm_render_calories(treadmill_t *treadmill) {
     } //// interval 91 - 100%
 }
 
+////////////////////////////////////////////////////////////////////////////
+
+static void dm_render_prog_time(treadmill_t *treadmill) {
+  uint16_t conclusion_percentage[16] = {0};
+  uint8_t dots_by_percentage[16] = {0};
+
+  for (int i = 0; i < 16; i++){
+    conclusion_percentage[i] = i*7;
+    dots_by_percentage[i] = i;
+    if (i == 15){
+      conclusion_percentage[i] = 100;
+    }
+    if (treadmill->training.conclusion_percentage <= 7){
+        dm_render_column_with_height(dots_by_percentage[0], 5, treadmill->get_time_ms(), 800);
+    }
+    else if (treadmill->training.conclusion_percentage >= conclusion_percentage[i]){
+      if (treadmill->training.conclusion_percentage > (conclusion_percentage[i] - 7) && treadmill->training.conclusion_percentage < conclusion_percentage[i] + 7){
+        dm_render_column_with_height(dots_by_percentage[i], 5, treadmill->get_time_ms(), 800);
+      }
+      else{
+        dm_render_column_with_height(dots_by_percentage[i], 5, treadmill->get_time_ms(), 0);
+      }
+    }
+  }
+}
+////////////////////////////////////////////////////////////////////////////
+
 void dm_render(treadmill_t *treadmill) {
   if (treadmill->message.tick) {
     dm_clear_buffer();
@@ -374,23 +444,22 @@ void dm_render(treadmill_t *treadmill) {
       }
     }
     return;
+}
+
+
+  void dm_render_incline(treadmill_t *treadmill){
+    char text[16];
+    //  sprintf(text, "%1d.%1d%%", treadmill->training.incline / 10, treadmill->training.incline % 10);
+    sprintf(text, "%1d%%", treadmill->training.incline / 10);
+    int length = dm_compute_length(text);
+    if (length < 16) {
+      dm_render_text(text, 8 + length / 2);
+    }
+    else {
+      dm_render_text(text, 16);
+    }
+    return;
   }
-
-  // if (treadmill->scene != treadmill->previous_scene) { ///// comment this func
-  //   switch (treadmill->scene) {
-  //     case SCENE_PAUSED: {
-  //       dm_reset_frame();
-  //       break;
-  //     }
-  //     case SCENE_REPORT: {
-  //       dm_reset_frame();
-  //       break; /////
-  //     }
-  //     default:;
-  //   }
-  // }  
-
-  // debug
 
   switch (treadmill->scene) {
     case SCENE_INIT: {
@@ -419,24 +488,33 @@ void dm_render(treadmill_t *treadmill) {
         if (__new_display) {
           // if incline has been pressed, show incline for specific time
           if (treadmill->aux.incline_changed_time_ms &&
-              treadmill->get_time_ms() - treadmill->aux.incline_changed_time_ms <= 2000) {
-            char text[16];
-            //  sprintf(text, "%1d.%1d%%", treadmill->training.incline / 10, treadmill->training.incline % 10);
-            sprintf(text, "%1d%%", treadmill->training.incline / 10);
-
-            int length = dm_compute_length(text);
-            if (length < 16) {
-            	dm_render_text(text, 8 + length/2);
-            } else {
-            	dm_render_text(text, 16);
+              treadmill->get_time_ms() - treadmill->aux.incline_changed_time_ms <= TREADMILL_INCL_TINE_SHOWN) {
+            treadmill->aux.last_incline_show = treadmill->get_time_ms();  /////////////////////
+            dm_render_incline(treadmill);
+            return;
+          }
+          else if ((treadmill->training.incline != 0) && (treadmill->get_time_ms() - treadmill->aux.last_incline_show) >= TREADMILL_INCL_TIME){            
+            if (treadmill->get_time_ms() - treadmill->aux.last_incline_show <= TREADMILL_INCL_TIME + TREADMILL_INCL_TINE_SHOWN) {
+              dm_render_incline(treadmill);
+            }
+            else{
+              treadmill->aux.last_incline_show = treadmill->get_time_ms();
             }
             return;
+          }
+          else if (aux_teste == 1){
+            dm_render_incline(treadmill);
+            // aux_teste = 0;
           }
         }
         switch (treadmill->program.id) {
           case PROGRAM_NONE: { /// render lines according to training speed
             uint32_t velocidade = dm_get_frame_from_speed(treadmill->training.speed);
             dm_render_lines(velocidade, treadmill->get_time_ms());
+            break;
+          }
+          case PROGRAM_TIME: {
+            dm_render_prog_time(treadmill);
             break;
           }
           case PROGRAM_200K_CALORIES: /// percentage of calorie target completion
@@ -457,11 +535,10 @@ void dm_render(treadmill_t *treadmill) {
             }
             break;
           }
-          // case PROGRAM_HIIT: { ///////////////////redo
-          //   uint32_t velocidade = dm_get_frame_from_speed(treadmill->training.speed);
-          //   dm_render_lines(velocidade, treadmill->get_time_ms());     
-          //   break;
-          // }
+          case PROGRAM_HIIT: { ///////////////////redo
+            dm_render_hiit(treadmill, on_interval, hiit_intervals);
+            break;
+          }
           case PROGRAM_FAT_BURN:
           case PROGRAM_SUPER_CARDIO: {
             if (treadmill->training.bpm == 0) {
@@ -603,6 +680,9 @@ void dm_render(treadmill_t *treadmill) {
                 case 3:
                   dm_render_text("V2", 13);
                   break;
+                case 4:
+                  dm_render_text_animated("SERIES", 100, treadmill->get_time_ms());
+                  break;
                 default:;
               }
             }
@@ -613,11 +693,41 @@ void dm_render(treadmill_t *treadmill) {
             break;
           }
           case PROGRAM_FAT_BURN:{
-            dm_render_text_animated("P6 * MOD", 100, treadmill->get_time_ms());
+            treadmill->scene_tick = treadmill->get_time_ms();
+            if ((treadmill->get_time_ms() - treadmill->scene_tick <= 2 * 1000) && (render_finished == 0)) {
+              render_finished = dm_render_text_animated("P6 * MOD", 100, treadmill->get_time_ms());
+              // treadmill->scene_tick = treadmill->get_time_ms();
+            }
+            else{
+              switch (treadmill->program.param_index) {
+                case 0:
+                  break;
+                case 1:
+                  dm_render_text_animated("IDADE", 100, treadmill->get_time_ms());
+                  break;  
+                default:;
+              }
+            }
+            // dm_render_text_animated("P6 * MOD", 100, treadmill->get_time_ms());
             break;
           }
           case PROGRAM_SUPER_CARDIO:{
-            dm_render_text_animated("P7 * VIG", 100, treadmill->get_time_ms());
+            treadmill->scene_tick = treadmill->get_time_ms();
+            if ((treadmill->get_time_ms() - treadmill->scene_tick <= 2 * 1000) && (render_finished == 0)) {
+              render_finished = dm_render_text_animated("P7 * VIG", 100, treadmill->get_time_ms());
+              // treadmill->scene_tick = treadmill->get_time_ms();
+            }
+            else{
+              switch (treadmill->program.param_index) {
+                case 0:
+                  break;
+                case 1:
+                  dm_render_text_animated("IDADE", 100, treadmill->get_time_ms());
+                  break;  
+                default:;
+              }
+            }
+            // dm_render_text_animated("P7 * VIG", 100, treadmill->get_time_ms());
             break;
           }
           case PROGRAM_WALK_08MIN:{
@@ -651,7 +761,6 @@ void dm_render(treadmill_t *treadmill) {
           report_goal = dm_render_text_animated("META CONCLUIDA", 100, treadmill->get_time_ms());
         }
         else {
-        // if (report_goal == 1 && report_aux == 0){
           if (report_state == 0) {
             dm_render_text("MAX", 16);
           }
@@ -670,13 +779,4 @@ void dm_render(treadmill_t *treadmill) {
       }
     };
   }
-
-//   static int col = 0;
-//   static uint32_t t = 0;
-//   if (treadmill->get_time_ms() - t >= 250) {
-//     col = (col + 1) % 16;
-//     t = treadmill->get_time_ms();
-//   }
-//   dm_clear_buffer();
-//   for (int i = 0; i < col + 1; ++i) dm_render_column_line(i);
 }

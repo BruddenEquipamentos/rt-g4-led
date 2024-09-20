@@ -4,12 +4,19 @@
 
 #include "nvm/nvm.h"
 #include "treadmill_programs.h"
+#include "treadmill_programs_update.h"
 #include "ble/ble_protocol/ble_ftms_treadmill.h"
 
 #include "../shared/dm/dm.h"
 extern int completed_goal;
 
 int report_state = 0; // alternate between avg and max value on report
+int incline_limit_reached = 0; ///////////// if user tries to change incline outside boundaries
+
+/////////////////////////////////////////////////////
+extern struct interval_t hiit_intervals;
+extern uint16_t on_interval;
+/////////////////////////////////////////////////////
 
 void treadmill_start_training_countdown(treadmill_t *treadmill) {
   completed_goal = 0;
@@ -49,13 +56,14 @@ void treadmill_pause_training(treadmill_t *treadmill) {
     uint8_t paused = 0x02;
     treadmill->on_update_fms_callback(treadmill, StoppedOrPausedByTheUser, &paused);
   }
-
   treadmill_set_speed(treadmill, 0);
 }
 
 void treadmill_reset_training(treadmill_t *treadmill) {
   memset(&treadmill->training, 0x00, sizeof(struct training));
   memset(&treadmill->aux, 0x00, sizeof(struct aux));
+  memset(&hiit_intervals, 0x00, sizeof(interval_t) * (PROGRAM_HIIT_MAX_SERIES * 2));  /////// reset hiit invervals
+  memset(&on_interval, 0x00, sizeof(uint16_t)); /////// reset hiit invervals
   if (treadmill->on_update_fms_callback){
 	  treadmill->on_update_fms_callback(treadmill, Reset, NULL);
   }
@@ -129,38 +137,15 @@ int treadmill_set_speed(treadmill_t *treadmill, const uint16_t speed) {
 
   // todo: refactor ///////////////////////////// hiit refactor
   if (treadmill->training.seconds > 0 && speed > 0) {
-    if ((treadmill->training.seconds < treadmill->program.p_hiit.seconds_t1)){
-      treadmill->program.p_hiit.speed_t1 = speed;
-    }  
-    else if (treadmill->training.seconds < (treadmill->program.p_hiit.seconds_t1 + treadmill->program.p_hiit.seconds_t2)){
-      treadmill->program.p_hiit.speed_t2 = speed;
-    }
-    else if (treadmill->training.seconds < ((2 * treadmill->program.p_hiit.seconds_t1) + treadmill->program.p_hiit.seconds_t2)){
-      treadmill->program.p_hiit.speed_t1 = speed;
-    }
-    else if (treadmill->training.seconds < ((2 * treadmill->program.p_hiit.seconds_t1) + (2 * treadmill->program.p_hiit.seconds_t2))){
-      treadmill->program.p_hiit.speed_t2 = speed;
-    }
-    else if (treadmill->training.seconds < ((3 * treadmill->program.p_hiit.seconds_t1) + (2 * treadmill->program.p_hiit.seconds_t2))){
-      treadmill->program.p_hiit.speed_t1 = speed;
-    }
-    else if (treadmill->training.seconds < ((3 * treadmill->program.p_hiit.seconds_t1) + (3 * treadmill->program.p_hiit.seconds_t2))){
-      treadmill->program.p_hiit.speed_t2 = speed;
-    }
-    else if (treadmill->training.seconds < ((4 * treadmill->program.p_hiit.seconds_t1) + (3 * treadmill->program.p_hiit.seconds_t2))){
-      treadmill->program.p_hiit.speed_t1 = speed;
-    }
-    else if (treadmill->training.seconds < ((4 * treadmill->program.p_hiit.seconds_t1) + (4 * treadmill->program.p_hiit.seconds_t2))){
-      treadmill->program.p_hiit.speed_t2 = speed;
-    }
-    else if (treadmill->training.seconds < ((5 * treadmill->program.p_hiit.seconds_t1) + (4 * treadmill->program.p_hiit.seconds_t2))){
-      treadmill->program.p_hiit.speed_t1 = speed;
-    }
-    else if (treadmill->training.seconds >= ((5 * treadmill->program.p_hiit.seconds_t1) + (4 * treadmill->program.p_hiit.seconds_t2))){
-      treadmill->program.p_hiit.speed_t2 = speed;
+    if (treadmill->program.id == PROGRAM_HIIT) {
+      if ((on_interval == 0) || (on_interval % 2 == 0)){
+        treadmill->program.p_hiit.speed_t1 = speed;
+      }
+      else{
+        treadmill->program.p_hiit.speed_t2 = speed;
+      }
     }
   }
-
   // if (treadmill->on_speed_changed_callback) {
   //   treadmill->on_speed_changed_callback(treadmill, speed);
   // }
@@ -168,7 +153,6 @@ int treadmill_set_speed(treadmill_t *treadmill, const uint16_t speed) {
   if (treadmill->on_update_fms_callback) {
     treadmill->on_update_fms_callback(treadmill, TargetSpeedChanged, &speed);
   }
-
   return 1;
 }
 

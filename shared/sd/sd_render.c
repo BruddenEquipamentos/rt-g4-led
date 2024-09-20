@@ -59,6 +59,11 @@ static void sd_set_value_to_all(const uint32_t value) {
 
 #include <stdio.h>  // TODO: refactor
 
+extern uint8_t speed_changed;
+extern uint8_t incline_changed;
+
+uint8_t aux_teste = 0;
+
 static void render_training_data(treadmill_t *treadmill) {
   sd_set_km_m(&sd_distance, treadmill->training.meters);
   sd_set_min_sec(&sd_time, treadmill->training.seconds);
@@ -67,6 +72,27 @@ static void render_training_data(treadmill_t *treadmill) {
   sd_set_kcal(&sd_kcal, treadmill->training.kcal / 1000);
   sd_set_incline(&sd_incline, treadmill->training.incline);
 
+
+  if (treadmill->scene == SCENE_TRAINING) {
+    if ((speed_changed == 1) && treadmill->get_time_ms() - treadmill->key_pressed_last_tick <= 2000){
+      sd_render_all_visible(false);
+      sd_set_visible(&sd_speed, true);
+    }
+    else{
+      speed_changed = 0;
+    }
+    if ((incline_changed == 1) && treadmill->get_time_ms() - treadmill->key_pressed_last_tick <= 2000){
+      sd_render_all_visible(false);
+      if ((treadmill->training.incline == treadmill->config.incline.min) || (treadmill->training.incline == treadmill->config.incline.max)) {
+        aux_teste = 1;
+        /////////////////////////////////
+      }
+    }      
+    else{
+      incline_changed = 0;
+    }
+  }
+  
   // TODO: refactor
   if (treadmill->scene == SCENE_TRAINING && treadmill->aux.speed_reached != treadmill->aux.speed_target) {
     sd_blink(&sd_speed, treadmill->get_time_ms(), 500);
@@ -300,7 +326,8 @@ void sd_render(treadmill_t *treadmill) {
       //   render_training_data(treadmill);
       // }
 
-      sd_set_visible(&sd_program, false);
+      // sd_set_visible(&sd_program, false);
+      sd_render_all_visible(false);
       render_training_data(treadmill);
       
       break;
@@ -328,7 +355,8 @@ void sd_render(treadmill_t *treadmill) {
       break;
     }
     case SCENE_COUNTDOWN: {
-      sd_set_visible(&sd_program, false);
+      // sd_set_visible(&sd_program, false);
+      sd_render_all_visible(false);
       render_training_data(treadmill);
       render_training_data_program(treadmill);
       break;

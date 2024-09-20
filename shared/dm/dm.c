@@ -117,9 +117,16 @@ struct dm_buffer{
   uint16_t data[5];
 };
 
-struct dm_buffer dm_lines_buffer[4] = {  
+struct dm_buffer dm_lines_buffer[5] = {   //4
     {.data = {
         0b0000011111100000,
+        0b0000000000000000,
+        0b0000000000000000,
+        0b0000000000000000,
+        0b0000000000000000,
+    }},
+    {.data = {
+        0b0000000000000000,
         0b0000111111110000,
         0b0000000000000000,
         0b0000000000000000,
@@ -127,7 +134,7 @@ struct dm_buffer dm_lines_buffer[4] = {
     }},
     {.data = {
         0b0000000000000000,
-        0b0000111111110000,
+        0b0000000000000000,
         0b0001111111111000,
         0b0000000000000000,
         0b0000000000000000,
@@ -135,7 +142,7 @@ struct dm_buffer dm_lines_buffer[4] = {
     {.data = {
         0b0000000000000000,
         0b0000000000000000,
-        0b0001111111111000,
+        0b0000000000000000,
         0b0011111111111100,
         0b0000000000000000,
     }},
@@ -151,7 +158,7 @@ struct dm_buffer dm_lines_buffer[4] = {
 void dm_render_lines(uint32_t ms_per_frame, uint32_t ms) {
   frametime = ms_per_frame;
   dm_tick(ms);
-  if (frame < 4) {
+  if (frame < 5) { //4
     memcpy(dm_buffer, dm_lines_buffer[frame].data, sizeof(uint16_t)*5);  
   } else {
     frame = 0;    

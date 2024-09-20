@@ -1,6 +1,8 @@
 #ifndef TREADMILL_PROGRAMS_H
 #define TREADMILL_PROGRAMS_H
 
+#define ARRAY_LEN(A) (sizeof(A)/sizeof(A[0]))   /////////////////
+
 #include <stdint.h>
 
 #include "treadmill_key.h"
@@ -27,7 +29,6 @@ typedef enum program_id {
 #define MAX_TIME_ON_TREADMILL_LOWER (60 * 7)
 #define DEFAULT_TIME_ON_TREADMILL (60 * 90) // 90 min
 
-
 // 99 minutes
 #define PROGRAM_TIME_DEFAULT_TIME (60 * 5)
 #define PROGRAM_TIME_MIN_TIME (60 * 3)
@@ -53,12 +54,15 @@ typedef enum program_id {
 #define PROGRAM_200K_CALORIES_INC_CALORIES_STEP (200)
 
 // hiit
-#define PROGRAM_HIIT_DEFAULT_SECONDS (1 * 60)  // 5 min
+#define PROGRAM_HIIT_DEFAULT_SECONDS (1 * 60)  // 1 min
 #define PROGRAM_HIIT_DEFAULT_SPEED_T1 (300)     // 3.0 km/h
 #define PROGRAM_HIIT_DEFAULT_SPEED_T2 (700)     // 7.0 km/h
 #define PROGRAM_HIIT_MIN_TIME (0.5 * 60)  ///////////// 30s
 #define PROGRAM_HIIT_MAX_TIME (10 * 60) 
-#define PROGRAM_HIIT_TIME_STEP (0.5 * 60)  //// 30 s step
+#define PROGRAM_HIIT_TIME_STEP (0.5 * 60)  //// 30s step
+#define PROGRAM_HIIT_DEFAULT_SERIES 5 /// 10 intervals
+#define PROGRAM_HIIT_MIN_SERIES 1 /// 2 intervals
+#define PROGRAM_HIIT_MAX_SERIES 10 /// 20 intervals
 // #define PROGRAM_HIIT_MIN_TIME (3 * 60)
 
 // walk 30 min
@@ -110,7 +114,7 @@ struct p_200k_calories {
 struct p_hiit {
   uint32_t seconds_t1;
   uint32_t seconds_t2;
-
+  uint16_t series;
   uint32_t seconds;
   uint32_t speed_t1;
   uint32_t speed_t2;
@@ -154,6 +158,12 @@ typedef struct key_press_program_callback {
   program_id_t id;
   void (*key_press)(treadmill_t *treadmill, const kbd_key_t key);
 } key_press_program_callback_t;
+
+// hiit program interval control struct
+typedef struct interval {                                                                                              
+    uint16_t speed;                         
+    uint32_t seconds;                                                          
+} interval_t;
 
 extern key_press_program_callback_t key_press_program_callback[PROGRAM_TOTALS];
 

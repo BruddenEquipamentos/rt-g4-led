@@ -1,6 +1,10 @@
 #include "../treadmill_motor_modbus.h"
 #include "../treadmill_programs_update.h"
 #include "scene.h"
+#include "sd/sd_render.h" /////////
+
+uint8_t speed_changed = 0;
+uint8_t incline_changed = 0;
 
 static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
@@ -8,6 +12,7 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
       treadmill_pause_training(treadmill);
       break;
     case KEY_SPEED_INCREMENT:
+      speed_changed = 1;
       if (treadmill->program.id == PROGRAM_WALK_30MIN) {
         if (treadmill->program.p_walk_30min.target_speed + treadmill->config.speed.step <=
             treadmill->config.speed.max) {
@@ -25,6 +30,7 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
       }
       break;
     case KEY_SPEED_DECREMENT:
+      speed_changed = 1;
       if (treadmill->program.id == PROGRAM_WALK_30MIN) {
         if ((int)treadmill->program.p_walk_30min.target_speed - treadmill->config.speed.step >=
             treadmill->config.speed.min) {
@@ -42,24 +48,30 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
       }
       break;
     case KEY_INCLINE_INCREMENT:
+      incline_changed = 1;
       treadmill_incline_increment(treadmill);
       break;
     case KEY_INCLINE_DECREMENT:
+      incline_changed = 1;
       treadmill_incline_decrement(treadmill);
       break;
     case KEY_EXT_KBD_SPEED_6:
       // treadmill_set_bpm_value(treadmill, 40); //debug
+      speed_changed = 1;
       treadmill_set_speed(treadmill, 600);
       break;
     case KEY_EXT_KBD_SPEED_9:
       // treadmill_set_bpm_value(treadmill, treadmill->training.bpm - 10); //debug
+      speed_changed = 1;
       treadmill_set_speed(treadmill, 900);
       break;
     case KEY_EXT_KBD_SPEED_12:
       // treadmill_set_bpm_value(treadmill, treadmill->training.bpm + 10); //debug
+      speed_changed = 1;
       treadmill_set_speed(treadmill, 1200);
       break;
     case KEY_EXT_KBD_SPEED_15:
+      speed_changed = 1;
       treadmill_set_speed(treadmill, 1500);
       break;
     case KEY_INCLINE_3:

@@ -8,6 +8,9 @@
 #include "treadmill_key.h"
 #include "treadmill_programs.h"
 
+#define TREADMILL_INCL_TINE_SHOWN 2000 // TIME WHICH INCLINATION APPEARS ON DOT MATRIX 
+#define TREADMILL_INCL_TIME 30000 // TIME BETWEEN INCLINATION APPEARS ON THE DOT MATRIX WHEN DIFF THAN ZERO
+
 #define NVM_U8_MODEL 0x0001
 #define NVM_U32_TOTAL_DISTANCE_METERS 0x0002
 #define NVM_U32_TOTAL_TIME_SECONDS 0x0003
@@ -16,7 +19,6 @@
 #define NVM_U8_AGE 0x0006
 #define NVM_U32_LUB_DISTANCE_PARAM 0x0007
 #define NVM_U32_MAX_TIME_PARAM 0x0008 /////////////////// SAVE MAX TIME CONFIG
-
 
 // Exemplo de NSU "818790500000007067703"
 #define NVM_NS_MAX_LENGTH (22)
@@ -111,6 +113,7 @@ typedef struct treadmill {
     // TODO: refactor
     uint32_t remaining_seconds;
     uint32_t total_seconds;
+    uint32_t conclusion_percentage;
 
     uint32_t bpm_total;
     uint32_t bpm_count;
@@ -125,6 +128,7 @@ typedef struct treadmill {
     uint32_t speed_ms;
 
     uint32_t incline_changed_time_ms;
+    uint32_t last_incline_show;
 
     // TEMP
     struct average_history {
