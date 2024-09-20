@@ -84,16 +84,16 @@ static void program_calories_key_press(treadmill_t *treadmill, const kbd_key_t k
 static uint32_t get_speed_from_shortcut_speed_key(const kbd_key_t key) {
   switch (key) {
     case KEY_SPEED_6:
-      return 500;
+      return 600;
       break;
     case KEY_SPEED_9:
-      return 800;
+      return 900;
       break;
     case KEY_SPEED_12:
-      return 1100;
+      return 1200;
       break;
     case KEY_SPEED_15:
-      return 1400;
+      return 1500;
       break;
     default:;
   }

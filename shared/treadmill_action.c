@@ -24,7 +24,10 @@ void treadmill_start_training(treadmill_t *treadmill) {
   treadmill_set_speed(treadmill, treadmill->config.speed.min);  
 }
 
-void treadmill_abort_countdown(treadmill_t *treadmill) { treadmill_set_scene(treadmill, SCENE_IDLE); }
+void treadmill_abort_countdown(treadmill_t *treadmill) { 
+  treadmill_exit_program(treadmill); //
+  treadmill_set_scene(treadmill, SCENE_IDLE); 
+}
 
 void treadmill_pause_training(treadmill_t *treadmill) {
   treadmill_clear_dm_message(treadmill);  

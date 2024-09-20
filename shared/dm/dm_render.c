@@ -64,18 +64,18 @@ void dm_render(treadmill_t *treadmill) {
     return;
   }
 
-  if (treadmill->scene != treadmill->previous_scene) {
-    switch (treadmill->scene) {
-      case SCENE_PAUSED: {
-        dm_reset_frame();
-        break;
-      }
-      case SCENE_REPORT: {
-        dm_reset_frame();
-      }
-      default:;
-    }
-  }  
+  // if (treadmill->scene != treadmill->previous_scene) {
+  //   switch (treadmill->scene) {
+  //     case SCENE_PAUSED: {
+  //       dm_reset_frame();
+  //       break;
+  //     }
+  //     case SCENE_REPORT: {
+  //       dm_reset_frame();
+  //     }
+  //     default:;
+  //   }
+  // }  
 
   switch (treadmill->scene) {
     case SCENE_INIT: {
