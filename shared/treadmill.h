@@ -27,7 +27,7 @@
 #define LUB_NOTIFICATION_SCENE_TIME (5000)
 #define IDLE_SCENE_TIME (10000)
 #define DEFAULT_WEIGHT_IN_KG (70)
-#define DEFAULT_LUB_DISTANCE_PARAM (1500)
+#define DEFAULT_LUB_DISTANCE_PARAM (0)
 #define DEFAULT_AGE (30)
 #define LUB_NOTIFICATION_DISTANCE_REMAINING_KM (100)
 
@@ -63,6 +63,7 @@ enum handgrip_state {
   HEARTRATE_HG_DISABLED = 0,
   HEARTRATE_HG_INITING,
   HEARTRATE_HG_READING,
+  HEARTRATE_HG_LOST, // Fat Burn and Super Cardio, ISO 957-6
 };
 
 extern char *scene_name[];
@@ -73,6 +74,8 @@ typedef struct treadmill {
 
   uint32_t scene_tick;  // tick since scene started
   uint32_t idle_tick;   // tick since last keypress
+  uint32_t hg_lost_tick; // tick since lost handgrip signal
+  uint8_t hg_lost_count; // count to set speed to config.min (aprox. 50 seconds)
 
   struct program {
     program_id_t id;

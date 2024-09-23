@@ -176,7 +176,7 @@ void bpm_reset_variables(void) {
   bpm_current_value = 0;
   adc_delay_tick_ms = 0;
   treadmill_set_bpm_value(&treadmill, 0);
-  treadmill_set_bpm_stop(&treadmill);
+  treadmill_set_bpm_stop(&treadmill, 0);
 }
 
 static void wait_ms(const int ms) { osDelay(ms); }
@@ -1078,7 +1078,9 @@ static inline void bpm_read_handler(void) {
           HAL_GPIO_WritePin(CONTR_GPIO_Port, CONTR_Pin, GPIO_PIN_SET);
           HAL_ADC_Start_DMA(&hadc1, adc_values, ADC_BUFFER_SIZE);
           HAL_TIM_Base_Start_IT(&htim6);
-          if (PolarBPM == 0) treadmill_set_bpm_read(&treadmill);
+          if (PolarBPM == 0) { ////////////////////////////////////////////////////////////////////
+            treadmill_set_bpm_read(&treadmill);
+          }
           adc_delay_tick_ms = HAL_GetTick();
         }
       } else {
@@ -1093,7 +1095,9 @@ static inline void bpm_read_handler(void) {
           adc_hrm = 0;
           hg_hold_tick = 0;
           bpm_reset_variables();
-          if (PolarBPM == 0) treadmill_set_bpm_stop(&treadmill);
+          if (PolarBPM == 0) { ////////////////////////////////////////////////////////////////////
+            treadmill_set_bpm_stop(&treadmill, 1);
+          }
         }
       }
     }
@@ -1107,14 +1111,14 @@ static inline void bpm_read_handler(void) {
         PolarICDiff = 0;
         PolarBPM = 0;
         ICCapturedPolarLastTick = 0;
-        treadmill_set_bpm_stop(&treadmill);
+        treadmill_set_bpm_stop(&treadmill, 1);
       } else {
         treadmill_set_bpm_value(&treadmill, (uint8_t)PolarBPM);
       }
     }
   }
   {
-    // RODA
+    // RODA ////////////////////////////////////////////////////////////////////////
     if (treadmill.scene == SCENE_TRAINING) {
       if (ICCapturedWheelLastTick == 0)
         ICCapturedWheelLastTick = HAL_GetTick();

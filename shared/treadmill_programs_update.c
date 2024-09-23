@@ -97,6 +97,7 @@ static void treadmill_hr_program_below_range_handler(treadmill_t *treadmill) {
   } else {
     // treadmill_set_dm_message(treadmill, "VEL+", 10000, 1000);
   }
+  
   treadmill_set_dm_message(treadmill, "  @+", 4000, 1000);
 }
 
@@ -137,8 +138,16 @@ static void update_program_fat_burn(treadmill_t *treadmill) {
         treadmill_hr_program_below_range_handler(treadmill);
       } else if (treadmill->training.bpm && treadmill->training.bpm > p_fat_burn->high_bpm) {
         treadmill_hr_program_above_range_handler(treadmill);
+      } else if (treadmill->hg_lost_tick != 0 && treadmill->hw.handgrip.state == HEARTRATE_HG_LOST) {
+        treadmill->hg_lost_count++;
+        if ((treadmill->training.speed != treadmill->config.speed.min) && (treadmill->hg_lost_count == 5)){
+          treadmill_set_speed(treadmill, treadmill->config.speed.min);
+          treadmill_set_incline(treadmill, treadmill->config.incline.min);
+        }
+        else {}
       } else {
         treadmill_clear_dm_message(treadmill);
+        treadmill_clear_bpm_hg_loss(treadmill);
       }
       p_fat_burn->hr_program_state = HEART_RATE_PROGRAM_STATE_WAIT;
       p_fat_burn->tick_ms = treadmill->get_time_ms();
@@ -175,8 +184,16 @@ static void update_program_super_cardio(treadmill_t *treadmill) {
         treadmill_hr_program_below_range_handler(treadmill);
       } else if (treadmill->training.bpm && treadmill->training.bpm > p_super_cardio->high_bpm) {
         treadmill_hr_program_above_range_handler(treadmill);
+      } else if (treadmill->hg_lost_tick != 0 && treadmill->hw.handgrip.state == HEARTRATE_HG_LOST) {
+        treadmill->hg_lost_count++;
+        if ((treadmill->training.speed != treadmill->config.speed.min) && (treadmill->hg_lost_count == 5)){
+          treadmill_set_speed(treadmill, treadmill->config.speed.min);
+          treadmill_set_incline(treadmill, treadmill->config.incline.min);
+        }
+        else {}
       } else {
         treadmill_clear_dm_message(treadmill);
+        treadmill_clear_bpm_hg_loss(treadmill);
       }
       p_super_cardio->hr_program_state = HEART_RATE_PROGRAM_STATE_WAIT;
       p_super_cardio->tick_ms = treadmill->get_time_ms();

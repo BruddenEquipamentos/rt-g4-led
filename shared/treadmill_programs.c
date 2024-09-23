@@ -191,7 +191,7 @@ void program_walk_30min_key_press(treadmill_t *treadmill, const kbd_key_t key) {
         treadmill->program.p_walk_30min.target_speed -= treadmill->config.speed.step;
       break;
     case KEY_SPEED_6:
-    case KEY_SPEED_9:
+    // case KEY_SPEED_9:
       treadmill->program.p_walk_30min.target_speed = get_speed_from_shortcut_speed_key(key);
       break;
     case KEY_INCLINE_INCREMENT:

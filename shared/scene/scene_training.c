@@ -3,6 +3,8 @@
 #include "scene.h"
 
 static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
+  treadmill_clear_bpm_hg_loss(treadmill); // avoid colision with programs fat burn and super cardio
+  treadmill->hw.handgrip.state = HEARTRATE_HG_DISABLED; // avoid colision with programs fat burn and super cardio
   switch (key) {
     case KEY_STOP:
       treadmill_pause_training(treadmill);

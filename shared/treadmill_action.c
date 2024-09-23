@@ -21,7 +21,7 @@ void treadmill_start_training(treadmill_t *treadmill) {
     treadmill->on_update_fms_callback(treadmill, StartedOrResumedByTheUser, NULL);
   }
 
-  treadmill_set_speed(treadmill, treadmill->config.speed.min);  
+  treadmill_set_speed(treadmill, treadmill->config.speed.min);
 }
 
 void treadmill_abort_countdown(treadmill_t *treadmill) { 
@@ -43,6 +43,9 @@ void treadmill_pause_training(treadmill_t *treadmill) {
 void treadmill_reset_training(treadmill_t *treadmill) {
   memset(&treadmill->training, 0x00, sizeof(struct training));
   memset(&treadmill->aux, 0x00, sizeof(struct aux));
+  treadmill_clear_bpm_hg_loss(treadmill); //////////////
+  treadmill_set_bpm_stop(treadmill, 0); /////////////////
+  
   if (treadmill->on_update_fms_callback != NULL) {
 	  treadmill->on_update_fms_callback(treadmill, Reset, NULL);
   }
@@ -123,7 +126,6 @@ int treadmill_set_speed(treadmill_t *treadmill, const uint16_t speed) {
   if (treadmill->on_update_fms_callback) {
     treadmill->on_update_fms_callback(treadmill, TargetSpeedChanged, &speed);
   }
-
   return 1;
 }
 
@@ -393,14 +395,39 @@ int treadmill_send_ftms_data(treadmill_t *treadmill) {
     return treadmill->hw.ble.send_data(buffer, bindex);
 }
 
-void treadmill_set_bpm_read(treadmill_t *treadmill) { treadmill->hw.handgrip.state = HEARTRATE_HG_INITING; }
+void treadmill_clear_bpm_hg_loss(treadmill_t *treadmill) {
+  treadmill->hg_lost_tick = 0; ///////
+  treadmill->hg_lost_count = 0; ////////
+}
+
+void treadmill_set_bpm_read(treadmill_t *treadmill) { 
+  treadmill->hw.handgrip.state = HEARTRATE_HG_INITING;
+  treadmill_clear_bpm_hg_loss(treadmill); /////
+}
 
 void treadmill_set_bpm_value(treadmill_t *treadmill, uint8_t bpm) {
   treadmill->hw.handgrip.state = HEARTRATE_HG_READING;
   treadmill->training.bpm = bpm;
+  treadmill_clear_bpm_hg_loss(treadmill); /////
 }
 
-void treadmill_set_bpm_stop(treadmill_t *treadmill) {
-  treadmill->hw.handgrip.state = HEARTRATE_HG_DISABLED;
+void treadmill_set_bpm_stop(treadmill_t *treadmill, uint8_t in_program) {
+  switch (in_program) {
+    case 0:{
+      treadmill->hw.handgrip.state = HEARTRATE_HG_DISABLED;
+      treadmill_clear_bpm_hg_loss(treadmill);
+      break;
+    }
+    case 1: {
+      treadmill->hw.handgrip.state = HEARTRATE_HG_LOST;
+      treadmill->hg_lost_tick = treadmill->get_time_ms();
+      break;
+    }
+    default: {
+      treadmill->hw.handgrip.state = HEARTRATE_HG_DISABLED;
+      treadmill_clear_bpm_hg_loss(treadmill);
+      break;
+    }
+  } 
   treadmill->training.bpm = 0;
 }
