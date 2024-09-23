@@ -1,3 +1,11 @@
+## Sept 23, 2024
+
+- Version 2.0.6
+- Rework behavior of programs P6 and P7 according to ISO 957-6 Standard: treadmill must set speed (and incline) to minimum after max 1 minute if user releases handgrip.
+- Fixed: Program P5 accepting speed shortcut 9 (maximum permitted is 6).
+- Fixed: Incorrect shortcut speed key interpretation.
+- Fixed: While pausing the training session the dot matrix freezes on pause scene.
+
 ## Feb 10, 2023
 
 - Refactored NVM.
