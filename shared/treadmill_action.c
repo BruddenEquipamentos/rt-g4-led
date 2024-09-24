@@ -64,6 +64,8 @@ void treadmill_reset_training(treadmill_t *treadmill) {
   memset(&treadmill->aux, 0x00, sizeof(struct aux));
   memset(&hiit_intervals, 0x00, sizeof(interval_t) * (PROGRAM_HIIT_MAX_SERIES * 2));  /////// reset hiit invervals
   memset(&on_interval, 0x00, sizeof(uint16_t)); /////// reset hiit invervals
+  treadmill_clear_bpm_hg_loss(treadmill); //////////////
+  treadmill_set_bpm_stop(treadmill, 0); /////////////////
   if (treadmill->on_update_fms_callback){
 	  treadmill->on_update_fms_callback(treadmill, Reset, NULL);
   }
@@ -348,7 +350,15 @@ int treadmill_send_ftms_data(treadmill_t *treadmill) {
   return treadmill->hw.ble.send_data(buffer, bindex);
 }
 
-void treadmill_set_bpm_read(treadmill_t *treadmill) { treadmill->hw.handgrip.state = HEARTRATE_HG_INITING; }
+void treadmill_clear_bpm_hg_loss(treadmill_t *treadmill) {
+  treadmill->hg_lost_tick = 0; ///////
+  treadmill->hg_lost_count = 0; ////////
+}
+
+void treadmill_set_bpm_read(treadmill_t *treadmill) { 
+  treadmill->hw.handgrip.state = HEARTRATE_HG_INITING;
+  treadmill_clear_bpm_hg_loss(treadmill); /////
+}
 
 void treadmill_set_bpm_value(treadmill_t *treadmill, uint8_t bpm) {
   treadmill->hw.handgrip.state = HEARTRATE_HG_READING;
@@ -358,7 +368,23 @@ void treadmill_set_bpm_value(treadmill_t *treadmill, uint8_t bpm) {
   }
 }
 
-void treadmill_set_bpm_stop(treadmill_t *treadmill) {
-  treadmill->hw.handgrip.state = HEARTRATE_HG_DISABLED;
+void treadmill_set_bpm_stop(treadmill_t *treadmill, uint8_t in_program) {
+  switch (in_program) {
+    case 0:{
+      treadmill->hw.handgrip.state = HEARTRATE_HG_DISABLED;
+      treadmill_clear_bpm_hg_loss(treadmill);
+      break;
+    }
+    case 1: {
+      treadmill->hw.handgrip.state = HEARTRATE_HG_LOST;
+      treadmill->hg_lost_tick = treadmill->get_time_ms();
+      break;
+    }
+    default: {
+      treadmill->hw.handgrip.state = HEARTRATE_HG_DISABLED;
+      treadmill_clear_bpm_hg_loss(treadmill);
+      break;
+    }
+  } 
   treadmill->training.bpm = 0;
 }
