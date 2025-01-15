@@ -157,6 +157,11 @@ static void update(treadmill_t *treadmill) {
     treadmill->training.cm += cm;
     treadmill->training.meters = treadmill->training.cm / 100;
 
+  // average speed
+    if (treadmill->training.seconds > 0) {
+      treadmill->training.average_speed = (treadmill->training.meters * 360) / treadmill->training.seconds;
+    }
+
     treadmill->training.pace = treadmill_calculate_pace(treadmill);
     treadmill->training.kcal += treadmill_calculate_calories(treadmill);
 

@@ -286,11 +286,12 @@ int treadmill_pause_procedure(treadmill_t *treadmill) {
 #include "ble/ble_protocol/ble_ftms_treadmill.h"
 #include "ble/ble_protocol/ble_protocol_helper.h"
 int treadmill_send_ftms_data(treadmill_t *treadmill) {
-#define BUFSIZE 64
+#define BUFSIZE 128
   uint8_t buffer[BUFSIZE] = {0};
   uint8_t bindex = 0;
 
   uint16_t instantaneous_speed = treadmill->training.speed;
+  uint16_t average_speed = treadmill->training.average_speed;
   uint32_t total_distance = treadmill->training.meters;
   uint16_t elapsed_time = treadmill->training.seconds;
   uint16_t inclination = treadmill->training.incline;
@@ -298,11 +299,13 @@ int treadmill_send_ftms_data(treadmill_t *treadmill) {
 
   uint16_t flags = 0x0000;
   flags |= TD_TOTAL_DISTANCE_PRESENT;
+  flags |= TD_AVERAGE_SPEED_PRESENT; //
   flags |= TD_INCLINATION_RAMP_ANGLE_SETTING_PRESENT;
   flags |= TD_ELEVATION_GAIN_PRESENT;
   flags |= TD_EXPENDED_ENERGY_PRESENT;
   // flags |= TD_HEART_RATE_PRESENT;
   flags |= TD_ELAPSED_TIME_PRESENT;
+  flags |= TD_AVERAGE_SPEED_PRESENT; //Lucas
 
   buffer[bindex++] = BLE_PROTOCOL_MESSAGE_START;
   flat_bin_to_ascii_8(buffer, &bindex, BUFSIZE, BP_NOTIFY);
@@ -311,6 +314,10 @@ int treadmill_send_ftms_data(treadmill_t *treadmill) {
 
   if ((flags & TD_MORE_DATA) == 0) {
     flat_bin_to_ascii_16(buffer, &bindex, BUFSIZE, instantaneous_speed);
+  }
+
+  if (flags & TD_AVERAGE_SPEED_PRESENT) { //Lucas
+    flat_bin_to_ascii_16(buffer, &bindex, BUFSIZE, average_speed);
   }
 
   if (flags & TD_TOTAL_DISTANCE_PRESENT) {

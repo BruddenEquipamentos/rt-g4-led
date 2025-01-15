@@ -72,7 +72,7 @@ void rt_led_load_model_params(treadmill_t *treadmill, rt_led_model_t model) {
 
       treadmill->hw.inverter.comm_type = MOTOR_COMMUNICATION_TYPE_FREQ;
 
-      strncpy(treadmill->config.device_name, "RT LED", 15);
+      strncpy(treadmill->config.device_name, "ARIA LED", 15);
       __new_display = 1;
       break;
     }
@@ -89,7 +89,7 @@ void rt_led_load_model_params(treadmill_t *treadmill, rt_led_model_t model) {
 
       treadmill->hw.inverter.comm_type = MOTOR_COMMUNICATION_TYPE_UART;
 
-      strncpy(treadmill->config.device_name, "RT LED", 15);
+      strncpy(treadmill->config.device_name, "ARIA LED", 15);
       __new_display = 1;
       break;
     }
@@ -106,7 +106,7 @@ void rt_led_load_model_params(treadmill_t *treadmill, rt_led_model_t model) {
 
       treadmill->hw.inverter.comm_type = MOTOR_COMMUNICATION_TYPE_UART;
 
-      strncpy(treadmill->config.device_name, "RT iLED", 15);
+      strncpy(treadmill->config.device_name, "ARIA iLED", 15);
       __new_display = 1;
       break;
     }
