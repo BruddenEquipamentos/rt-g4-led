@@ -330,8 +330,8 @@ int treadmill_send_ftms_data(treadmill_t *treadmill) {
   }
 
   if (flags & TD_ELEVATION_GAIN_PRESENT) {
-    flat_bin_to_ascii_16(buffer, &bindex, BUFSIZE, 0xffff);
-    flat_bin_to_ascii_16(buffer, &bindex, BUFSIZE, 0xffff);
+    flat_bin_to_ascii_16(buffer, &bindex, BUFSIZE, 0);
+    flat_bin_to_ascii_16(buffer, &bindex, BUFSIZE, 0);
   }
 
   if (flags & TD_EXPENDED_ENERGY_PRESENT) {
