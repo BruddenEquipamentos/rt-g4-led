@@ -9,10 +9,12 @@ extern int report_goal;
 static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_START:
+    case KEY_EXT_KBD_START:
       report_goal = 0;
       treadmill_close_report(treadmill);
       break;
     case KEY_EXT_KBD_STOP:
+    case KEY_STOP:
       dm_reset_frame(); //////////
       report_goal = 0;
       treadmill_close_report(treadmill);

@@ -67,6 +67,11 @@ typedef struct ble {
         uint32_t last_time_received;
     } gk;
 
+    struct {
+        int connected;
+        uint32_t connect_at;
+    } sh;
+
 } ble_t;
 
 // extern int (*ble_send_data)(char *data, int length) = NULL;

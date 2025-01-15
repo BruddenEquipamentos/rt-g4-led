@@ -150,6 +150,9 @@ void treadmill_ble_process(treadmill_t *treadmill) {
         if (ble_data_msg->length > 0 && ble_data_msg->data[0] == 1) {
           treadmill->hw.ble.gk.connected = 1;
         }
+        if (ble_data_msg->length > 0 && ble_data_msg->data[0] == 2) {
+          treadmill->hw.ble.sh.connected = 1;
+        }
         treadmill->hw.ble.connected = 1;
         break;
       }
@@ -253,7 +256,11 @@ void treadmill_ble_push_byte(treadmill_t *treadmill, const uint8_t byte) {
       treadmill_ble_post_message(BLE_RX_EVENT_CONNECTED, &gk, sizeof(gk));
       break;
     }
-
+    case 0x11: {
+    	static uint8_t sh = 2;
+    	treadmill_ble_post_message(BLE_RX_EVENT_CONNECTED, &sh, sizeof(sh));
+    	break;
+    }
     case 0x19:
     case 0x0E:
       treadmill_ble_post_message(BLE_RX_EVENT_DISCONNECTED, 0, 0);

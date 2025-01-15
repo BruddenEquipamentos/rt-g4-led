@@ -11,6 +11,7 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
   treadmill->hw.handgrip.state = HEARTRATE_HG_DISABLED; // avoid colision with programs fat burn and super cardio
   switch (key) {
     case KEY_EXT_KBD_STOP:
+    case KEY_STOP:
       treadmill_pause_training(treadmill);
       break;
     case KEY_SPEED_INCREMENT:
@@ -160,6 +161,12 @@ static void update(treadmill_t *treadmill) {
     treadmill->training.kcal += treadmill_calculate_calories(treadmill);
 
     treadmill->training.pace_total_seconds += treadmill->training.pace;
+
+    if (treadmill->hw.ble.connected && treadmill->hw.ble.heartrate.bpm <= 0) {
+      // do nothing
+    } else if (treadmill->hw.ble.connected && treadmill->hw.ble.heartrate.bpm > 0){
+      treadmill->training.bpm = treadmill->hw.ble.heartrate.bpm;
+    }
 
     if (treadmill->training.bpm >= 40 && treadmill->training.bpm <= 240) {
       treadmill->training.bpm_total += treadmill->training.bpm;

@@ -30,6 +30,7 @@ typedef struct ble_command {
     ble_command_status_t status;
     uint32_t tick;
     uint32_t timeout_tick;
+    uint32_t delay;
 } ble_command_t;
 
 #define MAX_NUM_COMMANDS 8
@@ -54,13 +55,13 @@ int ble_post_message(const char *data, const char *response, const uint32_t time
     return 1;
 }
 
-static void temp_debug_print(const char *response, const int length) {
-    DPRINT("Recv: %s", response);
-    for (int i = 0; i < length; ++i) {
-        DPRINT("%02X ", response[i]);
-    }
-    DPRINT("\n");
-}
+// static void temp_debug_print(const char *response, const int length) {
+//     DPRINT("Recv: %s", response);
+//     for (int i = 0; i < length; ++i) {
+//         DPRINT("%02X ", response[i]);
+//     }
+//     DPRINT("\n");
+// }
 
 static int is_expected_response(ble_command_t *cmd, const char *response, const int length) {
     return strstr(response, cmd->response) != NULL;
@@ -211,11 +212,50 @@ void ble_protocol_process(uint8_t *ptr_data, int length) {
     }
     case BP_BLE_HEARTRATE_DISCONNECT: {
         pTreadmill->hw.ble.heartrate.connecting = 0;
+//        pTreadmill->hw.ble.hrm.status = HRM_STATUS_DISCONNECTED;
+//        pTreadmill->hw.ble.hrm.bpm = 0;
+//        memset(pTreadmill->hw.ble.hrm.device_name, 0, sizeof(pTreadmill->hw.ble.hrm.device_name));
         break;
     }
-    case BP_GK_NOTIFICATION: {                
+    case BP_BLE_HRM: {
+        uint8_t hrm_opcode = next_u8(&ptr);
+        switch (hrm_opcode) {
+            case BP_BLE_HRM_DEVICE_NAME: {
+                uint8_t name_length = next_u8(&ptr);
+                char hrm_device_name[32] = {0};
+                for (int i = 0; i < name_length; ++i) {
+                    hrm_device_name[i] = next_u8(&ptr);
+                }
+                // Armazena o nome do dispositivo HRM encontrado
+//                strncpy(pTreadmill->hw.ble.hrm.device_name, hrm_device_name, name_length);
+                break;
+            }
+            case BP_BLE_HRM_CONNECTING: {
+//                pTreadmill->hw.ble.hrm.status = HRM_STATUS_CONNECTING;
+                break;
+            }
+            case BP_BLE_HRM_CONNECTED: {
+//                pTreadmill->hw.ble.hrm.status = HRM_STATUS_CONNECTED;
+                break;
+            }
+            case BP_BLE_HRM_NOTIFICATION: {
+               pTreadmill->hw.ble.heartrate.bpm = next_u8(&ptr);
+                break;
+            }
+            case BP_BLE_HRM_DISCONNECTED: {
+//                pTreadmill->hw.ble.hrm.status = HRM_STATUS_DISCONNECTED;
+//                pTreadmill->hw.ble.hrm.bpm = 0;
+//                memset(pTreadmill->hw.ble.hrm.device_name, 0, sizeof(pTreadmill->hw.ble.hrm.device_name));
+                break;
+            }
+            default:
+                break;
+        }
+        break;
+    }
+    case BP_GK_NOTIFICATION: {
         uint8_t length = next_u8(&ptr);
-        uint8_t buffer[128] = {0};        
+        uint8_t buffer[128] = {0};
         for (int i = 0; i < length; ++i) {
             buffer[i] = next_u8(&ptr);
         }
@@ -235,9 +275,11 @@ void ble_protocol_process(uint8_t *ptr_data, int length) {
                     // temporaly unavailable
                 } else {
                     // there's bpm data
-                    assert(len == 3 && "Heart Rate Len is not size 3");
-                    pTreadmill->hw.ble.gk.bpm = buffer[i] | buffer[i+1] << 8;
-                    i += 2;
+                    // assert(len == 3 && "Heart Rate Len is not size 3");
+                    if (len == 3){
+                        pTreadmill->hw.ble.gk.bpm = buffer[i] | buffer[i + 1] << 8;
+                        i += 2;
+                    }
                 }
                 break;
             }
@@ -248,10 +290,12 @@ void ble_protocol_process(uint8_t *ptr_data, int length) {
                 if (flags & 0x1) {
                     // temporarily unavailable
                 } else {
-                    assert(len == 3 && "Active Energy Len is not size 3");
+                    // assert(len == 3 && "Active Energy Len is not size 3");
+                    if (len == 3){
+                        pTreadmill->hw.ble.gk.active_energy = buffer[i] | buffer[i + 1] << 8;
+                        i += 2;
+                    }
                     // queue_active_kcal_uart;
-                    pTreadmill->hw.ble.gk.active_energy = buffer[i] | buffer[i+1] << 8;
-                    i += 2;
                 }
                 break;
             }
@@ -261,10 +305,12 @@ void ble_protocol_process(uint8_t *ptr_data, int length) {
                 if (flags & 0x01) {
                     // temporaliry unavailable
                 } else {
-                    assert(len == 3 && "Total Energy Len is not size 3");
+                    // assert(len == 3 && "Total Energy Len is not size 3");
                     // queue_kcal_uart
-                    pTreadmill->hw.ble.gk.total_energy = buffer[i] | buffer[i+1] << 8;
-                    i += 2;
+                    if (len == 3){
+                        pTreadmill->hw.ble.gk.total_energy = buffer[i] | buffer[i + 1] << 8;
+                        i += 2;
+                    }
                 }
                 break;
             }
@@ -276,16 +322,19 @@ void ble_protocol_process(uint8_t *ptr_data, int length) {
                 } else if (flags & 0x02) {
                     // temporarily unavailable
                 } else {
-                    assert(len == 3 && "Average BPM is not size 3");
-                    pTreadmill->hw.ble.gk.average_bpm = buffer[i] | buffer[i+1] << 8;
-                    i += 2;
+                    //assert(len == 3 && "Average BPM is not size 3");
+                    if (len == 3) {
+                    	pTreadmill->hw.ble.gk.average_bpm = buffer[i] | buffer[i + 1] << 8;
+						i += 2;
+                    }
+
                     // queue_average_bpm_uart;
                 }
                 break;
             }
             }
         }
-        pTreadmill->hw.ble.gk.last_time_received = pTreadmill->get_time_ms();        
+        pTreadmill->hw.ble.gk.last_time_received = pTreadmill->get_time_ms();
         break;
     }
     default:;

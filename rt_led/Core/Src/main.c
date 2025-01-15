@@ -36,6 +36,8 @@
 #include "treadmill_ble.h"
 #include "treadmill_motor.h"
 #include "ext_i2c_kbd.h"
+#include "../shared/ble/ble_protocol/ble_protocol_helper.h"
+#include "../shared/ble/ble_protocol/ble_ftms_treadmill.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -44,7 +46,6 @@ uint32_t _tim_delta = 0;
 uint32_t _tim6_count = 0;
 
 /* USER CODE END PTD */
-
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 struct stats_time {
@@ -281,6 +282,38 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
   }
 }
 
+static int treadmill_update_fms(treadmill_t *t, const uint8_t status,
+		const void *param) {
+#define BUFSIZE 32
+	uint8_t buffer[BUFSIZE] = { 0 };
+	uint8_t i = 0;
+
+	// todo: validate status
+	buffer[i++] = BLE_PROTOCOL_MESSAGE_START;
+	flat_bin_to_ascii_8(buffer, &i, BUFSIZE, BP_FMS_NOTIFY);
+	flat_bin_to_ascii_8(buffer, &i, BUFSIZE, status);
+
+	// params speed or incline, for instance
+	switch (status) {
+	case StoppedOrPausedByTheUser:
+		flat_bin_to_ascii_8(buffer, &i, BUFSIZE, *(uint8_t*) param);
+		break;
+	case TargetSpeedChanged:
+		flat_bin_to_ascii_16(buffer, &i, BUFSIZE, *(uint16_t*) param);
+		break;
+	case TargetInclineChanged:
+		flat_bin_to_ascii_16(buffer, &i, BUFSIZE, *(int16_t*) param);
+		break;
+	}
+
+	uint8_t cs = ble_protocol_checksum(buffer, i);
+	flat_bin_to_ascii_8(buffer, &i, BUFSIZE, cs);
+	buffer[i++] = BLE_PROTOCOL_MESSAGE_END;
+
+	return t->hw.ble.send_data(buffer, i);
+}
+
+
 /* USER CODE END 0 */
 
 /**
@@ -393,6 +426,8 @@ int main(void)
   treadmill_setup(&treadmill);
   treadmill.get_time_ms = HAL_GetTick;
   treadmill.hw.beep = beep;
+
+  treadmill.on_update_fms_callback = treadmill_update_fms;
 
   treadmill.hw.ble.get_tick = HAL_GetTick;
   treadmill.hw.ble.send_data = ble_uart_write;

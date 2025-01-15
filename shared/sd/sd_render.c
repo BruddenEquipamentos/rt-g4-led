@@ -84,7 +84,7 @@ static void render_training_data(treadmill_t *treadmill) {
     if ((incline_changed == 1) && treadmill->get_time_ms() - treadmill->key_pressed_last_tick <= 2000){
       sd_render_all_visible(false);
       if ((treadmill->training.incline == treadmill->config.incline.min) || (treadmill->training.incline == treadmill->config.incline.max)) {
-        aux_teste = 1;
+//        aux_teste = 1; //todo: check if incline is min or max if user press incline increment key
         /////////////////////////////////
       }
     }      
@@ -327,7 +327,8 @@ void sd_render(treadmill_t *treadmill) {
       // }
 
       // sd_set_visible(&sd_program, false);
-      sd_render_all_visible(false);
+      sd_render_all_visible(false); 
+      // sd_set_value_to_all(8888); ///led test
       render_training_data(treadmill);
       
       break;

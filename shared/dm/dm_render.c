@@ -24,6 +24,14 @@ extern interval_t hiit_intervals[20];
 extern uint8_t aux_teste;
 extern int incline_limit_reached;
 
+static void dm_render_all(void){
+  for (int col = 0; col < 15; ++col) {
+    for (int row = 0; row < 5; ++row) {
+      dm_buffer[row] |= (1 << (15 - col));
+    }
+  }
+}
+
 static int dm_blink(const uint32_t update_time_ms, const uint32_t blink_interval_ms) {
   static uint32_t dm_blink_time_ms = 0;
   if (blink_interval_ms == 0) return 0;
@@ -475,6 +483,8 @@ void dm_render(treadmill_t *treadmill) {
         dm_render_mb_param_value(treadmill);
       } else {
         dm_render_text_animated("APERTE START OU ESCOLHA UM PROGRAMA", 100, treadmill->get_time_ms());
+        // LED TEST
+        // dm_render_all();
       }
       break;
     }

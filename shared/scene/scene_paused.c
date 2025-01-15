@@ -3,9 +3,11 @@
 static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_START:
+    case KEY_EXT_KBD_START:
       treadmill_resume_training(treadmill);
       break;
     case KEY_EXT_KBD_STOP:
+    case KEY_STOP:
       dm_reset_frame(); ////////
       treadmill_finish_training(treadmill);
       break;

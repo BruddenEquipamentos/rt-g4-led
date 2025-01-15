@@ -68,6 +68,10 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
 
 static void update(treadmill_t *treadmill) {
 
+  if (treadmill->hw.ble.connected && treadmill->hw.ble.heartrate.bpm > 0) {
+    treadmill->training.bpm = treadmill->hw.ble.heartrate.bpm;
+  }
+
   //////////////////// IHRSA
   // if (treadmill->get_time_ms() - treadmill->scene_tick >= 5 * 1000) {
   //   treadmill_start_training_countdown(treadmill);
