@@ -23,6 +23,12 @@ typedef enum ble_process_status {
     BLE_PROCESS_STATUS_IDLE
 } ble_process_status_t;
 
+typedef enum hrm_status {
+    HRM_STATUS_DISCONNECTED = 0,
+    HRM_STATUS_CONNECTING,
+    HRM_STATUS_CONNECTED
+} hrm_status_t;
+
 typedef int (*send_data_cb)(const uint8_t *data, int length);
 typedef int (*recv_data_cb)(uint8_t *data, int max_length);
 
@@ -69,8 +75,16 @@ typedef struct ble {
 
     struct {
         int connected;
-        uint32_t connect_at;
+        uint32_t connected_at;
+        uint16_t bpm;        
     } sh;
+
+    struct {
+        hrm_status_t status;
+        // hrm_status_t previous_status;
+        uint8_t bpm;
+        char device_name[32];
+    } hrm;  // new HRM structure
 
 } ble_t;
 

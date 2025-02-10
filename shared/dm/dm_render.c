@@ -482,7 +482,23 @@ void dm_render(treadmill_t *treadmill) {
       if (treadmill->config.modbus) {
         dm_render_mb_param_value(treadmill);
       } else {
-        dm_render_text_animated("APERTE START OU ESCOLHA UM PROGRAMA", 100, treadmill->get_time_ms());
+        if (treadmill->hw.ble.gk.connected){
+          // dm_render_text_animated("APPLE WATCH CONNECTADO", 150, treadmill->get_time_ms());
+          // dm_render_text_animated("APPLE WATCH CONNECTED", 100, treadmill->get_time_ms()); //Lucas add digits
+        }
+        else if (treadmill->hw.ble.sh.connected){
+          if (dm_blink(treadmill->get_time_ms(), 1000)){
+            dm_render_text("NFC", 14);
+          } else {
+              dm_clear_buffer();  // Limpa a tela quando não deve mostrar o texto
+          }
+            // dm_render_text_animated("GALAXY WATCH CONNECTADO", 150, treadmill->get_time_ms()); //Lucas add digits
+            // dm_render_text_animated("GALAXY WATCH CONNECTED", 100, treadmill->get_time_ms()); //Lucas add digits
+//          }
+        }
+        else{
+          dm_render_text_animated("APERTE START OU ESCOLHA UM PROGRAMA", 100, treadmill->get_time_ms());
+        }
         // LED TEST
         // dm_render_all();
       }

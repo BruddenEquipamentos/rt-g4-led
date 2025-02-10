@@ -169,9 +169,27 @@ static void update(treadmill_t *treadmill) {
 
     if (treadmill->hw.ble.connected && treadmill->hw.ble.heartrate.bpm <= 0) {
       // do nothing
-    } else if (treadmill->hw.ble.connected && treadmill->hw.ble.heartrate.bpm > 0){
-      treadmill->training.bpm = treadmill->hw.ble.heartrate.bpm;
+    } 
+    // else if (treadmill->hw.ble.connected && treadmill->hw.ble.heartrate.bpm > 0){
+    //   treadmill->training.bpm = treadmill->hw.ble.heartrate.bpm;
+    // } //Lucas - removed here - check
+
+    // Lucas
+    // insert here the behaviors for GK and SH
+    // insert on programs P6 and P7 - bpm loss behavior
+    if (treadmill->hw.ble.gk.connected == 1) {
+      treadmill->training.bpm = (uint8_t)treadmill->hw.ble.gk.bpm;
     }
+    else if (treadmill->hw.ble.sh.connected == 1){
+      treadmill->training.bpm = treadmill->hw.ble.heartrate.bpm; //Lucas - use this for SH HR
+    }
+    if (treadmill->hw.ble.hrm.status == HRM_STATUS_CONNECTED) {
+      treadmill->training.bpm = (uint8_t)treadmill->hw.ble.hrm.bpm; //Lucas
+    }
+
+    // if ((treadmill->hw.handgrip.state == HEARTRATE_HG_DISABLED) && (treadmill->hw.ble.gk.connected == 0) && (treadmill->hw.ble.hrm.status == HRM_STATUS_DISCONNECTED) && (treadmill->hw.ble.sh.connected == 0)) {
+    //   treadmill->training.bpm = 0;
+    // }    //Lucas check here
 
     if (treadmill->training.bpm >= 40 && treadmill->training.bpm <= 240) {
       treadmill->training.bpm_total += treadmill->training.bpm;

@@ -10,6 +10,11 @@
 
 int completed_goal = 0;
 
+extern uint8_t gk_was_connected;
+extern uint8_t gk_lost_bpm;
+extern uint8_t ble_strap_was_connected;
+extern uint8_t ble_strap_lost_bpm;
+
 typedef struct program_training_callback {
   program_id_t id;
   void (*update)(treadmill_t *treadmill);
@@ -247,6 +252,14 @@ static void update_program_fat_burn(treadmill_t *treadmill) {
     case HEART_RATE_PROGRAM_STATE_INIT: {
       p_fat_burn->tick_ms = treadmill->get_time_ms();
       p_fat_burn->hr_program_state = HEART_RATE_PROGRAM_STATE_WAIT;
+      if (treadmill->hw.ble.gk.connected || treadmill->hw.ble.sh.connected) { //Lucas sh
+        gk_was_connected = 1;
+        gk_lost_bpm = 0;
+		  }
+    	if (treadmill->hw.ble.hrm.status == HRM_STATUS_CONNECTED) {
+        ble_strap_was_connected = 1;
+        ble_strap_lost_bpm = 0;
+		  }
       break;
     }
     case HEART_RATE_PROGRAM_STATE_WAIT: {
@@ -268,7 +281,28 @@ static void update_program_fat_burn(treadmill_t *treadmill) {
           treadmill_set_incline(treadmill, treadmill->config.incline.min);
         }
         else {}
-      } else {
+      } 
+      else if ((gk_was_connected == 1)) { //Lucas check for SH needed?
+        if (treadmill->hw.ble.gk.connected == 0 && treadmill->hw.ble.sh.connected == 0){
+          gk_lost_bpm++;
+          if (gk_lost_bpm == 4 && (treadmill->training.incline != 0)){
+            treadmill_set_incline(treadmill, treadmill->config.incline.min);
+          }
+          else if (gk_lost_bpm == 5){
+            treadmill_set_speed(treadmill, treadmill->config.speed.min);
+          }	
+        }			
+      }
+      else if ((ble_strap_was_connected == 1) && (treadmill->hw.ble.hrm.status == HRM_STATUS_DISCONNECTED)) {
+        ble_strap_lost_bpm++;
+        if (ble_strap_lost_bpm == 4 && (treadmill->training.incline != 0)){
+          treadmill_set_incline(treadmill, treadmill->config.incline.min);
+        }
+        else if (ble_strap_lost_bpm == 5 && (treadmill->training.speed != treadmill->config.speed.min)){
+          treadmill_set_speed(treadmill, treadmill->config.speed.min);
+        }				
+      }
+      else {
         treadmill_clear_dm_message(treadmill);
         treadmill_clear_bpm_hg_loss(treadmill);
       }
@@ -314,7 +348,28 @@ static void update_program_super_cardio(treadmill_t *treadmill) {
           treadmill_set_incline(treadmill, treadmill->config.incline.min);
         }
         else {}
-      } else {
+      } 
+      else if ((gk_was_connected == 1)) { //Lucas check for SH needed?
+        if (treadmill->hw.ble.gk.connected == 0 && treadmill->hw.ble.sh.connected == 0){
+          gk_lost_bpm++;
+          if (gk_lost_bpm == 4 && (treadmill->training.incline != 0)){
+            treadmill_set_incline(treadmill, treadmill->config.incline.min);
+          }
+          else if (gk_lost_bpm == 5){
+            treadmill_set_speed(treadmill, treadmill->config.speed.min);
+          }	
+        }			
+      }
+      else if ((ble_strap_was_connected == 1) && (treadmill->hw.ble.hrm.status == HRM_STATUS_DISCONNECTED)) {
+        ble_strap_lost_bpm++;
+        if (ble_strap_lost_bpm == 4 && (treadmill->training.incline != 0)){
+          treadmill_set_incline(treadmill, treadmill->config.incline.min);
+        }
+        else if (ble_strap_lost_bpm == 5 && (treadmill->training.speed != treadmill->config.speed.min)){
+          treadmill_set_speed(treadmill, treadmill->config.speed.min);
+        }				
+      }
+      else {
         treadmill_clear_dm_message(treadmill);
         treadmill_clear_bpm_hg_loss(treadmill);
       }

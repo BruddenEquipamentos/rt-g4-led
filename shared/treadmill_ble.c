@@ -115,6 +115,7 @@ static void treadmill_ble_reset(treadmill_t *treadmill) {
   memset(&treadmill->hw.ble.connection, 0, sizeof(treadmill->hw.ble.connection));
   memset(&treadmill->hw.ble.heartrate, 0, sizeof(treadmill->hw.ble.heartrate));
   memset(&treadmill->hw.ble.gk, 0, sizeof(treadmill->hw.ble.gk));
+  memset(&treadmill->hw.ble.sh, 0, sizeof(treadmill->hw.ble.sh)); //Lucas
 }
 
 void treadmill_ble_process(treadmill_t *treadmill) {

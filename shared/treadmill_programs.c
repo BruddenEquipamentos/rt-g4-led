@@ -9,6 +9,11 @@
 
 extern int render_finished;
 
+uint8_t gk_was_connected = 0;
+uint8_t gk_lost_bpm = 0;
+uint8_t ble_strap_was_connected = 0;
+uint8_t ble_strap_lost_bpm = 0;
+
 char *programs_name[] = {
     "PROGRAM_NONE", "PROGRAM_TIME",       "PROGRAM_DISTANCE", "PROGRAM_CALORIES",
     "PROGRAM_HIIT", "PROGRAM_WALK_30MIN", "PROGRAM_FAT_BURN", "PROGRAM_SUPER_CARDIO", "PROGRAM_WALK_08MIN", "PROGRAM_200K_CALORIES"
@@ -438,6 +443,10 @@ static void program_fat_burn_key_press(treadmill_t *treadmill, const kbd_key_t k
     case KEY_START:
       switch (treadmill->program.param_index) {
         case 0:
+          gk_was_connected = 0;
+          gk_lost_bpm = 0;
+          ble_strap_was_connected = 0;
+          ble_strap_lost_bpm = 0;
           treadmill->program.param_index++;
           break;
         case 1:
@@ -513,6 +522,10 @@ static void program_super_cardio_key_press(treadmill_t *treadmill, const kbd_key
     case KEY_START:
       switch (treadmill->program.param_index) {
         case 0:
+          gk_was_connected = 0;
+          gk_lost_bpm = 0;
+          ble_strap_was_connected = 0;
+          ble_strap_lost_bpm = 0;
           treadmill->program.param_index++;
           break;
         case 1:
