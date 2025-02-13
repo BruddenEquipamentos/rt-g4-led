@@ -162,6 +162,7 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
       next_config_option(treadmill);
       break;
     }
+    case KEY_STOP:
     case KEY_EXT_KBD_STOP: {
       treadmill_exit_config(treadmill);
       break;
