@@ -6,6 +6,7 @@
 #include "treadmill_programs.h"
 #include "treadmill_programs_update.h"
 #include "ble/ble_protocol/ble_ftms_treadmill.h"
+#include "ble/ble_protocol/ble_protocol_helper.h"
 
 #include "../shared/dm/dm.h"
 extern int completed_goal;
@@ -282,6 +283,63 @@ int treadmill_pause_procedure(treadmill_t *treadmill) {
   return 1;
 }
 
+static void build_ftms_data_packet(treadmill_t *treadmill, uint8_t *buffer, uint8_t max_size, uint8_t *size, uint16_t flags) {
+    uint16_t instantaneous_speed = treadmill->training.speed;
+    uint16_t average_speed = treadmill->training.average_speed; //Lucas
+    uint32_t total_distance = treadmill->training.meters;
+    uint16_t elapsed_time = treadmill->training.seconds;
+    uint16_t inclination = treadmill->training.incline;
+    uint16_t calories = treadmill->training.kcal / 1000;
+
+    buffer[(*size)++] = BLE_PROTOCOL_MESSAGE_START;
+    flat_bin_to_ascii_8(buffer, size, max_size, BP_NOTIFY);
+    flat_bin_to_ascii_16(buffer, size, max_size, FTMS_TREADMILL_DATA_UUID);
+
+    flat_bin_to_ascii_16(buffer, size, max_size, flags);
+
+    if ((flags & TD_MORE_DATA) == 0) {
+        flat_bin_to_ascii_16(buffer, size, max_size, instantaneous_speed);
+    }
+
+    if (flags & TD_AVERAGE_SPEED_PRESENT) { //Lucas
+        flat_bin_to_ascii_16(buffer, size, max_size, average_speed);
+    } 
+
+    if (flags & TD_TOTAL_DISTANCE_PRESENT) {
+        flat_bin_to_ascii_24(buffer, size, max_size, total_distance);
+    }
+
+    if (flags & TD_INCLINATION_RAMP_ANGLE_SETTING_PRESENT) {
+        flat_bin_to_ascii_16(buffer,size, max_size, inclination);
+        flat_bin_to_ascii_16(buffer, size, max_size, 0x7fff);
+    }
+
+    if (flags & TD_ELEVATION_GAIN_PRESENT) {
+        // flat_bin_to_ascii_16(buffer, size, max_size, 0xffff);
+        // flat_bin_to_ascii_16(buffer, size, max_size, 0xffff);
+        flat_bin_to_ascii_16(buffer, size, max_size, 0);
+        flat_bin_to_ascii_16(buffer, size, max_size, 0);
+    }
+
+    if (flags & TD_EXPENDED_ENERGY_PRESENT) {
+        flat_bin_to_ascii_16(buffer, size, max_size, calories); // total energy kcal
+        flat_bin_to_ascii_16(buffer, size, max_size, 0xffff); // energy per hour kcal
+        flat_bin_to_ascii_8(buffer, size, max_size, 0xff);  // energy per minute kcal
+    }
+
+    if (flags & TD_HEART_RATE_PRESENT) {
+        flat_bin_to_ascii_8(buffer, size, max_size, 0);
+    }
+
+    if (flags & TD_ELAPSED_TIME_PRESENT) {
+        flat_bin_to_ascii_16(buffer, size, max_size, elapsed_time);
+    }
+
+    uint8_t cs = ble_protocol_checksum(buffer, *size);
+    flat_bin_to_ascii_8(buffer, size, max_size, cs);
+    buffer[(*size)++] = BLE_PROTOCOL_MESSAGE_END;
+}
+
 // TODO: Refactor place
 #include "ble/ble_protocol/ble_ftms_treadmill.h"
 #include "ble/ble_protocol/ble_protocol_helper.h"
@@ -291,72 +349,50 @@ int treadmill_send_ftms_data(treadmill_t *treadmill) {
   uint8_t bindex = 0;
 
   uint16_t instantaneous_speed = treadmill->training.speed;
-  uint16_t average_speed = treadmill->training.average_speed;
+  uint16_t average_speed = treadmill->training.average_speed; //Lucas
   uint32_t total_distance = treadmill->training.meters;
   uint16_t elapsed_time = treadmill->training.seconds;
   uint16_t inclination = treadmill->training.incline;
-  uint16_t calories = treadmill->training.kcal/1000;
+  uint16_t calories = treadmill->training.kcal / 1000;    
 
-  uint16_t flags = 0x0000;
-  flags |= TD_TOTAL_DISTANCE_PRESENT;
-  flags |= TD_AVERAGE_SPEED_PRESENT; //
-  flags |= TD_INCLINATION_RAMP_ANGLE_SETTING_PRESENT;
-  flags |= TD_ELEVATION_GAIN_PRESENT;
-  flags |= TD_EXPENDED_ENERGY_PRESENT;
-  // flags |= TD_HEART_RATE_PRESENT;
-  flags |= TD_ELAPSED_TIME_PRESENT;
-  flags |= TD_AVERAGE_SPEED_PRESENT; //Lucas
+  // packet size = 2 + 2 + 3 + 4 + 4 + 4 + 1 + 1 + 2 = 23 bytes    
+  const packet_size = 25;    
+  const mtu = treadmill->hw.ble.connection.mtu > 0 ? treadmill->hw.ble.connection.mtu - 3 : 0;
+  
+  if (mtu && mtu < packet_size) {
+      // split in two
+      uint16_t flags = 0x0000;
+      bindex = 0;
+      flags |= TD_MORE_DATA;             // -ok
+      flags |= TD_ELAPSED_TIME_PRESENT;  // -ok      
+      flags |= TD_AVERAGE_SPEED_PRESENT; // -ok
+      build_ftms_data_packet(treadmill, buffer, BUFSIZE, &bindex, flags);
+      // send packet
+      treadmill->hw.ble.send_data(buffer, bindex);
 
-  buffer[bindex++] = BLE_PROTOCOL_MESSAGE_START;
-  flat_bin_to_ascii_8(buffer, &bindex, BUFSIZE, BP_NOTIFY);
-  flat_bin_to_ascii_16(buffer, &bindex, BUFSIZE, FTMS_TREADMILL_DATA_UUID);
-  flat_bin_to_ascii_16(buffer, &bindex, BUFSIZE, flags);
-
-  if ((flags & TD_MORE_DATA) == 0) {
-    flat_bin_to_ascii_16(buffer, &bindex, BUFSIZE, instantaneous_speed);
+      flags = 0x0000;
+      bindex = 0;
+      flags |= TD_TOTAL_DISTANCE_PRESENT; // -ok
+      flags |= TD_INCLINATION_RAMP_ANGLE_SETTING_PRESENT; // -ok
+      flags |= TD_ELEVATION_GAIN_PRESENT; // -ok
+      flags |= TD_EXPENDED_ENERGY_PRESENT; // -ok
+      build_ftms_data_packet(treadmill, buffer, BUFSIZE, &bindex, flags);
+  } else {
+      // single packet
+      uint16_t flags = 0x0000;
+      bindex = 0;
+      flags |= TD_AVERAGE_SPEED_PRESENT; // -ok
+      flags |= TD_TOTAL_DISTANCE_PRESENT; // -ok
+      flags |= TD_INCLINATION_RAMP_ANGLE_SETTING_PRESENT; // -ok
+      flags |= TD_ELEVATION_GAIN_PRESENT; // -ok
+      flags |= TD_EXPENDED_ENERGY_PRESENT; // -ok
+      // // flags |= TD_HEART_RATE_PRESENT;
+      flags |= TD_ELAPSED_TIME_PRESENT; // -ok
+      build_ftms_data_packet(treadmill, buffer, BUFSIZE, &bindex, flags);        
   }
-
-  if (flags & TD_AVERAGE_SPEED_PRESENT) { //Lucas
-    flat_bin_to_ascii_16(buffer, &bindex, BUFSIZE, average_speed);
-  }
-
-  if (flags & TD_TOTAL_DISTANCE_PRESENT) {
-    flat_bin_to_ascii_24(buffer, &bindex, BUFSIZE, total_distance);
-  }
-
-  if (flags & TD_INCLINATION_RAMP_ANGLE_SETTING_PRESENT) {
-    flat_bin_to_ascii_16(buffer, &bindex, BUFSIZE, inclination);
-    flat_bin_to_ascii_16(buffer, &bindex, BUFSIZE, 0x7fff);
-  }
-
-  if (flags & TD_ELEVATION_GAIN_PRESENT) {
-    flat_bin_to_ascii_16(buffer, &bindex, BUFSIZE, 0);
-    flat_bin_to_ascii_16(buffer, &bindex, BUFSIZE, 0);
-  }
-
-  if (flags & TD_EXPENDED_ENERGY_PRESENT) {
-    flat_bin_to_ascii_16(buffer, &bindex, BUFSIZE,
-                         calories);                     // total energy kcal
-    flat_bin_to_ascii_16(buffer, &bindex, BUFSIZE, 0);  // energy per hour kcal
-    flat_bin_to_ascii_8(buffer, &bindex, BUFSIZE, 0);   // energy per minute kcal
-  }
-
-  if (flags & TD_HEART_RATE_PRESENT) {
-    flat_bin_to_ascii_8(buffer, &bindex, BUFSIZE, 0);
-  }
-
-  if (flags & TD_ELAPSED_TIME_PRESENT) {
-    flat_bin_to_ascii_16(buffer, &bindex, BUFSIZE, elapsed_time);
-  }
-
-  uint8_t cs = ble_protocol_checksum(buffer, bindex);
-  flat_bin_to_ascii_8(buffer, &bindex, BUFSIZE, cs);
-
-  buffer[bindex++] = BLE_PROTOCOL_MESSAGE_END;
 
   return treadmill->hw.ble.send_data(buffer, bindex);
 }
-
 void treadmill_clear_bpm_hg_loss(treadmill_t *treadmill) {
   treadmill->hg_lost_tick = 0; ///////
   treadmill->hg_lost_count = 0; ////////
