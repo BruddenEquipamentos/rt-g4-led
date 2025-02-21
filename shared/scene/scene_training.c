@@ -223,6 +223,10 @@ static void update(treadmill_t *treadmill) {
         mm_per_minute = mm;
       }
     }
+
+
+    extern void treadmill_ble_send_training_data(treadmill_t *treadmill);
+    treadmill_ble_send_training_data(treadmill);
   }
 
   // Simulate time that it takes to reach the targeted speed

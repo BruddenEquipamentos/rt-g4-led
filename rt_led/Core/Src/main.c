@@ -46,6 +46,7 @@ uint32_t _tim_delta = 0;
 uint32_t _tim6_count = 0;
 
 /* USER CODE END PTD */
+
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 struct stats_time {
@@ -357,7 +358,7 @@ int main(void)
   MX_CRC_Init();
   MX_TIM6_Init();
   MX_TIM14_Init();
-  // MX_TIM17_Init(); //remove Polar - to avoid ghost BPM
+  MX_TIM17_Init();
   MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
 

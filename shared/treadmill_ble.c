@@ -110,6 +110,12 @@ struct ble_data {
 #define BLE_DATA_QUEUE_LENGTH (5)
 struct ble_data ble_data[BLE_DATA_QUEUE_LENGTH];
 
+
+void treadmill_ble_send_training_data(treadmill_t *treadmill) {
+  treadmill->hw.ble.ftms.tick_data_ms = treadmill->get_time_ms();
+  treadmill_send_ftms_data(treadmill);
+}
+
 static void treadmill_ble_reset(treadmill_t *treadmill) {
   memset(&treadmill->hw.ble.ftms, 0, sizeof(treadmill->hw.ble.ftms));
   memset(&treadmill->hw.ble.connection, 0, sizeof(treadmill->hw.ble.connection));
@@ -173,12 +179,18 @@ void treadmill_ble_process(treadmill_t *treadmill) {
       break;
     }
     case BLE_STATE_READY: {
-      if (treadmill->hw.ble.ftms.subscribed) {
-        if (treadmill->get_time_ms() - treadmill->hw.ble.ftms.tick_data_ms >=
-            (treadmill->hw.ble.connection.interval * 125) / 100) {
-          treadmill->hw.ble.ftms.tick_data_ms = treadmill->get_time_ms();
-          treadmill_send_ftms_data(treadmill);
+      if (treadmill->hw.ble.ftms.subscribed) {      
+
+        // To update each second 
+        if (treadmill->scene != SCENE_TRAINING && treadmill->get_time_ms() - treadmill->hw.ble.ftms.tick_data_ms >= 1000) {
+          treadmill_ble_send_training_data(treadmill);
         }
+        
+        // if (treadmill->get_time_ms() - treadmill->hw.ble.ftms.tick_data_ms >=
+        //     (treadmill->hw.ble.connection.interval * 125) / 100) {
+        //   treadmill->hw.ble.ftms.tick_data_ms = treadmill->get_time_ms();
+        //   treadmill_send_ftms_data(treadmill);
+        // }
       } else {
         // periodic queue command to check connection
         if (treadmill->get_time_ms() - treadmill->hw.ble.check_com_ms >= 3000) {
