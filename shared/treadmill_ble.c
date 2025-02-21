@@ -193,7 +193,7 @@ void treadmill_ble_process(treadmill_t *treadmill) {
         // }
       } else {
         // periodic queue command to check connection
-        if (treadmill->get_time_ms() - treadmill->hw.ble.check_com_ms >= 3000) {
+        if (treadmill->get_time_ms() - treadmill->hw.ble.check_com_ms >= 10000) {
           treadmill->hw.ble.check_com_ms = treadmill->get_time_ms();
           ble_post_message(
               "\x02"
