@@ -482,11 +482,12 @@ void dm_render(treadmill_t *treadmill) {
       if (treadmill->config.modbus) {
         dm_render_mb_param_value(treadmill);
       } else {
-        if (treadmill->hw.ble.gk.connected){
-          // dm_render_text_animated("APPLE WATCH CONNECTADO", 150, treadmill->get_time_ms());
-          // dm_render_text_animated("APPLE WATCH CONNECTED", 100, treadmill->get_time_ms()); //Lucas add digits
-        }
-        else if (treadmill->hw.ble.sh.connected){
+        // if (treadmill->hw.ble.gk.connected){
+        //   // dm_render_text_animated("APPLE WATCH CONNECTADO", 150, treadmill->get_time_ms());
+        //   // dm_render_text_animated("APPLE WATCH CONNECTED", 100, treadmill->get_time_ms()); //Lucas add digits
+        // }
+        // else 
+        if (treadmill->hw.ble.gk.connected || treadmill->hw.ble.sh.connected){
           if (dm_blink(treadmill->get_time_ms(), 1000)){
             dm_render_text("NFC", 14);
           } else {
