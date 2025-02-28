@@ -23,6 +23,12 @@ typedef enum ble_process_status {
     BLE_PROCESS_STATUS_IDLE
 } ble_process_status_t;
 
+enum gk_flag {
+    GK_FLAG_NONE = 0,
+    GK_FLAG_CONNECTED = 1<<0,
+    GK_FLAG_DISPLAY = 1<<1,
+};
+
 typedef enum hrm_status {
     HRM_STATUS_DISCONNECTED = 0,
     HRM_STATUS_CONNECTING,
@@ -71,6 +77,8 @@ typedef struct ble {
         uint16_t total_energy;
         uint16_t average_bpm;
         uint32_t last_time_received;
+        uint32_t connected_at;
+        enum gk_flag flags;
     } gk;
 
     struct {

@@ -358,7 +358,7 @@ int main(void)
   MX_CRC_Init();
   MX_TIM6_Init();
   MX_TIM14_Init();
-  MX_TIM17_Init();
+  // MX_TIM17_Init(); //remove Polar - to avoid ghost BPM
   MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
 
@@ -1496,66 +1496,66 @@ void BeepTask(void const * argument)
       HAL_TIM_PWM_Stop(&htim16, TIM_CHANNEL_1);
       switch (beep) {
         case BEEP_KEYPRESS_ACK: {
-          TIM16->CNT = 0;
-          TIM16->PSC = 120;
-          TIM16->ARR = 40;
-          TIM16->CCR2 = 10;
-          HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
-          osTimerStart(beepTimerHandle, pdMS_TO_TICKS(100));
+           TIM16->CNT = 0;
+           TIM16->PSC = 120;
+           TIM16->ARR = 40;
+           TIM16->CCR2 = 10;
+           HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
+           osTimerStart(beepTimerHandle, pdMS_TO_TICKS(100));
           break;
         }
         case BEEP_KEYPRESS_NAK: {
-          TIM16->CNT = 0;
-          TIM16->PSC = 600;
-          TIM16->ARR = 40;
-          TIM16->CCR2 = 20;
-          HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
-          osTimerStart(beepTimerHandle, pdMS_TO_TICKS(100));
+           TIM16->CNT = 0;
+           TIM16->PSC = 600;
+           TIM16->ARR = 40;
+           TIM16->CCR2 = 20;
+           HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
+           osTimerStart(beepTimerHandle, pdMS_TO_TICKS(100));
           break;
         }
         case BEEP_COUNTDOWN_COUNT: {
-          TIM16->CNT = 0;
-          TIM16->PSC = 120 * 2;
-          TIM16->ARR = 40;
-          TIM16->CCR2 = 20;
-          HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
-          osTimerStart(beepTimerHandle, pdMS_TO_TICKS(250));
+           TIM16->CNT = 0;
+           TIM16->PSC = 120 * 2;
+           TIM16->ARR = 40;
+           TIM16->CCR2 = 20;
+           HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
+           osTimerStart(beepTimerHandle, pdMS_TO_TICKS(250));
           break;
         }
         case BEEP_COUNTDOWN_END: {
-          TIM16->CNT = 0;
-          TIM16->PSC = 110 * 2;
-          TIM16->ARR = 40;
-          TIM16->CCR2 = 20;
-          HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
-          osTimerStart(beepTimerHandle, pdMS_TO_TICKS(500));
+           TIM16->CNT = 0;
+           TIM16->PSC = 110 * 2;
+           TIM16->ARR = 40;
+           TIM16->CCR2 = 20;
+           HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
+           osTimerStart(beepTimerHandle, pdMS_TO_TICKS(500));
           break;
         }
         case BEEP_REST: {
-          TIM16->CNT = 0;
-          TIM16->PSC = 120;
-          TIM16->ARR = 40;
-          TIM16->CCR2 = 2;
-          HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
-          osTimerStart(beepTimerHandle, pdMS_TO_TICKS(50));
+           TIM16->CNT = 0;
+           TIM16->PSC = 120;
+           TIM16->ARR = 40;
+           TIM16->CCR2 = 2;
+           HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
+           osTimerStart(beepTimerHandle, pdMS_TO_TICKS(50));
           break;
         }
         case BEEP_PROGRAM_FINISHED: {
-          TIM16->CNT = 0;
-          TIM16->PSC = 110;
-          TIM16->ARR = 40;
-          TIM16->CCR2 = 20;
-          HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
-          osTimerStart(beepTimerHandle, pdMS_TO_TICKS(500));
+           TIM16->CNT = 0;
+           TIM16->PSC = 110;
+           TIM16->ARR = 40;
+           TIM16->CCR2 = 20;
+           HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
+           osTimerStart(beepTimerHandle, pdMS_TO_TICKS(500));
           break;
         }
         case BEEP_EMERGENCY: {
-          TIM16->CNT = 0;
-          TIM16->PSC = 110;
-          TIM16->ARR = 40;
-          TIM16->CCR2 = 20;
-          HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
-          osTimerStart(beepTimerHandle, pdMS_TO_TICKS(1000));
+           TIM16->CNT = 0;
+           TIM16->PSC = 110;
+           TIM16->ARR = 40;
+           TIM16->CCR2 = 20;
+           HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
+           osTimerStart(beepTimerHandle, pdMS_TO_TICKS(1000));
           break;
         }
       }

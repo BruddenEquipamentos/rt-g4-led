@@ -162,10 +162,18 @@ static void update(treadmill_t *treadmill) {
       treadmill->training.average_speed = (treadmill->training.meters * 360) / treadmill->training.seconds;
     }
 
-    treadmill->training.pace = treadmill_calculate_pace(treadmill);
-    treadmill->training.kcal += treadmill_calculate_calories(treadmill);
-
+    treadmill->training.pace = treadmill_calculate_pace(treadmill); 
     treadmill->training.pace_total_seconds += treadmill->training.pace;
+
+    //Lucas 25/02
+    if (treadmill->hw.ble.gk.connected) {        	
+      treadmill->training.kcal_gk = treadmill->hw.ble.gk.total_energy*1000;                        
+      treadmill->training.kcal = treadmill->training.kcal_gk;
+    } else {            
+      treadmill->training.kcal += treadmill_calculate_calories(treadmill);
+    }
+
+    // treadmill->training.kcal += treadmill_calculate_calories(treadmill); //Lucas 25/02
 
     if (treadmill->hw.ble.connected && treadmill->hw.ble.heartrate.bpm <= 0) {
       // do nothing

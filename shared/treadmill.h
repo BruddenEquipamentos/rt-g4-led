@@ -102,6 +102,7 @@ typedef struct treadmill {
     uint32_t cm;
     uint32_t meters;
     uint32_t kcal;
+    uint32_t kcal_gk;
 
     uint16_t speed;
     uint16_t speed_max; /////////////

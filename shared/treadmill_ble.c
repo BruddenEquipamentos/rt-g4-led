@@ -15,6 +15,15 @@
 
 #include "treadmill_action.h"
 
+static void treadmill_ble_reset(treadmill_t *treadmill) {
+  memset(&treadmill->hw.ble.ftms, 0, sizeof(treadmill->hw.ble.ftms));
+  memset(&treadmill->hw.ble.connection, 0, sizeof(treadmill->hw.ble.connection));
+  memset(&treadmill->hw.ble.heartrate, 0, sizeof(treadmill->hw.ble.heartrate));
+  memset(&treadmill->hw.ble.gk, 0, sizeof(treadmill->hw.ble.gk));
+  memset(&treadmill->hw.ble.sh, 0, sizeof(treadmill->hw.ble.sh));
+  memset(&treadmill->hw.ble.heartrate, 0, sizeof(treadmill->hw.ble.sh));
+}
+
 void treadmill_ble_process_init(treadmill_t *treadmill) {
   static uint32_t init_wait = 0;
   ble_t *ble = &treadmill->hw.ble;
@@ -22,9 +31,9 @@ void treadmill_ble_process_init(treadmill_t *treadmill) {
     case BLE_INIT_STATE_INIT: {
       if (ble->reset) ble->reset();
       ble->connected = 0;
-      memset(&ble->ftms, 0x00, sizeof(struct ftms));
-      memset(&ble->connection, 0x00, sizeof(struct connection));
-
+      // memset(&ble->ftms, 0x00, sizeof(struct ftms)); //Lucas 25/02
+      // memset(&ble->connection, 0x00, sizeof(struct connection)); //Lucas 25/02
+      treadmill_ble_reset(treadmill); //Lucas 25/02
       ble->init_state = BLE_INIT_STATE_WAIT;
       init_wait = treadmill->get_time_ms();
       break;
@@ -116,14 +125,6 @@ void treadmill_ble_send_training_data(treadmill_t *treadmill) {
   treadmill_send_ftms_data(treadmill);
 }
 
-static void treadmill_ble_reset(treadmill_t *treadmill) {
-  memset(&treadmill->hw.ble.ftms, 0, sizeof(treadmill->hw.ble.ftms));
-  memset(&treadmill->hw.ble.connection, 0, sizeof(treadmill->hw.ble.connection));
-  memset(&treadmill->hw.ble.heartrate, 0, sizeof(treadmill->hw.ble.heartrate));
-  memset(&treadmill->hw.ble.gk, 0, sizeof(treadmill->hw.ble.gk));
-  memset(&treadmill->hw.ble.sh, 0, sizeof(treadmill->hw.ble.sh)); //Lucas
-}
-
 void treadmill_ble_process(treadmill_t *treadmill) {
   ble_t *ble = &treadmill->hw.ble;
 
@@ -156,9 +157,12 @@ void treadmill_ble_process(treadmill_t *treadmill) {
       case BLE_RX_EVENT_CONNECTED: {
         if (ble_data_msg->length > 0 && ble_data_msg->data[0] == 1) {
           treadmill->hw.ble.gk.connected = 1;
+          treadmill->hw.ble.gk.connected_at = treadmill->get_time_ms();
+          treadmill->hw.ble.gk.flags |= (GK_FLAG_CONNECTED | GK_FLAG_DISPLAY);
         }
         if (ble_data_msg->length > 0 && ble_data_msg->data[0] == 2) {
           treadmill->hw.ble.sh.connected = 1;
+          treadmill->hw.ble.sh.connected_at = treadmill->get_time_ms(); 
         }
         treadmill->hw.ble.connected = 1;
         break;
@@ -179,7 +183,8 @@ void treadmill_ble_process(treadmill_t *treadmill) {
       break;
     }
     case BLE_STATE_READY: {
-      if (treadmill->hw.ble.ftms.subscribed) {      
+//      treadmill->hw.ble.status = ble_process_commands(ble); //Lucas 25/02
+      if (treadmill->hw.ble.ftms.subscribed) {     
 
         // To update each second 
         if (treadmill->scene != SCENE_TRAINING && treadmill->get_time_ms() - treadmill->hw.ble.ftms.tick_data_ms >= 1000) {
@@ -193,7 +198,7 @@ void treadmill_ble_process(treadmill_t *treadmill) {
         // }
       } else {
         // periodic queue command to check connection
-        if (treadmill->get_time_ms() - treadmill->hw.ble.check_com_ms >= 3000) {
+        if (treadmill->get_time_ms() - treadmill->hw.ble.check_com_ms >= 10000) {
           treadmill->hw.ble.check_com_ms = treadmill->get_time_ms();
           ble_post_message(
               "\x02"

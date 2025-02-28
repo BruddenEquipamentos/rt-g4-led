@@ -439,6 +439,21 @@ static void dm_render_prog_time(treadmill_t *treadmill) {
     }
   }
 }
+
+void dm_render_incline(treadmill_t *treadmill){
+    char text[16];
+    //  sprintf(text, "%1d.%1d%%", treadmill->training.incline / 10, treadmill->training.incline % 10);
+    sprintf(text, "%1d%%", treadmill->training.incline / 10);
+    int length = dm_compute_length(text);
+    if (length < 16) {
+      dm_render_text(text, 8 + length / 2);
+    }
+    else {
+      dm_render_text(text, 16);
+    }
+    return;
+}
+
 ////////////////////////////////////////////////////////////////////////////
 
 void dm_render(treadmill_t *treadmill) {
@@ -450,21 +465,6 @@ void dm_render(treadmill_t *treadmill) {
       } else {
         dm_render_text(treadmill->message.data, 16);
       }
-    }
-    return;
-}
-
-
-  void dm_render_incline(treadmill_t *treadmill){
-    char text[16];
-    //  sprintf(text, "%1d.%1d%%", treadmill->training.incline / 10, treadmill->training.incline % 10);
-    sprintf(text, "%1d%%", treadmill->training.incline / 10);
-    int length = dm_compute_length(text);
-    if (length < 16) {
-      dm_render_text(text, 8 + length / 2);
-    }
-    else {
-      dm_render_text(text, 16);
     }
     return;
   }
@@ -482,22 +482,41 @@ void dm_render(treadmill_t *treadmill) {
       if (treadmill->config.modbus) {
         dm_render_mb_param_value(treadmill);
       } else {
-        // if (treadmill->hw.ble.gk.connected){
-        //   // dm_render_text_animated("APPLE WATCH CONNECTADO", 150, treadmill->get_time_ms());
-        //   // dm_render_text_animated("APPLE WATCH CONNECTED", 100, treadmill->get_time_ms()); //Lucas add digits
-        // }
-        // else 
-        if (treadmill->hw.ble.gk.connected || treadmill->hw.ble.sh.connected){
-          if (dm_blink(treadmill->get_time_ms(), 1000)){
-            dm_render_text("NFC", 14);
+        if (treadmill->hw.ble.gk.connected){
+          if (treadmill->hw.ble.ftms.subscribed == 1) {
+            // Mostra NFC fixo por 1 segundo após subscrição
+            if (treadmill->get_time_ms() - treadmill->hw.ble.gk.connected_at <= 4000) {
+              dm_render_text("NFC", 14);
+            } else {
+              dm_render_text_animated("APERTE START OU ESCOLHA UM PROGRAMA", 100, treadmill->get_time_ms());
+            }
           } else {
-              dm_clear_buffer();  // Limpa a tela quando não deve mostrar o texto
+            // Pisca NFC enquanto conectado mas não subscrito
+            if (dm_blink(treadmill->get_time_ms(), 1000)) {
+              dm_render_text("NFC", 14);
+            } else {
+              dm_clear_buffer();
+            }
           }
-            // dm_render_text_animated("GALAXY WATCH CONNECTADO", 150, treadmill->get_time_ms()); //Lucas add digits
-            // dm_render_text_animated("GALAXY WATCH CONNECTED", 100, treadmill->get_time_ms()); //Lucas add digits
-//          }
         }
-        else{
+        else if (treadmill->hw.ble.sh.connected){
+          if (treadmill->hw.ble.ftms.subscribed == 1) {
+            // Mostra NFC fixo por 1 segundo após subscrição
+            if (treadmill->get_time_ms() - treadmill->hw.ble.sh.connected_at <= 4000) {
+              dm_render_text("NFC", 14);
+            } else {
+              dm_render_text_animated("APERTE START OU ESCOLHA UM PROGRAMA", 100, treadmill->get_time_ms());
+            }
+          } else {
+            // Pisca NFC enquanto conectado mas não subscrito
+            if (dm_blink(treadmill->get_time_ms(), 1000)) {
+              dm_render_text("NFC", 14);
+            } else {
+              dm_clear_buffer();
+            }
+          }
+        }
+        else {
           dm_render_text_animated("APERTE START OU ESCOLHA UM PROGRAMA", 100, treadmill->get_time_ms());
         }
         // LED TEST
@@ -510,6 +529,42 @@ void dm_render(treadmill_t *treadmill) {
         dm_render_mb_param_value(treadmill);
       } else {
         dm_clear_buffer();
+        
+        // Lógica de exibição do NFC
+        if (treadmill->hw.ble.gk.connected){
+          if (treadmill->hw.ble.ftms.subscribed == 1) {
+            // Mostra NFC fixo por 1 segundo após subscrição
+            if (treadmill->get_time_ms() - treadmill->hw.ble.gk.connected_at <= 4000) {
+              dm_render_text("NFC", 14);
+              return;
+            }
+          } else {
+            // Apenas pisca NFC ou limpa a tela, sem mostrar contexto anterior
+            if (dm_blink(treadmill->get_time_ms(), 1000)) {
+              dm_render_text("NFC", 14);
+            } else {
+              dm_clear_buffer();
+            }
+            return; // Retorna aqui para não mostrar o contexto anterior
+          }
+        }
+        else if (treadmill->hw.ble.sh.connected){
+          if (treadmill->hw.ble.ftms.subscribed == 1) {
+            // Mostra NFC fixo por 1 segundo após subscrição
+            if (treadmill->get_time_ms() - treadmill->hw.ble.sh.connected_at <= 4000) {
+              dm_render_text("NFC", 14);
+              return;
+            }
+          } else {
+            // Apenas pisca NFC ou limpa a tela, sem mostrar contexto anterior
+            if (dm_blink(treadmill->get_time_ms(), 1000)) {
+              dm_render_text("NFC", 14);
+            } else {
+              dm_clear_buffer();
+            }
+            return; // Retorna aqui para não mostrar o contexto anterior
+          }
+        }
 
         extern uint8_t __new_display;
         if (__new_display) {

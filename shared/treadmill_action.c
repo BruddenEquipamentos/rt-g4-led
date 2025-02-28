@@ -36,13 +36,12 @@ void treadmill_start_training(treadmill_t *treadmill) {
   treadmill->training.pace_max = 5000;
 
   //////////////////// max pace max speed max bpm
+  treadmill_set_speed(treadmill, treadmill->config.speed.min);  //Lucas --- no tft10 não tem
 
   treadmill_set_scene(treadmill, SCENE_TRAINING);
   if (treadmill->on_update_fms_callback) {
     treadmill->on_update_fms_callback(treadmill, StartedOrResumedByTheUser, NULL);
-  }
-
-  treadmill_set_speed(treadmill, treadmill->config.speed.min);  
+  }  
 }
 
 void treadmill_abort_countdown(treadmill_t *treadmill) { 
@@ -80,11 +79,11 @@ void treadmill_resume_training(treadmill_t *treadmill) {
     treadmill->program.p_walk_08min.target_speed = (int)treadmill->config.speed.min;
   }
   ////////////////// return to 1.2 km/h
+  treadmill_set_speed(treadmill, treadmill->config.speed.min); //Lucas --- no tft10 não tem
 
   if (treadmill->on_update_fms_callback) {
     treadmill->on_update_fms_callback(treadmill, StartedOrResumedByTheUser, NULL);
   }
-  treadmill_set_speed(treadmill, treadmill->config.speed.min);
 }
 
 void treadmill_finish_training(treadmill_t *treadmill) {
@@ -92,6 +91,7 @@ void treadmill_finish_training(treadmill_t *treadmill) {
   treadmill_set_speed(treadmill, 0);
   treadmill_set_scene(treadmill, SCENE_REPORT);
   report_state = 0; ///////////////////////////
+  memset(&treadmill->hw.ble.hrm, 0, sizeof(treadmill->hw.ble.hrm)); //Lucas -- disconnect from BLE strap only
   if (treadmill->on_update_fms_callback) {
     uint8_t stopped = 0x01;
     treadmill->on_update_fms_callback(treadmill, StoppedOrPausedByTheUser, &stopped);
@@ -149,13 +149,10 @@ int treadmill_set_speed(treadmill_t *treadmill, const uint16_t speed) {
       }
     }
   }
-  // if (treadmill->on_speed_changed_callback) {
-  //   treadmill->on_speed_changed_callback(treadmill, speed);
-  // }
 
-  if (treadmill->on_update_fms_callback) {
-    treadmill->on_update_fms_callback(treadmill, TargetSpeedChanged, &speed);
-  }
+  // if (treadmill->on_update_fms_callback) { //Lucas --- no tft10 não tem
+  //   treadmill->on_update_fms_callback(treadmill, TargetSpeedChanged, &speed);
+  // }
   return 1;
 }
 
@@ -166,9 +163,9 @@ int treadmill_set_incline(treadmill_t *treadmill, const int16_t incline) {
     treadmill->aux.incline_changed_time_ms = treadmill->get_time_ms();
     treadmill->training.incline = incline;
 
-    if (treadmill->on_update_fms_callback) {
-      treadmill->on_update_fms_callback(treadmill, TargetInclineChanged, &incline);
-    }
+    // if (treadmill->on_update_fms_callback) { //Lucas --- no tft10 não tem
+    //   treadmill->on_update_fms_callback(treadmill, TargetInclineChanged, &incline);
+    // }
   }
   return 1;
 }
