@@ -358,7 +358,7 @@ int main(void)
   MX_CRC_Init();
   MX_TIM6_Init();
   MX_TIM14_Init();
-  // MX_TIM17_Init(); //remove Polar - to avoid ghost BPM
+//  MX_TIM17_Init(); //remove Polar - to avoid ghost BPM
   MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
 

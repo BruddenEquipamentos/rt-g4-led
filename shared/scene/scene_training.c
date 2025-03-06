@@ -100,7 +100,8 @@ static uint32_t treadmill_calculate_speed(uint32_t dm, uint32_t seconds) {
   volatile uint32_t cm_sec = (dm * 100 / seconds);
   uint32_t speed = ((cm_sec * 36) / 1000);  // 333 * 36 = 1198
   uint32_t speed_mod = (speed) % 10;
-  if (speed_mod >= 5) speed = speed + (10 - speed_mod);
+  if (speed_mod >= 5) 
+    speed = speed + (10 - speed_mod);
   return speed / 10;
 }
 
@@ -157,9 +158,8 @@ static void update(treadmill_t *treadmill) {
     treadmill->training.cm += cm;
     treadmill->training.meters = treadmill->training.cm / 100;
 
-  // average speed
-    if (treadmill->training.seconds > 0) {
-      treadmill->training.average_speed = (treadmill->training.meters * 360) / treadmill->training.seconds;
+    if (treadmill->training.cm % 100 >= 50) { //Lucas added from tft
+      treadmill->training.meters++;
     }
 
     treadmill->training.pace = treadmill_calculate_pace(treadmill); 
@@ -219,6 +219,8 @@ static void update(treadmill_t *treadmill) {
         treadmill->aux.average_history[treadmill->aux.average_history_index].minute = minute;
         treadmill->aux.average_history[treadmill->aux.average_history_index].average_speed =
             treadmill_calculate_speed(mm_per_minute, 60);
+        // Lucas average speed in training
+        treadmill->training.average_speed = treadmill->aux.average_history[treadmill->aux.average_history_index].average_speed;
 
         if (minute >= 16) {
           for (int i = 1; i < 16; ++i) {
@@ -229,6 +231,9 @@ static void update(treadmill_t *treadmill) {
         }
 
         mm_per_minute = mm;
+
+        // Lucas average speed in training
+        // treadmill->training.average_speed = treadmill_current_average_speed(treadmill);
       }
     }
 

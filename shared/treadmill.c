@@ -70,6 +70,18 @@ uint32_t _exp2 = 0;
 
 uint32_t _result;
 
+uint32_t treadmill_current_average_speed(treadmill_t *treadmill) {
+    if (treadmill->training.seconds == 0)
+        return 0;
+
+    uint32_t cm_sec = (treadmill->training.meters * 100 / treadmill->training.seconds);
+    uint32_t speed = ((cm_sec * 36) / 10); // 333 * 36 = 1198
+    uint32_t speed_mod = speed % 10;
+    if (speed_mod >= 5)
+        speed = speed + (10 - speed_mod);
+    return speed;
+}
+
 uint32_t treadmill_calculate_calories(treadmill_t *treadmill) {
   // No painel de LED atual, não se leva em consideração o BPM
   // no calculo de gasto calórico.

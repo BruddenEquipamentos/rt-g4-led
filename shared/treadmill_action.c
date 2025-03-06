@@ -396,11 +396,30 @@ void treadmill_clear_bpm_hg_loss(treadmill_t *treadmill) {
 }
 
 void treadmill_set_bpm_read(treadmill_t *treadmill) { 
+  if (treadmill->hw.ble.gk.connected) { 
+      return;
+  }
+  if (treadmill->hw.ble.sh.connected) {
+      return;
+  }
+  if (treadmill->hw.ble.hrm.status == HRM_STATUS_CONNECTED) { 
+    return;
+  }
   treadmill->hw.handgrip.state = HEARTRATE_HG_INITING;
   treadmill_clear_bpm_hg_loss(treadmill); /////
 }
 
 void treadmill_set_bpm_value(treadmill_t *treadmill, uint8_t bpm) {
+
+  if (treadmill->hw.ble.gk.connected) {
+    return;
+  }
+  if (treadmill->hw.ble.sh.connected) {
+    return;
+  }
+  if (treadmill->hw.ble.hrm.status == HRM_STATUS_CONNECTED) { 
+    return;
+  }
   treadmill->hw.handgrip.state = HEARTRATE_HG_READING;
   treadmill->training.bpm = bpm;
   if (treadmill->training.bpm >= treadmill->training.bpm_max){ //////////////////// bpm max

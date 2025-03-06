@@ -266,4 +266,6 @@ void treadmill_key_press_clear(treadmill_t *treadmill);
 
 void treadmill_ble_restart(treadmill_t *treadmill);
 
+uint32_t treadmill_current_average_speed(treadmill_t* treadmill);
+
 #endif
