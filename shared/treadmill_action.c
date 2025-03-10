@@ -69,6 +69,9 @@ void treadmill_reset_training(treadmill_t *treadmill) {
   if (treadmill->on_update_fms_callback){
 	  treadmill->on_update_fms_callback(treadmill, Reset, NULL);
   }
+  // Zerar as novas variáveis de velocidade média
+  treadmill->training.speed_sum = 0;
+  treadmill->training.speed_samples = 0;
 }
 
 void treadmill_resume_training(treadmill_t *treadmill) {  

@@ -108,6 +108,9 @@ typedef struct treadmill {
     uint16_t speed_max; /////////////
     uint16_t average_speed; //////
     int16_t incline;
+    // New average speed -- Lucas
+		uint32_t speed_sum;
+    uint32_t speed_samples;
 
     uint16_t pace;
     uint16_t pace_max; ///////////////

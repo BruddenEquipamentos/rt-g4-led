@@ -219,8 +219,6 @@ static void update(treadmill_t *treadmill) {
         treadmill->aux.average_history[treadmill->aux.average_history_index].minute = minute;
         treadmill->aux.average_history[treadmill->aux.average_history_index].average_speed =
             treadmill_calculate_speed(mm_per_minute, 60);
-        // Lucas average speed in training
-        treadmill->training.average_speed = treadmill->aux.average_history[treadmill->aux.average_history_index].average_speed;
 
         if (minute >= 16) {
           for (int i = 1; i < 16; ++i) {
@@ -231,12 +229,19 @@ static void update(treadmill_t *treadmill) {
         }
 
         mm_per_minute = mm;
-
-        // Lucas average speed in training
-        // treadmill->training.average_speed = treadmill_current_average_speed(treadmill);
       }
     }
 
+    // Average speed
+    // Atualizar soma e contagem de amostras de velocidade
+    treadmill->training.speed_sum += treadmill->training.speed;
+    treadmill->training.speed_samples++;
+        
+    // Calcular velocidade média usando todas as amostras
+    if (treadmill->training.speed_samples > 0) {
+      treadmill->training.average_speed = 
+      treadmill->training.speed_sum / treadmill->training.speed_samples;
+    }
 
     extern void treadmill_ble_send_training_data(treadmill_t *treadmill);
     treadmill_ble_send_training_data(treadmill);
