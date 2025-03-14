@@ -53,8 +53,8 @@ void treadmill_set_scene(treadmill_t *treadmill, treadmill_scene_t scene) {
   // }
 }
 
-uint32_t treadmill_calculate_pace(treadmill_t *treadmill) {
-  return ((60000000.0 / treadmill->training.speed) * 6) / 1000;
+uint32_t treadmill_calculate_pace(const uint16_t speed) {
+  return ((60000000.0 / speed) * 6) / 1000;
 }
 
 static int walking_speed(const uint16_t speed) { return speed < 600; }

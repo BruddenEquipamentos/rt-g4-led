@@ -138,7 +138,7 @@ int treadmill_set_speed(treadmill_t *treadmill, const uint16_t speed) {
   if (speed > treadmill->config.speed.max) return 0;
   if (speed > 0 && speed < treadmill->config.speed.min) return 0;
   treadmill->training.speed = speed;
-  treadmill->training.pace = treadmill_calculate_pace(treadmill);
+  treadmill->training.pace = treadmill_calculate_pace(treadmill->training.speed);
   treadmill->aux.speed_target = speed;
 
   // todo: refactor ///////////////////////////// hiit refactor

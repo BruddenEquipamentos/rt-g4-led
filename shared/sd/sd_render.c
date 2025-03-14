@@ -127,7 +127,7 @@ static void render_training_data(treadmill_t *treadmill) {
           uint32_t speed_mod = speed % 10;
           if (speed_mod >= 5) speed = speed + (10 - speed_mod);
           sd_set_kmh(&sd_speed, speed);
-          sd_set_min_sec(&sd_pace, treadmill->training.pace_total_seconds / treadmill->training.seconds);
+          sd_set_min_sec(&sd_pace, treadmill_calculate_pace(speed));
           sd_set_bpm(&sd_bpm, treadmill->training.bpm_average);        
           break;
         default:

@@ -162,7 +162,7 @@ static void update(treadmill_t *treadmill) {
       treadmill->training.meters++;
     }
 
-    treadmill->training.pace = treadmill_calculate_pace(treadmill); 
+    treadmill->training.pace = treadmill_calculate_pace(treadmill->training.speed); 
     treadmill->training.pace_total_seconds += treadmill->training.pace;
 
     //Lucas 25/02

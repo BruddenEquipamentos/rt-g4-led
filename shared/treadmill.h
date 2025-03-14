@@ -248,7 +248,7 @@ void treadmill_update(treadmill_t *treadmill);
 void treadmill_update(treadmill_t *treadmill);
 void treadmill_set_scene(treadmill_t *treadmill, treadmill_scene_t scene);
 
-uint32_t treadmill_calculate_pace(treadmill_t *treadmill);
+uint32_t treadmill_calculate_pace(const uint16_t speed);
 uint32_t treadmill_calculate_calories(treadmill_t *treadmill);
 
 void treadmill_load_config(treadmill_t *treadmill);
