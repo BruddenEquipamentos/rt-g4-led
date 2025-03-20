@@ -109,27 +109,38 @@ void ext_i2c_kbd_handler(void) {
 
             // TODO: refactor
             uint32_t interval = 300;
-            if (read_buffer[0] == 5 || read_buffer[0] == 8) { 
+            if (pTreadmill->config.incline.step > 0 && read_buffer[0] == 5 || read_buffer[0] == 8) {
                 // incline increment / decrement
                 if (repeat_presses_count < 3) {
                     interval = 150;
                 } else {
                     interval = 50;
                 }
+            } else if (pTreadmill->config.incline.step  == 0 && read_buffer[0] == 5 || read_buffer[0] == 6) {
+				if (pTreadmill->scene == SCENE_PROGRAM){ /////////// ok
+					// speed increment / decrement
+					if (repeat_presses_count < 3) {
+						interval = 150;
+					} else {
+						interval = 50;
+					}
+				}
+				else{
+					ext_kbd_state = EXT_KBD_STATE_IDLE;
+				}
             } else if (read_buffer[0] == 3 || read_buffer[0] == 6) {
-                extern treadmill_t *pTreadmill;
-                if (pTreadmill->scene == SCENE_PROGRAM){ /////////// ok
-                    // speed increment / decrement
-                    if (repeat_presses_count < 3) {
-                        interval = 150;
-                    } else {
-                        interval = 50;
-                    }
-                // todo: limit the increment time window
-                }
-                else{
-                    ext_kbd_state = EXT_KBD_STATE_IDLE;
-                }
+				if (pTreadmill->scene == SCENE_PROGRAM){ /////////// ok
+					// speed increment / decrement
+					if (repeat_presses_count < 3) {
+						interval = 150;
+					} else {
+						interval = 50;
+					}
+				// todo: limit the increment time window
+				}
+				else{
+					ext_kbd_state = EXT_KBD_STATE_IDLE;
+				}
             }
 
             if (HAL_GetTick() - repeat_tick >= interval) {
@@ -197,7 +208,12 @@ void handle_key(uint8_t key) {
         break;
     }
     case 5: {
-        treadmill_key_press(pTreadmill, KEY_INCLINE_INCREMENT);
+    	if (pTreadmill->config.incline.step == 0) {
+    		treadmill_key_press(pTreadmill, KEY_SPEED_DECREMENT);
+    	} else {
+    		treadmill_key_press(pTreadmill, KEY_INCLINE_INCREMENT);
+    	}
+
         break;
     }
     case 6: {
