@@ -101,6 +101,18 @@ void sd_set_kmh(sd_t *sd, const uint32_t speed) {
   snprintf(sd->text, 8, "%d.%01d", spd_km, spd_m);
 }
 
+// void sd_set_kmh_report(sd_t *sd, const uint32_t speed) {
+//   uint32_t spd_km = speed / 100;  // 1200 -> 12.0 km/h
+//   uint32_t spd_m = speed % 100;
+//   sd->flag |= SD_FLAG_PAD_LEADING_ZERO;
+//   sd->digit[3] = 0;
+//   sd->digit[2] = ((spd_km % 100) / 10);
+//   sd->digit[1] = ((spd_km % 100) % 10);
+//   sd->dot = SD_DOT_AT_1;
+//   sd->digit[0] = spd_m;
+//   snprintf(sd->text, 8, "%d.%02d", spd_km, spd_m);
+// }
+
 void sd_set_incline(sd_t *sd, const int16_t incline) {
   sd_set_value(sd, (uint32_t)incline);
   sd->flag |= SD_FLAG_PAD_LEADING_ZERO;
