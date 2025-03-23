@@ -66,7 +66,7 @@ void sd_set_pad_leading_zero(sd_t *sd, const bool pad);
 void sd_set_min_sec(sd_t *sd, uint32_t seconds);
 void sd_set_km_m(sd_t *sd, uint32_t meters);
 void sd_set_kmh(sd_t *sd, const uint32_t speed);
-// void sd_set_kmh_report(sd_t *sd, const uint32_t speed); //Lucas 20/03
+void sd_set_kmh_report(sd_t *sd, const uint32_t speed); //Lucas 20/03
 void sd_set_incline(sd_t *sd, int16_t incline);
 void sd_set_kcal(sd_t *sd, const uint32_t kcal);
 void sd_set_value(sd_t *sd, const uint32_t value);

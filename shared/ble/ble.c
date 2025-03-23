@@ -208,12 +208,13 @@ void ble_protocol_process(uint8_t *ptr_data, int length) {
     case BP_BLE_HEARTRATE: {
         pTreadmill->hw.ble.heartrate.connecting = 0;
         pTreadmill->hw.ble.heartrate.bpm = next_u8(&ptr);
+        pTreadmill->hw.ble.hrm.bpm = pTreadmill->hw.ble.heartrate.bpm;
         break;
     }
     case BP_BLE_HEARTRATE_DISCONNECT: {
         pTreadmill->hw.ble.heartrate.connecting = 0;
-//        pTreadmill->hw.ble.hrm.status = HRM_STATUS_DISCONNECTED;
-//        pTreadmill->hw.ble.hrm.bpm = 0;
+        pTreadmill->hw.ble.hrm.status = HRM_STATUS_DISCONNECTED;
+        pTreadmill->hw.ble.hrm.bpm = 0;
 //        memset(pTreadmill->hw.ble.hrm.device_name, 0, sizeof(pTreadmill->hw.ble.hrm.device_name));
         break;
     }
@@ -231,20 +232,20 @@ void ble_protocol_process(uint8_t *ptr_data, int length) {
                 break;
             }
             case BP_BLE_HRM_CONNECTING: {
-//                pTreadmill->hw.ble.hrm.status = HRM_STATUS_CONNECTING;
+                pTreadmill->hw.ble.hrm.status = HRM_STATUS_CONNECTING;
                 break;
             }
             case BP_BLE_HRM_CONNECTED: {
-//                pTreadmill->hw.ble.hrm.status = HRM_STATUS_CONNECTED;
+                pTreadmill->hw.ble.hrm.status = HRM_STATUS_CONNECTED;
                 break;
             }
             case BP_BLE_HRM_NOTIFICATION: {
-               pTreadmill->hw.ble.heartrate.bpm = next_u8(&ptr);
+                pTreadmill->hw.ble.hrm.bpm = next_u8(&ptr);
                 break;
             }
             case BP_BLE_HRM_DISCONNECTED: {
-//                pTreadmill->hw.ble.hrm.status = HRM_STATUS_DISCONNECTED;
-//                pTreadmill->hw.ble.hrm.bpm = 0;
+                pTreadmill->hw.ble.hrm.status = HRM_STATUS_DISCONNECTED;
+                pTreadmill->hw.ble.hrm.bpm = 0;
 //                memset(pTreadmill->hw.ble.hrm.device_name, 0, sizeof(pTreadmill->hw.ble.hrm.device_name));
                 break;
             }

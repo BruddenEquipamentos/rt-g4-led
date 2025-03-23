@@ -123,12 +123,13 @@ static void render_training_data(treadmill_t *treadmill) {
           sd_set_bpm(&sd_bpm, treadmill->training.bpm_max);
           break;
         case 1:
-          uint32_t cm_sec = (treadmill->training.meters * 100 / treadmill->training.seconds);
-          uint32_t speed = ((cm_sec * 36) / 10);  // 333 * 36 = 1198
-          uint32_t speed_mod = speed % 10;
-          if (speed_mod >= 5) speed = speed + (10 - speed_mod);
+          // uint32_t cm_sec = (treadmill->training.meters * 100 / treadmill->training.seconds);
+          // uint32_t speed = ((cm_sec * 36) / 10);  // 333 * 36 = 1198
+          // uint32_t speed_mod = speed % 10;
+          // if (speed_mod >= 5) speed = speed + (10 - speed_mod);
           // sd_set_kmh(&sd_speed, speed);
-          sd_set_kmh_report(&sd_speed, speed);
+          uint32_t speed_avg = treadmill->training.average_speed;
+          sd_set_kmh(&sd_speed, speed_avg);
           sd_set_min_sec(&sd_pace, treadmill_calculate_pace(speed));
           sd_set_bpm(&sd_bpm, treadmill->training.bpm_average);        
           break;

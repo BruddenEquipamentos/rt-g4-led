@@ -499,7 +499,7 @@ void dm_render(treadmill_t *treadmill) {
             }
           }
         }
-        else if (treadmill->hw.ble.sh.connected){
+        else if (treadmill->hw.ble.sh.connected == 1){
           if (treadmill->hw.ble.ftms.subscribed == 1) {
             // Mostra NFC fixo por 1 segundo após subscrição
             if (treadmill->get_time_ms() - treadmill->hw.ble.sh.connected_at <= 4000) {
@@ -515,6 +515,14 @@ void dm_render(treadmill_t *treadmill) {
               dm_clear_buffer();
             }
           }
+        }
+        else if (treadmill->hw.ble.ftms.subscribed && treadmill->hw.ble.hrm.bpm > 0){
+            // Pisca NFC enquanto conectado mas não subscrito
+            if (dm_blink(treadmill->get_time_ms(), 1000)) {
+              dm_render_text("NFC", 14);
+            } else {
+              dm_clear_buffer();
+            }
         }
         else {
           dm_render_text_animated("APERTE START OU ESCOLHA UM PROGRAMA", 100, treadmill->get_time_ms());

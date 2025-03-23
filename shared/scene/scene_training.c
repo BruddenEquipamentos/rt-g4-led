@@ -110,41 +110,6 @@ uint32_t max_var_tick = 0;
 
 static void update(treadmill_t *treadmill) {
 
-  //////////////////// IHRSA
-  // if (treadmill->get_time_ms() - treadmill->scene_tick < 10 * 1000) {
-  //   treadmill_set_speed(treadmill, 120);
-  //   // treadmill->scene_tick = treadmill->get_time_ms();
-  // }
-  // if (treadmill->get_time_ms() - treadmill->scene_tick >= 10 * 1000) {
-  //   treadmill_set_speed(treadmill, 300);
-  //   // treadmill->scene_tick = treadmill->get_time_ms();
-  // }
-  // if (treadmill->get_time_ms() - treadmill->scene_tick >= 15 * 1000) {
-  //   treadmill_set_speed(treadmill, 600);
-  //   // treadmill->scene_tick = treadmill->get_time_ms();
-  // }
-  // if (treadmill->get_time_ms() - treadmill->scene_tick >= 25 * 1000) {
-  //   treadmill_set_speed(treadmill, 900);
-  //   // treadmill->scene_tick = treadmill->get_time_ms();
-  // }
-  // if (treadmill->get_time_ms() - treadmill->scene_tick >= 35 * 1000) {
-  //   treadmill_set_speed(treadmill, 1200);
-  //   // treadmill->scene_tick = treadmill->get_time_ms();
-  // }
-  // if (treadmill->get_time_ms() - treadmill->scene_tick >= 45 * 1000) {
-  //   treadmill_set_speed(treadmill, 1500);
-  //   // treadmill->scene_tick = treadmill->get_time_ms();
-  // }
-  // if ((treadmill->get_time_ms() - treadmill->scene_tick) > (45 * 1000) && (treadmill->get_time_ms() - treadmill->scene_tick) < (60 * 1000)) {
-  //   treadmill_set_speed(treadmill, 1800);
-  //   // treadmill->scene_tick = treadmill->get_time_ms();
-  // }
-  // if (treadmill->get_time_ms() - treadmill->scene_tick >= 60 * 1000) {
-  //   treadmill_finish_training(treadmill);
-  //   treadmill->scene_tick = treadmill->get_time_ms();
-  // }
-  //////////////////// IHRSA
-
   if (treadmill->ms - treadmill->training.ms >= 1000) {
     treadmill->training.ms = treadmill->ms;
 
@@ -175,21 +140,19 @@ static void update(treadmill_t *treadmill) {
 
     // treadmill->training.kcal += treadmill_calculate_calories(treadmill); //Lucas 25/02
 
-    if (treadmill->hw.ble.connected && treadmill->hw.ble.heartrate.bpm <= 0) {
+    if (treadmill->hw.ble.connected && treadmill->hw.ble.hrm.bpm <= 0) {
+      treadmill->hw.ble.hrm.bpm = 0;
       // do nothing
     } 
-    // else if (treadmill->hw.ble.connected && treadmill->hw.ble.heartrate.bpm > 0){
-    //   treadmill->training.bpm = treadmill->hw.ble.heartrate.bpm;
-    // } //Lucas - removed here - check
+    else if (treadmill->hw.ble.connected && treadmill->hw.ble.hrm.bpm > 0){
+      treadmill->training.bpm = treadmill->hw.ble.hrm.bpm;
+    } //Lucas - 23/03
 
-    // Lucas
-    // insert here the behaviors for GK and SH
-    // insert on programs P6 and P7 - bpm loss behavior
-    if (treadmill->hw.ble.gk.connected == 1) {
+    else if (treadmill->hw.ble.gk.connected == 1) {
       treadmill->training.bpm = (uint8_t)treadmill->hw.ble.gk.bpm;
     }
     else if (treadmill->hw.ble.sh.connected == 1){
-      treadmill->training.bpm = treadmill->hw.ble.heartrate.bpm; //Lucas - use this for SH HR
+      treadmill->training.bpm = (uint8_t)treadmill->hw.ble.hrm.bpm; //Lucas - use this for SH HR
     }
     if (treadmill->hw.ble.hrm.status == HRM_STATUS_CONNECTED) {
       treadmill->training.bpm = (uint8_t)treadmill->hw.ble.hrm.bpm; //Lucas
