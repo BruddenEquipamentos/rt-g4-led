@@ -154,8 +154,12 @@ static void update(treadmill_t *treadmill) {
     else if (treadmill->hw.ble.sh.connected == 1){
       treadmill->training.bpm = (uint8_t)treadmill->hw.ble.hrm.bpm; //Lucas - use this for SH HR
     }
-    if (treadmill->hw.ble.hrm.status == HRM_STATUS_CONNECTED) {
+    else if (treadmill->hw.ble.hrm.status == HRM_STATUS_CONNECTED) {
       treadmill->training.bpm = (uint8_t)treadmill->hw.ble.hrm.bpm; //Lucas
+    }
+
+    else if ((treadmill->hw.handgrip.state == HEARTRATE_HG_DISABLED) && treadmill->hw.ble.connected == 0){
+      treadmill->training.bpm = 0;
     }
 
     // if ((treadmill->hw.handgrip.state == HEARTRATE_HG_DISABLED) && (treadmill->hw.ble.gk.connected == 0) && (treadmill->hw.ble.hrm.status == HRM_STATUS_DISCONNECTED) && (treadmill->hw.ble.sh.connected == 0)) {
