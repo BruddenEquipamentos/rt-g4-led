@@ -423,6 +423,10 @@ void treadmill_set_bpm_value(treadmill_t *treadmill, uint8_t bpm) {
   if (treadmill->hw.ble.hrm.status == HRM_STATUS_CONNECTED) { 
     return;
   }
+  if (treadmill->hw.ble.hrm.bpm > 0) {
+    return;
+  }
+
   treadmill->hw.handgrip.state = HEARTRATE_HG_READING;
   treadmill->training.bpm = bpm;
   if (treadmill->training.bpm >= treadmill->training.bpm_max){ //////////////////// bpm max
@@ -448,5 +452,8 @@ void treadmill_set_bpm_stop(treadmill_t *treadmill, uint8_t in_program) {
       break;
     }
   } 
-  treadmill->training.bpm = 0;
+  if (treadmill->hw.ble.hrm.bpm <= 0) {
+    treadmill->training.bpm = 0;
+  }
+
 }

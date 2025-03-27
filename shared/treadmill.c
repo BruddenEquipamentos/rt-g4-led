@@ -7,6 +7,7 @@
 #include "nvm/nvm.h"
 #include "panel/rt_led.h"
 
+#include "ble/ble_protocol/ble_ftms_treadmill.h"
 #include "ble/ble_protocol/ble_protocol_helper.h" //Lucas 23/03
 
 char *scene_name[SCENE_TOTALS] = {
