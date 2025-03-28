@@ -43,6 +43,7 @@ void treadmill_pause_training(treadmill_t *treadmill) {
 void treadmill_reset_training(treadmill_t *treadmill) {
   memset(&treadmill->training, 0x00, sizeof(struct training));
   memset(&treadmill->aux, 0x00, sizeof(struct aux));
+  memset(&treadmill->program, 0x00, sizeof(struct program));
   treadmill_clear_bpm_hg_loss(treadmill); //////////////
   treadmill_set_bpm_stop(treadmill, 0); /////////////////
   
