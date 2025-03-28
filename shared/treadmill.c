@@ -40,8 +40,8 @@ void treadmill_setup(treadmill_t *treadmill) {
 
   treadmill->scene = SCENE_INIT;
   treadmill->scene_tick = 0;
-
   treadmill_load_config(treadmill);
+  treadmill_ble_restart(treadmill); //Lucas 28/03
   treadmill->debug.print_states = true;
 }
 

@@ -62,6 +62,7 @@ void treadmill_pause_training(treadmill_t *treadmill) {
 void treadmill_reset_training(treadmill_t *treadmill) {
   memset(&treadmill->training, 0x00, sizeof(struct training));
   memset(&treadmill->aux, 0x00, sizeof(struct aux));
+  memset(&treadmill->program, 0x00, sizeof(struct program));
   memset(&hiit_intervals, 0x00, sizeof(interval_t) * (PROGRAM_HIIT_MAX_SERIES * 2));  /////// reset hiit invervals
   memset(&on_interval, 0x00, sizeof(uint16_t)); /////// reset hiit invervals
   treadmill_clear_bpm_hg_loss(treadmill); //////////////
@@ -408,6 +409,9 @@ void treadmill_set_bpm_read(treadmill_t *treadmill) {
   if (treadmill->hw.ble.hrm.status == HRM_STATUS_CONNECTED) { 
     return;
   }
+  if (treadmill->hw.ble.ftms.subscribed && treadmill->hw.ble.hrm.bpm > 0) {
+    return;
+  }
   treadmill->hw.handgrip.state = HEARTRATE_HG_INITING;
   treadmill_clear_bpm_hg_loss(treadmill); /////
 }
@@ -423,7 +427,7 @@ void treadmill_set_bpm_value(treadmill_t *treadmill, uint8_t bpm) {
   if (treadmill->hw.ble.hrm.status == HRM_STATUS_CONNECTED) { 
     return;
   }
-  if (treadmill->hw.ble.hrm.bpm > 0) {
+  if (treadmill->hw.ble.ftms.subscribed && treadmill->hw.ble.hrm.bpm > 0) {
     return;
   }
 
@@ -452,8 +456,8 @@ void treadmill_set_bpm_stop(treadmill_t *treadmill, uint8_t in_program) {
       break;
     }
   } 
-  if (treadmill->hw.ble.hrm.bpm <= 0) {
-    treadmill->training.bpm = 0;
-  }
+  // if (treadmill->hw.ble.hrm.bpm <= 0) {
+  //   treadmill->training.bpm = 0;
+  // }
 
 }

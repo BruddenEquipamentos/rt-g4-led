@@ -274,7 +274,7 @@ static void update_program_fat_burn(treadmill_t *treadmill) {
         treadmill_hr_program_below_range_handler(treadmill);
       } else if (treadmill->training.bpm && treadmill->training.bpm > p_fat_burn->high_bpm) {
         treadmill_hr_program_above_range_handler(treadmill);
-      } else if (treadmill->hg_lost_tick != 0 && treadmill->hw.handgrip.state == HEARTRATE_HG_LOST) {
+      } else if (treadmill->hg_lost_tick != 0 && treadmill->hw.handgrip.state == HEARTRATE_HG_LOST && gk_was_connected == 0) {
         treadmill->hg_lost_count++;
         if ((treadmill->training.speed != treadmill->config.speed.min) && (treadmill->hg_lost_count == 5)){
           treadmill_set_speed(treadmill, treadmill->config.speed.min);
@@ -341,7 +341,7 @@ static void update_program_super_cardio(treadmill_t *treadmill) {
         treadmill_hr_program_below_range_handler(treadmill);
       } else if (treadmill->training.bpm && treadmill->training.bpm > p_super_cardio->high_bpm) {
         treadmill_hr_program_above_range_handler(treadmill);
-      } else if (treadmill->hg_lost_tick != 0 && treadmill->hw.handgrip.state == HEARTRATE_HG_LOST) {
+      } else if (treadmill->hg_lost_tick != 0 && treadmill->hw.handgrip.state == HEARTRATE_HG_LOST && gk_was_connected == 0) {
         treadmill->hg_lost_count++;
         if ((treadmill->training.speed != treadmill->config.speed.min) && (treadmill->hg_lost_count == 5)){
           treadmill_set_speed(treadmill, treadmill->config.speed.min);

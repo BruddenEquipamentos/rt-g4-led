@@ -39,6 +39,13 @@ void treadmill_ble_process_init(treadmill_t *treadmill) {
       break;
     }
     case BLE_INIT_STATE_WAIT: {
+      
+      //Lucas 28/03 - disable NFC
+      ble_post_message(
+          "\x02"
+          "NFC,0\n",
+          "AOK", 1000);
+
       if (treadmill->get_time_ms() - init_wait >= 2000) {
         init_wait = 0;
         ble->init_state = BLE_INIT_POST_COMMANDS;
@@ -92,6 +99,12 @@ void treadmill_ble_process_init(treadmill_t *treadmill) {
       break;
     }
     case BLE_INIT_STATE_READY: {
+        //Lucas 28/03 - enable NFC only when BLE is ready
+        ble_post_message(
+          "\x02"
+          "NFC,1\n",
+          "AOK", 1000);
+        
       ble->state = BLE_STATE_READY;
       break;
     }
