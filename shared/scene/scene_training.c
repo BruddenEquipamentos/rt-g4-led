@@ -151,7 +151,7 @@ static void update(treadmill_t *treadmill) {
     else if (treadmill->hw.ble.gk.connected == 1) {
       treadmill->training.bpm = (uint8_t)treadmill->hw.ble.gk.bpm;
     }
-    else if (treadmill->hw.ble.sh.connected == 1){
+    else if (treadmill->hw.ble.sh.connected == 1 || (treadmill->hw.ble.hrm.bpm > 0)){
       treadmill->training.bpm = (uint8_t)treadmill->hw.ble.hrm.bpm; //Lucas - use this for SH HR
     }
     else if (treadmill->hw.ble.hrm.status == HRM_STATUS_CONNECTED) {
