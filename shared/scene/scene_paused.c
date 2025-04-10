@@ -24,7 +24,12 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
   }
 }
 
-static void update(treadmill_t *treadmill) {}
+static void update(treadmill_t *treadmill) {
+  if (treadmill->get_time_ms() - treadmill->scene_tick >= 2*60*1000) { // 2 minutes in pause
+    dm_reset_frame();
+    treadmill_finish_training(treadmill);
+  }
+}
 
 scene_t scene_paused = {
     .id = SCENE_PAUSED,
