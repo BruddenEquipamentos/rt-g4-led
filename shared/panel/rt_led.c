@@ -70,6 +70,8 @@ void rt_led_load_model_params(treadmill_t *treadmill, rt_led_model_t model) {
 
       treadmill->config.weight = 70;
 
+      treadmill->config.language = 0; // PT-BR
+
       treadmill->hw.inverter.comm_type = MOTOR_COMMUNICATION_TYPE_FREQ;
 
       strncpy(treadmill->config.device_name, "ARIA LED", 15);

@@ -61,6 +61,14 @@ typedef enum rt_led_config_test_params {
   RT_LED_CONFIG_TEST_TOTALS,
 } rt_led_config_test_params;
 
+// Language added to Aria treadmill
+typedef enum rt_led_config_language_params {
+  RT_LED_CONFIG_LNG_PT_BR = 0,
+  RT_LED_CONFIG_LNG_EN_US = 1,
+  RT_LED_CONFIG_LNG_ES_ES = 2,
+  RT_LED_CONFIG_LNG_TOTALS = 3,
+} rt_led_config_language_params_t;
+
 void rt_led_key_press(treadmill_t *treadmill, const kbd_key_t key);
 void rt_led_update(treadmill_t *treadmill);
 

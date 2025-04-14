@@ -11,6 +11,8 @@
 #include "treadmill_programs.h"
 #include "treadmill_programs_update.h" /////////////////
 
+#include "lang.h" //Language options
+
 // aux variables
 unsigned long end_tick = 0;
 int render_finished = 0;
@@ -610,7 +612,7 @@ void dm_render(treadmill_t *treadmill) {
           case PROGRAM_200K_CALORIES: /// percentage of calorie target completion
             int meta_50per = treadmill->program.p_200k_calories.kcal / 2;
             if ((treadmill->training.kcal / 1000) >= (meta_50per) && (treadmill->training.kcal / 1000) <= (meta_50per + 2)) {
-              dm_render_text_animated("50% DA META", 70, treadmill->get_time_ms());
+              dm_render_text_animated("50%% DA META", 70, treadmill->get_time_ms());
             }
             else {
               dm_render_calories(treadmill);
@@ -618,7 +620,7 @@ void dm_render(treadmill_t *treadmill) {
             break;
           case PROGRAM_CALORIES: {
             if ((treadmill->training.kcal / 1000) >= (treadmill->program.p_calories.kcal / 2) && (treadmill->training.kcal / 1000) <= ((treadmill->program.p_calories.kcal / 2) + 2)) {
-              dm_render_text_animated("50% DA META", 70, treadmill->get_time_ms());
+              dm_render_text_animated("50%% DA META", 70, treadmill->get_time_ms());
             }
             else {
               dm_render_calories(treadmill);

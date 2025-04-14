@@ -61,6 +61,33 @@ static void change_config_model(treadmill_t *treadmill, const kbd_key_t key) {
   }
 }
 
+// Added to Aria Treadmill - Language = 1: PT-BR, 2: EN-US, 3: ES-ES
+static void change_config_language(treadmill_t *treadmill, const kbd_key_t key) {
+  switch (key) {
+    case KEY_SPEED_INCREMENT: {
+      if (treadmill->config.language + 1 >= RT_LED_CONFIG_LNG_TOTALS) {
+        treadmill->config.language = 0;
+      } else {
+        treadmill->config.language++;
+      }
+      rt_led_load_model_params(treadmill, treadmill->config.model);
+      treadmill_ble_restart(treadmill);
+      break;
+    }
+    case KEY_SPEED_DECREMENT: {
+      if (treadmill->config.language == 0) {
+        treadmill->config.language = RT_LED_CONFIG_LNG_TOTALS - 1;
+      } else {
+        treadmill->config.language--;
+      }
+      rt_led_load_model_params(treadmill, treadmill->config.model);
+      treadmill_ble_restart(treadmill);
+      break;
+    }
+    default:;
+  }
+}
+
 static void change_config_weight(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_SPEED_INCREMENT: {
@@ -173,6 +200,10 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
       switch (treadmill->config.option) {
         case CONFIG_OPTION_MODEL: {
           change_config_model(treadmill, key);
+          break;
+        }
+        case CONFIG_OPTION_LANGUAGE:{
+          change_config_language(treadmill, key);
           break;
         }
         case CONFIG_OPTION_WEIGHT: {

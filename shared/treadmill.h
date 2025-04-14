@@ -176,6 +176,8 @@ typedef struct treadmill {
     char nsi[22];  // legado
 
     char device_name[15];
+
+    int language;
   } config;
 
   struct total {
