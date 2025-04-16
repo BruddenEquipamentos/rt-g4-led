@@ -10,6 +10,8 @@
 #include "ble/ble_protocol/ble_ftms_treadmill.h"
 #include "ble/ble_protocol/ble_protocol_helper.h" //Lucas 23/03
 
+#include "lang.h"
+
 char *scene_name[SCENE_TOTALS] = {
     "SCENE_INIT",    "SCENE_IDLE",      "SCENE_EMERGENCY", "SCENE_LUB",    "SCENE_CONFIG",
     "SCENE_PROGRAM", "SCENE_COUNTDOWN", "SCENE_TRAINING",  "SCENE_PAUSED", "SCENE_REPORT",
@@ -55,9 +57,15 @@ void treadmill_set_scene(treadmill_t *treadmill, treadmill_scene_t scene) {
   //   treadmill->on_state_changed_callback(treadmill, scene);
   // }
 }
-
 uint32_t treadmill_calculate_pace(const uint16_t speed) {
-  return ((60000000.0 / speed) * 6) / 1000;
+  extern treadmill_t *pTreadmill;
+  if (pTreadmill->config.unit == RT_LED_CONFIG_UNIT_MILES){ //imperial
+    unsigned long long speed_mph = (((unsigned long long)speed) * 621371) / ((unsigned long long)1000000); // add 0
+    return ((600000000.0 / speed_mph) * 6) / 10000;
+  }
+  else{ //metric
+    return ((60000000.0 / speed) * 6) / 1000;
+  }
 }
 
 static int walking_speed(const uint16_t speed) { return speed < 600; }
@@ -186,6 +194,20 @@ void treadmill_load_config(treadmill_t *treadmill) {
     treadmill->config.max_time = 0;
   } /////// max time config
 
+  uint8_t language = 0;
+  if (nvm.NVM_ReadVariable8bits(NVM_U8_LANG, &language)) {
+    treadmill->config.language = language;
+  } else {
+    treadmill->config.language = RT_LED_CONFIG_LNG_PT_BR;
+  }
+
+  uint8_t unit = 0;
+  if (nvm.NVM_ReadVariable8bits(NVM_U8_UNIT, &unit)) {
+    treadmill->config.unit = unit;
+  } else {
+    treadmill->config.unit = RT_LED_CONFIG_UNIT_KM;
+  }
+
   char ns[22];
   if (nvm.NVM_ReadString(NVM_NSU_START_ADDRESS, (uint8_t *)ns, 22)) {
     strncpy(treadmill->config.nsu, ns, 22);
@@ -210,6 +232,12 @@ void treadmill_save_config(treadmill_t *treadmill) {
   }
   if (treadmill->previous_config.weight != treadmill->config.weight) {
     nvm.NVM_WriteVariable8bits(NVM_U8_WEIGHT, treadmill->config.weight);
+  }
+  if (treadmill->previous_config.language != treadmill->config.language) {
+    nvm.NVM_WriteVariable8bits(NVM_U8_LANG, treadmill->config.language);
+  }
+  if (treadmill->previous_config.unit != treadmill->config.unit) {
+    nvm.NVM_WriteVariable8bits(NVM_U8_UNIT, treadmill->config.unit);
   }
   // if (treadmill->previous_config.lub_param_km != treadmill->config.lub_param_km) {
   //   nvm.NVM_WriteVariable32bits(NVM_U32_LUB_DISTANCE_PARAM, treadmill->config.lub_param_km);
@@ -276,5 +304,18 @@ void treadmill_reset_lub(treadmill_t *treadmill) {
     treadmill->config.lub_distance_m = treadmill->total.distance_in_meters;
   }
 }
+
+const char *get_string(treadmill_t *treadmill, int str_id) {
+  if (str_id < 0 || str_id >= STR_TOTALS)
+      return "INVALID STRING ID";
+
+  const char *str = strings[treadmill->config.language][str_id];
+  if (!str || str[0] == '\0')  // fallback se string vazia ou nula
+      str = strings[RT_LED_CONFIG_LNG_PT_BR][str_id];
+
+  return str;
+}
+
+
 
 void treadmill_ble_restart(treadmill_t *treadmill) { treadmill->hw.ble.init_state = BLE_INIT_STATE_INIT; }

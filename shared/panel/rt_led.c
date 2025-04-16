@@ -70,7 +70,7 @@ void rt_led_load_model_params(treadmill_t *treadmill, rt_led_model_t model) {
 
       treadmill->config.weight = 70;
 
-      treadmill->config.language = 0; // PT-BR
+      treadmill->config.language = RT_LED_CONFIG_LNG_PT_BR;
 
       treadmill->hw.inverter.comm_type = MOTOR_COMMUNICATION_TYPE_FREQ;
 
@@ -89,6 +89,8 @@ void rt_led_load_model_params(treadmill_t *treadmill, rt_led_model_t model) {
 
       treadmill->config.weight = 70;
 
+      treadmill->config.language = RT_LED_CONFIG_LNG_PT_BR;
+
       treadmill->hw.inverter.comm_type = MOTOR_COMMUNICATION_TYPE_UART;
 
       strncpy(treadmill->config.device_name, "ARIA LED", 15);
@@ -105,6 +107,8 @@ void rt_led_load_model_params(treadmill_t *treadmill, rt_led_model_t model) {
       treadmill->config.speed.step = 10;
 
       treadmill->config.weight = 70;
+
+      treadmill->config.language = RT_LED_CONFIG_LNG_PT_BR;
 
       treadmill->hw.inverter.comm_type = MOTOR_COMMUNICATION_TYPE_UART;
 

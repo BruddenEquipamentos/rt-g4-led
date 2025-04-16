@@ -215,20 +215,20 @@ static void render_config_data(treadmill_t *treadmill) {
       break;
     }
     case CONFIG_OPTION_LANGUAGE: {
-      sd_set_visible(&sd_pace, false);
+      sd_set_visible(&sd_pace, true);
+      sd_set_value(&sd_pace, treadmill->config.language);
       break;
     }
     case CONFIG_OPTION_UNIT: {
-      sd_set_visible(&sd_pace, false);
+      sd_set_visible(&sd_pace, true);
+      sd_set_value(&sd_pace, treadmill->config.unit);
       break;
     }
-
     case CONFIG_OPTION_WEIGHT: {
       sd_set_visible(&sd_pace, true);
       sd_set_value(&sd_pace, treadmill->config.weight);
       break;
     }
-
     case CONFIG_OPTION_MA: {
       sd_set_visible(&sd_pace, false);
       break;
@@ -254,7 +254,7 @@ static void render_config_data(treadmill_t *treadmill) {
       sd_set_visible(&sd_pace, true);
       sd_set_value(&sd_pace, (treadmill->total.distance_in_meters / 1000) % 10000);
 
-      sd_program.flag = SD_FLAG_PAD_LEADING_ZERO;
+      // sd_program.flag = SD_FLAG_PAD_LEADING_ZERO; //test
       break;
     }
     case CONFIG_OPTION_TOTAL_HOURS: {
@@ -266,7 +266,7 @@ static void render_config_data(treadmill_t *treadmill) {
       sd_set_visible(&sd_pace, true);
       sd_set_value(&sd_pace, (treadmill->total.time_in_seconds / 3600) % 10000);
 
-      sd_program.flag = SD_FLAG_PAD_LEADING_ZERO;
+      // sd_program.flag = SD_FLAG_PAD_LEADING_ZERO; //test
       break;
     }
     case CONFIG_OPTION_BLE_STATE: {

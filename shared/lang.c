@@ -1,6 +1,6 @@
 // lang.c
 #include "lang.h"
-#include "rt_led.h"
+#include "panel/rt_led.h"
 #include "treadmill.h"
 
 const char *strings[RT_LED_CONFIG_LNG_TOTALS][STR_TOTALS] = {
@@ -21,6 +21,7 @@ const char *strings[RT_LED_CONFIG_LNG_TOTALS][STR_TOTALS] = {
         "P5 * 30 MIN",
         "P6 * MOD",
         "IDADE",
+        "TEMPO",
         "P7 * VIG",
         "P8 * 8 MIN",
         "P9 * 200 CAL",
@@ -46,6 +47,7 @@ const char *strings[RT_LED_CONFIG_LNG_TOTALS][STR_TOTALS] = {
         "P5 * 30 MIN",
         "P6 * MOD",
         "AGE",
+        "TIME",
         "P7 * VIG",
         "P8 * 8 MIN",
         "P9 * 200 CAL",
@@ -71,28 +73,16 @@ const char *strings[RT_LED_CONFIG_LNG_TOTALS][STR_TOTALS] = {
         "P5 * 30 MIN",
         "P6 * MOD",
         "EDAD",
+        "TIEMPO",
         "P7 * VIG",
         "P8 * 8 MIN",
         "P9 * 200 CAL",
         "PROG",
         "MAX",
-        "PROM",
+        "MED",
         "META COMPLETADA"
     }
 };
-
-extern treadmill_t *treadmill;
-
-const char *get_string(int id) {
-    if (id < 0 || id >= STR_TOTALS)
-        return "INVALID STRING ID";
-
-    const char *str = strings[treadmill->config.language][id];
-    if (!str || str[0] == '\0')  // fallback se string vazia ou nula
-        str = strings[RT_LED_CONFIG_LNG_PT_BR][id];
-    
-    return str;
-}
 
 // void set_language(rt_led_config_language_params_t lang) {
 //     if (lang >= 0 && lang < RT_LED_CONFIG_LNG_TOTALS) {

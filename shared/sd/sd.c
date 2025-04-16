@@ -3,6 +3,11 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "treadmill.h" //Lucas 15/04
+#include "panel/rt_led.h"
+
+extern treadmill_t *pTreadmill;
+
 struct digit_map {
   char ch;
   enum sd_digit sd_digit;
@@ -77,40 +82,87 @@ void sd_set_min_sec(sd_t *sd, const uint32_t seconds) {
   snprintf(sd->text, 8, "%d:%02d", min, sec);
 }
 
+// uint32_t teste_milhas = 0;
+
 void sd_set_km_m(sd_t *sd, const uint32_t meters) {
-  uint32_t km = meters / 1000;  // 1000 -> 1.00
-  uint32_t m = (meters % 1000) / 10;
-  sd->flag |= SD_FLAG_PAD_LEADING_ZERO;
-  sd->digit[3] = ((km % 100) / 10);
-  sd->digit[2] = ((km % 100) % 10);
-  sd->dot = SD_DOT_AT_2;
-  sd->digit[1] = m / 10;
-  sd->digit[0] = m % 10;
-  snprintf(sd->text, 8, "%d.%02d", km, m);
+  if (pTreadmill->config.unit == RT_LED_CONFIG_UNIT_MILES){
+    unsigned long long total_miles = (((unsigned long long)meters) * 621371) / ((unsigned long long)10000000);
+    // teste_milhas = total_miles;
+    unsigned long long miles = total_miles / 100;
+    unsigned long long decimal = total_miles % 100;
+    sd->flag |= SD_FLAG_PAD_LEADING_ZERO;
+    sd->digit[3] = (miles / 10);  
+    sd->digit[2] = (miles % 10);         
+    sd->dot = SD_DOT_AT_2;               
+    sd->digit[1] = (decimal / 10);      
+    sd->digit[0] = (decimal % 10);       
+    snprintf(sd->text, 8, "%d.%02d", miles, decimal); //Milhas
+  
+  }
+  else{
+    uint32_t km = meters / 1000;  // 1000 -> 1.00
+    uint32_t m = (meters % 1000) / 10;
+    sd->flag |= SD_FLAG_PAD_LEADING_ZERO;
+    sd->digit[3] = ((km % 100) / 10);
+    sd->digit[2] = ((km % 100) % 10);
+    sd->dot = SD_DOT_AT_2;
+    sd->digit[1] = m / 10;
+    sd->digit[0] = m % 10;
+    snprintf(sd->text, 8, "%d.%02d", km, m); //Km
+  }
 }
 
 void sd_set_kmh(sd_t *sd, const uint32_t speed) {
-  uint32_t spd_km = speed / 100;  // 1200 -> 12.0 km/h
-  uint32_t spd_m = speed % 100;
-  sd->flag |= SD_FLAG_PAD_LEADING_ZERO;
-  sd->digit[3] = 0;
-  sd->digit[2] = ((spd_km % 100) / 10);
-  sd->digit[1] = ((spd_km % 100) % 10);
-  sd->dot = SD_DOT_AT_1;
-  sd->digit[0] = spd_m / 10;
-  snprintf(sd->text, 8, "%d.%01d", spd_km, spd_m);
+  if (pTreadmill->config.unit == RT_LED_CONFIG_UNIT_MILES){
+    unsigned long long spd_total_miles = (((unsigned long long)speed) * 621371) / ((unsigned long long)1000000);
+    unsigned long long spd_miles = spd_total_miles / 100;
+    unsigned long long spd_decimal = spd_total_miles % 100;
+    sd->flag |= SD_FLAG_PAD_LEADING_ZERO;
+    sd->digit[3] = 0;
+    sd->digit[2] = ((spd_miles % 100) / 10); 
+    sd->digit[1] = ((spd_miles % 100) % 10);     
+    sd->dot = SD_DOT_AT_1;               
+    sd->digit[0] = (spd_decimal / 10);
+    // sd->digit[0] = (spd_decimal % 10);       
+    snprintf(sd->text, 8, "%d.%01d", spd_miles, spd_decimal); //Milhas
+  }
+  else{
+    uint32_t spd_km = speed / 100;  // 1200 -> 12.0 km/h
+    uint32_t spd_m = speed % 100;
+    sd->flag |= SD_FLAG_PAD_LEADING_ZERO;
+    sd->digit[3] = 0;
+    sd->digit[2] = ((spd_km % 100) / 10);
+    sd->digit[1] = ((spd_km % 100) % 10);
+    sd->dot = SD_DOT_AT_1;
+    sd->digit[0] = spd_m / 10;
+    snprintf(sd->text, 8, "%d.%01d", spd_km, spd_m);
+  }
 }
 
 void sd_set_kmh_report(sd_t *sd, const uint32_t speed) {
-  uint32_t spd_km = speed / 100;  // 1234 -> 12.34 km/h
-  uint32_t spd_m = speed % 100;
-  sd->flag |= SD_FLAG_PAD_LEADING_ZERO;
-  sd->digit[3] = ((spd_km % 100) / 10);
-  sd->digit[2] = ((spd_km % 100) % 10);
-  sd->dot = SD_DOT_AT_2;
-  sd->digit[1] = spd_m / 10;
-  sd->digit[0] = spd_m % 10;
-  snprintf(sd->text, 8, "%d.%02d", spd_km, spd_m);
+  if (pTreadmill->config.unit == RT_LED_CONFIG_UNIT_MILES){
+    unsigned long long spd_total_miles = (((unsigned long long)speed) * 621371) / ((unsigned long long)1000000);
+    unsigned long long spd_miles = spd_total_miles / 100;
+    unsigned long long spd_decimal = spd_total_miles % 100;
+    sd->flag |= SD_FLAG_PAD_LEADING_ZERO;
+    sd->digit[3] = ((spd_miles % 100) / 10);
+    sd->digit[2] = ((spd_miles % 100) % 10);
+    sd->dot = SD_DOT_AT_2;
+    sd->digit[1] = spd_decimal / 10;
+    sd->digit[0] = spd_decimal % 10;
+    snprintf(sd->text, 8, "%d.%02d", spd_miles, spd_decimal);
+  }
+  else{
+    uint32_t spd_km = speed / 100;  // 1234 -> 12.34 km/h
+    uint32_t spd_m = speed % 100;
+    sd->flag |= SD_FLAG_PAD_LEADING_ZERO;
+    sd->digit[3] = ((spd_km % 100) / 10);
+    sd->digit[2] = ((spd_km % 100) % 10);
+    sd->dot = SD_DOT_AT_2;
+    sd->digit[1] = spd_m / 10;
+    sd->digit[0] = spd_m % 10;
+    snprintf(sd->text, 8, "%d.%02d", spd_km, spd_m);
+  }
 }
 
 void sd_set_incline(sd_t *sd, const int16_t incline) {

@@ -3,7 +3,7 @@
 
 // Language options for Aria treadmill
 
-#include "rt_led.h"
+#include "panel/rt_led.h"
 
 enum {
     STR_PRESS_START,
@@ -22,6 +22,7 @@ enum {
     STR_P5_30MIN,
     STR_P6_MOD,
     STR_IDADE,
+    STR_TEMPO,
     STR_P7_VIG,
     STR_P8_8MIN,
     STR_P9_200CAL,
@@ -35,8 +36,6 @@ enum {
 extern const char *strings[RT_LED_CONFIG_LNG_TOTALS][STR_TOTALS];
 extern rt_led_config_language_params_t language;
 
-const char *get_string(int id);
-void set_language(rt_led_config_language_params_t language);
-
+// const char *get_string(int id);
 
 #endif // LANG_H

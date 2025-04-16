@@ -2,6 +2,7 @@
 
 #include "../sd/sd.h"
 #include "../sd/sd_render.h"
+#include "rt_led.h"
 
 #define BLINK_INTERVAL (1000)
 

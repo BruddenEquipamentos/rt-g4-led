@@ -9,7 +9,6 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
     case KEY_EXT_KBD_STOP:
     case KEY_STOP:
       dm_reset_frame(); ////////
-      // Disable NFC on report screen (TODO: only for Samsung)
       treadmill_finish_training(treadmill);
       break;
     case KEY_SPEED_INCREMENT:

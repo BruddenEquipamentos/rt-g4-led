@@ -276,7 +276,7 @@ void display_update(void) {
       if (sd_program.visible) {
         display_five.sd = &sd_program;
       } else {
-        extern treadmill_t *pTreadmill     ;
+        extern treadmill_t *pTreadmill;
         if (pTreadmill->scene == SCENE_CONFIG) {
           display_five.sd = &sd_program;
           display_six.sd = &sd_pace;

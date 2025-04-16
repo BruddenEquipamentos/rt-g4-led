@@ -249,6 +249,17 @@ const digit_t dm_I = {
     }
 };
 
+const digit_t dm_J = {
+    .cols = 3,
+    .data = {
+        0b001,
+        0b001,
+        0b001,
+        0b101,
+        0b011,
+    }
+};
+
 const digit_t dm_L = {
     .cols = 2,
     .data = {
@@ -497,6 +508,7 @@ digit_map_t dm_map[] = {
     {.ch='G', .dm=&dm_G},
     {.ch='H', .dm=&dm_H},
     {.ch='I', .dm=&dm_I},
+    {.ch='J', .dm=&dm_J},
     {.ch='L', .dm=&dm_L},
     {.ch='M', .dm=&dm_M},
     {.ch='N', .dm=&dm_N},

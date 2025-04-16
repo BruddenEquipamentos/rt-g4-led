@@ -70,7 +70,6 @@ static void change_config_language(treadmill_t *treadmill, const kbd_key_t key) 
       } else {
         treadmill->config.language++;
       }
-      rt_led_load_model_params(treadmill, treadmill->config.model);
       treadmill_ble_restart(treadmill);
       break;
     }
@@ -80,7 +79,6 @@ static void change_config_language(treadmill_t *treadmill, const kbd_key_t key) 
       } else {
         treadmill->config.language--;
       }
-      rt_led_load_model_params(treadmill, treadmill->config.model);
       treadmill_ble_restart(treadmill);
       break;
     }
@@ -183,6 +181,28 @@ static void change_config_max_time(treadmill_t *treadmill, const kbd_key_t key) 
   }
 }
 
+static void change_config_unit(treadmill_t *treadmill, const kbd_key_t key) {
+  switch (key) {
+    case KEY_SPEED_INCREMENT: {
+      if (treadmill->config.unit + 1 >= RT_LED_CONFIG_UNIT_TOTALS) {
+        treadmill->config.unit = RT_LED_CONFIG_UNIT_KM;
+      } else {
+        treadmill->config.unit++;
+      }
+      break;
+    }
+    case KEY_SPEED_DECREMENT: {
+      if (treadmill->config.unit == RT_LED_CONFIG_UNIT_KM) {
+        treadmill->config.unit = RT_LED_CONFIG_UNIT_MILES;
+      } else {
+        treadmill->config.unit--;
+      }
+      break;
+    }
+    default:;
+  }
+}
+
 static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_START: {
@@ -204,6 +224,10 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
         }
         case CONFIG_OPTION_LANGUAGE:{
           change_config_language(treadmill, key);
+          break;
+        }
+        case CONFIG_OPTION_UNIT: {
+          change_config_unit(treadmill, key);
           break;
         }
         case CONFIG_OPTION_WEIGHT: {

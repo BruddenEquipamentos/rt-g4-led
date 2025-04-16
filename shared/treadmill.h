@@ -19,6 +19,8 @@
 #define NVM_U8_AGE 0x0006
 #define NVM_U32_LUB_DISTANCE_PARAM 0x0007
 #define NVM_U32_MAX_TIME_PARAM 0x0008 /////////////////// SAVE MAX TIME CONFIG
+#define NVM_U8_LANG 0x0009 //Lucas 14/04 language
+#define NVM_U8_UNIT 0x0010 //Lucas 14/04 unit
 
 // Exemplo de NSU "818790500000007067703"
 #define NVM_NS_MAX_LENGTH (22)
@@ -178,6 +180,8 @@ typedef struct treadmill {
     char device_name[15];
 
     int language;
+    int unit;
+
   } config;
 
   struct total {
@@ -272,5 +276,7 @@ void treadmill_key_press_clear(treadmill_t *treadmill);
 void treadmill_ble_restart(treadmill_t *treadmill);
 
 uint32_t treadmill_current_average_speed(treadmill_t* treadmill);
+
+const char *get_string(treadmill_t* treadmill, int id); /////////
 
 #endif

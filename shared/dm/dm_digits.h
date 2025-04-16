@@ -38,6 +38,7 @@ extern const digit_t dm_F;
 extern const digit_t dm_G;
 extern const digit_t dm_H;
 extern const digit_t dm_I;
+extern const digit_t dm_J;
 extern const digit_t dm_L;
 extern const digit_t dm_M;
 extern const digit_t dm_N;

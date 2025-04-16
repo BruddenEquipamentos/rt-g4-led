@@ -9,7 +9,7 @@
 
 #define MAJOR 1
 #define MINOR 2
-#define REVISION 1 ////
+#define REVISION 3 ////
 
 extern uint16_t fw_version;
 
@@ -68,6 +68,12 @@ typedef enum rt_led_config_language_params {
   RT_LED_CONFIG_LNG_ES_ES = 2,
   RT_LED_CONFIG_LNG_TOTALS = 3,
 } rt_led_config_language_params_t;
+
+typedef enum rt_led_config_unit_params {
+  RT_LED_CONFIG_UNIT_KM = 0,    // km
+  RT_LED_CONFIG_UNIT_MILES = 1, // milhas
+  RT_LED_CONFIG_UNIT_TOTALS
+} rt_led_config_unit_params_t;
 
 void rt_led_key_press(treadmill_t *treadmill, const kbd_key_t key);
 void rt_led_update(treadmill_t *treadmill);
