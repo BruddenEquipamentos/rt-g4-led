@@ -83,7 +83,8 @@ static uint32_t treadmill_calculate_speed(uint32_t dm, uint32_t seconds) {
 
 static void update(treadmill_t *treadmill) {
   if (treadmill->ms - treadmill->training.ms >= 1000) {
-    treadmill->training.ms = treadmill->ms;
+    int32_t ms_delta = (int32_t)1000 - (treadmill->ms - treadmill->training.ms);		
+	  treadmill->training.ms = treadmill->ms + ms_delta;
 
     treadmill->training.seconds++;
     treadmill->training.remaining_seconds--;

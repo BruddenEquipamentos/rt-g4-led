@@ -9,7 +9,7 @@
 
 #define MAJOR 2
 #define MINOR 0
-#define REVISION 6
+#define REVISION 8
 
 extern uint16_t fw_version;
 
