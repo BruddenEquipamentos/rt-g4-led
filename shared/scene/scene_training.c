@@ -111,7 +111,8 @@ uint32_t max_var_tick = 0;
 static void update(treadmill_t *treadmill) {
 
   if (treadmill->ms - treadmill->training.ms >= 1000) {
-    treadmill->training.ms = treadmill->ms;
+    int32_t ms_delta = (int32_t)1000 - (treadmill->ms - treadmill->training.ms);		
+	treadmill->training.ms = treadmill->ms + ms_delta;
 
     treadmill->training.seconds++;
     treadmill->training.remaining_seconds--;
