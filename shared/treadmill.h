@@ -62,6 +62,7 @@ typedef enum treadmill_scene {
   SCENE_TRAINING,
   SCENE_PAUSED,
   SCENE_REPORT,
+  // SCENE_BLE_ALLOW_YES_NO, //added
   SCENE_TOTALS,
 } treadmill_scene_t;
 

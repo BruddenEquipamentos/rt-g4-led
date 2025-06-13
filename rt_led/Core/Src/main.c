@@ -1286,73 +1286,48 @@ static void handle_shortcut_keys(void) {
       if (debounce == 0) debounce = HAL_GetTick();
       if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
         debounce = SHORTCUT_ACKED;
-
-        //////////////////////////////////////////////////////////////
-
-        if (treadmill.program.id == PROGRAM_WALK_30MIN) {
-          if ((int)treadmill.program.p_walk_30min.target_speed - 100 >=
-              treadmill.config.speed.min) {
-            treadmill.program.p_walk_30min.target_speed -= 100;
-          }
-        } 
-        else if (treadmill.program.id == PROGRAM_WALK_08MIN) { /////////// new program
-          if ((int)treadmill.program.p_walk_08min.target_speed - 100 >=
-              treadmill.config.speed.min) {
-            treadmill.program.p_walk_08min.target_speed -= 100;
-          }
-          else{
-            treadmill.program.p_walk_08min.target_speed = treadmill.config.speed.min;
-          }
-        }      
-        //////////////////////////////////////////////////////////////
-
-        else{
-          int speed = (int)treadmill.training.speed - 100; ///////////
-          if (speed < treadmill.config.speed.min) speed = treadmill.config.speed.min;
-          treadmill_set_speed(&treadmill, (uint16_t)speed);
-        }
-
-        // int speed = (int)treadmill.training.speed - 100; ///////////
-
-        // if (speed < treadmill.config.speed.min) speed = treadmill.config.speed.min;
-
-        // treadmill_set_speed(&treadmill, (uint16_t)speed);
         treadmill.hw.beep(BEEP_KEYPRESS_ACK);
+        treadmill_key_press(pTreadmill, KEY_EXT_KBD_SPEED_DEC);
       }
+        //////////////////////////////////////////////////////////////
+
+      //   if (treadmill.program.id == PROGRAM_WALK_30MIN) {
+      //     if ((int)treadmill.program.p_walk_30min.target_speed - 100 >=
+      //         treadmill.config.speed.min) {
+      //       treadmill.program.p_walk_30min.target_speed -= 100;
+      //     }
+      //   } 
+      //   else if (treadmill.program.id == PROGRAM_WALK_08MIN) { /////////// new program
+      //     if ((int)treadmill.program.p_walk_08min.target_speed - 100 >=
+      //         treadmill.config.speed.min) {
+      //       treadmill.program.p_walk_08min.target_speed -= 100;
+      //     }
+      //     else{
+      //       treadmill.program.p_walk_08min.target_speed = treadmill.config.speed.min;
+      //     }
+      //   }      
+      //   //////////////////////////////////////////////////////////////
+
+      //   else{
+      //     int speed = (int)treadmill.training.speed - 100; ///////////
+      //     if (speed < treadmill.config.speed.min) speed = treadmill.config.speed.min;
+      //     treadmill_set_speed(&treadmill, (uint16_t)speed);
+      //   }
+
+      //   // int speed = (int)treadmill.training.speed - 100; ///////////
+
+      //   // if (speed < treadmill.config.speed.min) speed = treadmill.config.speed.min;
+
+      //   // treadmill_set_speed(&treadmill, (uint16_t)speed);
+      //   treadmill.hw.beep(BEEP_KEYPRESS_ACK);
+      // }
 
     } else if (HAL_GPIO_ReadPin(SP_PLUS_GPIO_Port, SP_PLUS_Pin) == GPIO_PIN_RESET) {
       if (debounce == 0) debounce = HAL_GetTick();
       if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
         debounce = SHORTCUT_ACKED;
-
-        //////////////////////////////////////////////////////////////
-        if (treadmill.program.id == PROGRAM_WALK_30MIN) {
-          if (treadmill.program.p_walk_30min.target_speed + 100 <=
-              treadmill.config.speed.max) {
-            treadmill.program.p_walk_30min.target_speed += 100;
-          }
-        }
-        else if (treadmill.program.id == PROGRAM_WALK_08MIN) { //////////// new program
-          if (treadmill.program.p_walk_08min.target_speed + 100 <=
-              treadmill.config.speed.max) {
-            treadmill.program.p_walk_08min.target_speed += 100;
-            if (treadmill.program.p_walk_08min.target_speed > treadmill.config.speed.max){ ///////
-              treadmill.program.p_walk_08min.target_speed = treadmill.config.speed.max;
-            }
-          }
-        }
-        //////////////////////////////////////////////////////////////
-
-        else{
-          int speed = (int)treadmill.training.speed + 100; ///////////
-          if (speed > treadmill.config.speed.max) speed = treadmill.config.speed.max;
-          treadmill_set_speed(&treadmill, (uint16_t)speed);
-        }
-        // int speed = (int)treadmill.training.speed + 100; ///////////
-
-        // if (speed > treadmill.config.speed.max) speed = treadmill.config.speed.max;
-        // treadmill_set_speed(&treadmill, (uint16_t)speed);
         treadmill.hw.beep(BEEP_KEYPRESS_ACK);
+        treadmill_key_press(pTreadmill, KEY_EXT_KBD_SPEED_INC);
       }
 
     } else if (HAL_GPIO_ReadPin(INC_MINUS_GPIO_Port, INC_MINUS_Pin) == GPIO_PIN_RESET) {
@@ -1360,9 +1335,9 @@ static void handle_shortcut_keys(void) {
       if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
         debounce = SHORTCUT_ACKED;
 
+        treadmill.hw.beep(BEEP_KEYPRESS_ACK);
         // changed behavior - start
         treadmill_key_press(&treadmill, KEY_START);
-        treadmill.hw.beep(BEEP_KEYPRESS_ACK);
       }
 
     } else if (HAL_GPIO_ReadPin(INC_PLUS_GPIO_Port, INC_PLUS_Pin) == GPIO_PIN_RESET) {
@@ -1370,8 +1345,8 @@ static void handle_shortcut_keys(void) {
       if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
         debounce = SHORTCUT_ACKED;
         // changed behavior - stop 
-                treadmill_key_press(&treadmill, KEY_EXT_KBD_STOP);
         treadmill.hw.beep(BEEP_KEYPRESS_ACK);
+        treadmill_key_press(&treadmill, KEY_EXT_KBD_STOP);
       }
 
     } else {

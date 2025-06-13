@@ -93,6 +93,7 @@ void treadmill_resume_training(treadmill_t *treadmill) {
 void treadmill_finish_training(treadmill_t *treadmill) {
   treadmill_clear_dm_message(treadmill);
   treadmill_set_speed(treadmill, 0);
+  treadmill_set_incline(treadmill, 0);
   treadmill_set_scene(treadmill, SCENE_REPORT);
   report_state = 0; ///////////////////////////
   memset(&treadmill->hw.ble.hrm, 0, sizeof(treadmill->hw.ble.hrm)); //Lucas -- disconnect from BLE strap only

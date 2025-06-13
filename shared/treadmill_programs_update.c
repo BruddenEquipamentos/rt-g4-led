@@ -123,6 +123,7 @@ static void update_program_walk_30min(treadmill_t *treadmill) {
     }
 
     if (calculated_speed < treadmill->config.speed.min) {
+      calculated_speed = treadmill->config.speed.min
       treadmill_set_speed(treadmill, treadmill->config.speed.min);
     } 
     else {
@@ -168,6 +169,7 @@ static void update_program_walk_08min(treadmill_t *treadmill) {
     } 
     else if ((treadmill->training.seconds >= 2 * 60) && (treadmill->training.seconds < 3 * 60)){
       if (v2 < treadmill->config.speed.min) {
+        v2 = treadmill->config.speed.min;
         treadmill_set_speed(treadmill, treadmill->config.speed.min);
       } 
       else {
@@ -176,6 +178,7 @@ static void update_program_walk_08min(treadmill_t *treadmill) {
     }
     else if ((treadmill->training.seconds >= 3 * 60) && (treadmill->training.seconds < 5 * 60)){
       if (v3 < treadmill->config.speed.min) {
+        v3 = treadmill->config.speed.min;
         treadmill_set_speed(treadmill, treadmill->config.speed.min);
       } 
       else {
@@ -184,6 +187,7 @@ static void update_program_walk_08min(treadmill_t *treadmill) {
     }
     else if ((treadmill->training.seconds >= 5 * 60) && (treadmill->training.seconds < 6 * 60)){
       if (v4 < treadmill->config.speed.min) {
+        v4 = treadmill->config.speed.min;
         treadmill_set_speed(treadmill, treadmill->config.speed.min);
       } 
       else {
@@ -192,6 +196,7 @@ static void update_program_walk_08min(treadmill_t *treadmill) {
     }
     else if (treadmill->training.seconds >= 6 * 60){
       if (v5 < treadmill->config.speed.min) {
+        V5 = treadmill->config.speed.min;
         treadmill_set_speed(treadmill, treadmill->config.speed.min);
       } 
       else {
