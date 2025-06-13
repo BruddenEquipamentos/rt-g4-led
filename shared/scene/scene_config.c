@@ -37,7 +37,8 @@ static void next_config_option(treadmill_t *treadmill) {
 // exit + set scene here?
 static void change_config_model(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
-    case KEY_SPEED_INCREMENT: {
+    case KEY_SPEED_INCREMENT: 
+    case KEY_EXT_KBD_SPEED_INC:{
       if (treadmill->config.model + 1 >= RT_LED_MODEL_TOTALS) {
         treadmill->config.model = 0;
       } else {
@@ -47,7 +48,8 @@ static void change_config_model(treadmill_t *treadmill, const kbd_key_t key) {
       treadmill_ble_restart(treadmill);
       break;
     }
-    case KEY_SPEED_DECREMENT: {
+    case KEY_SPEED_DECREMENT:
+    case KEY_EXT_KBD_SPEED_DEC: {
       if (treadmill->config.model == 0) {
         treadmill->config.model = RT_LED_MODEL_TOTALS - 1;
       } else {
@@ -64,7 +66,8 @@ static void change_config_model(treadmill_t *treadmill, const kbd_key_t key) {
 // Added to Aria Treadmill - Language = 1: PT-BR, 2: EN-US, 3: ES-ES
 static void change_config_language(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
-    case KEY_SPEED_INCREMENT: {
+    case KEY_SPEED_INCREMENT:
+    case KEY_EXT_KBD_SPEED_INC: {
       if (treadmill->config.language + 1 >= RT_LED_CONFIG_LNG_TOTALS) {
         treadmill->config.language = 0;
       } else {
@@ -73,7 +76,8 @@ static void change_config_language(treadmill_t *treadmill, const kbd_key_t key) 
       treadmill_ble_restart(treadmill);
       break;
     }
-    case KEY_SPEED_DECREMENT: {
+    case KEY_SPEED_DECREMENT: 
+    case KEY_EXT_KBD_SPEED_DEC:{
       if (treadmill->config.language == 0) {
         treadmill->config.language = RT_LED_CONFIG_LNG_TOTALS - 1;
       } else {
@@ -88,14 +92,16 @@ static void change_config_language(treadmill_t *treadmill, const kbd_key_t key) 
 
 static void change_config_weight(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
-    case KEY_SPEED_INCREMENT: {
+    case KEY_SPEED_INCREMENT: 
+    case KEY_EXT_KBD_SPEED_INC:{
       if (treadmill->config.weight + 1 <= RT_LED_WEIGHT_MAX)
         treadmill->config.weight++;
       else
         treadmill->config.weight = RT_LED_WEIGHT_MIN;
       break;
     }
-    case KEY_SPEED_DECREMENT: {
+    case KEY_SPEED_DECREMENT: 
+    case KEY_EXT_KBD_SPEED_DEC:{
       if (treadmill->config.weight - 1 >= RT_LED_WEIGHT_MIN)
         treadmill->config.weight--;
       else
@@ -108,14 +114,16 @@ static void change_config_weight(treadmill_t *treadmill, const kbd_key_t key) {
 
 static void change_config_lub(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
-    case KEY_SPEED_INCREMENT: {
+    case KEY_SPEED_INCREMENT: 
+    case KEY_EXT_KBD_SPEED_INC:{
       if (treadmill->config.lub_param_km + RT_LED_LUB_STEP_DISTANCE <= RT_LED_LUB_MAX_DISTANCE)
         treadmill->config.lub_param_km += RT_LED_LUB_STEP_DISTANCE;
       else
         treadmill->config.lub_param_km = RT_LED_LUB_MIN_DISTANCE;
       break;
     }
-    case KEY_SPEED_DECREMENT: {
+    case KEY_SPEED_DECREMENT: 
+    case KEY_EXT_KBD_SPEED_DEC:{
       if (treadmill->config.lub_param_km - RT_LED_LUB_STEP_DISTANCE >= RT_LED_LUB_MIN_DISTANCE)
         treadmill->config.lub_param_km -= RT_LED_LUB_MIN_DISTANCE;
       else
@@ -130,7 +138,9 @@ static void change_config_lub(treadmill_t *treadmill, const kbd_key_t key) {
 static void change_config_modbus(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_SPEED_INCREMENT:
-    case KEY_SPEED_DECREMENT: {
+    case KEY_SPEED_DECREMENT: 
+    case KEY_EXT_KBD_SPEED_INC:
+    case KEY_EXT_KBD_SPEED_DEC:{
       treadmill->config.modbus = treadmill->config.modbus == RT_LED_CONFIG_MODBUS_HIDE_PARAMS
                                      ? RT_LED_CONFIG_MODBUS_SHOW_PARAMS
                                      : RT_LED_CONFIG_MODBUS_HIDE_PARAMS;
@@ -143,7 +153,9 @@ static void change_config_modbus(treadmill_t *treadmill, const kbd_key_t key) {
 static void change_config_test(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_SPEED_INCREMENT:
-    case KEY_SPEED_DECREMENT: {
+    case KEY_SPEED_DECREMENT: 
+    case KEY_EXT_KBD_SPEED_INC:
+    case KEY_EXT_KBD_SPEED_DEC:{
       treadmill->config.test =
           treadmill->config.test == RT_LED_CONFIG_TEST_DISABLE ? RT_LED_CONFIG_TEST_ENABLE : RT_LED_CONFIG_TEST_DISABLE;
       break;
@@ -155,7 +167,8 @@ static void change_config_test(treadmill_t *treadmill, const kbd_key_t key) {
 /////// new config MAX TIME
 static void change_config_max_time(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
-    case KEY_SPEED_INCREMENT: {
+    case KEY_SPEED_INCREMENT: 
+    case KEY_EXT_KBD_SPEED_INC: {
       if (treadmill->config.max_time == 0){
         treadmill->config.max_time = MAX_TIME_ON_TREADMILL_LOWER;
       }
@@ -168,7 +181,8 @@ static void change_config_max_time(treadmill_t *treadmill, const kbd_key_t key) 
       }
       break;
     }
-    case KEY_SPEED_DECREMENT: {
+    case KEY_SPEED_DECREMENT: 
+    case KEY_EXT_KBD_SPEED_DEC:{
       if (treadmill->config.max_time - PROGRAM_TIME_INC_TIME_STEP >= MAX_TIME_ON_TREADMILL_LOWER)
         treadmill->config.max_time -= PROGRAM_TIME_INC_TIME_STEP;
       else
@@ -183,7 +197,8 @@ static void change_config_max_time(treadmill_t *treadmill, const kbd_key_t key) 
 
 static void change_config_unit(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
-    case KEY_SPEED_INCREMENT: {
+    case KEY_SPEED_INCREMENT: 
+    case KEY_EXT_KBD_SPEED_INC:{
       if (treadmill->config.unit + 1 >= RT_LED_CONFIG_UNIT_TOTALS) {
         treadmill->config.unit = RT_LED_CONFIG_UNIT_KM;
       } else {
@@ -191,7 +206,8 @@ static void change_config_unit(treadmill_t *treadmill, const kbd_key_t key) {
       }
       break;
     }
-    case KEY_SPEED_DECREMENT: {
+    case KEY_SPEED_DECREMENT: 
+    case KEY_EXT_KBD_SPEED_DEC:{
       if (treadmill->config.unit == RT_LED_CONFIG_UNIT_KM) {
         treadmill->config.unit = RT_LED_CONFIG_UNIT_MILES;
       } else {
@@ -216,7 +232,9 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
     }
 
     case KEY_SPEED_INCREMENT:
-    case KEY_SPEED_DECREMENT: {
+    case KEY_SPEED_DECREMENT: 
+    case KEY_EXT_KBD_SPEED_INC:
+    case KEY_EXT_KBD_SPEED_DEC:{
       switch (treadmill->config.option) {
         case CONFIG_OPTION_MODEL: {
           change_config_model(treadmill, key);
