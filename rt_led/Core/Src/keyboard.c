@@ -100,7 +100,7 @@ enum key  get_key_pressed(void) {
     key &= keys[i];
   }
 
-  if (key & KEY_START && key & KEY_STOP) {
+  if (key & KEY_START && key & KEY_STOP) { //Lucas rework that 15/05 - wait for seconds see tft firmware 
       key &= ~(KEY_START | KEY_STOP);
       key |= KEY_CONFIG;
   } else {

@@ -181,14 +181,21 @@ void ext_i2c_kbd_handler(void) {
     //	handle_key(0xff);
 }
 
-int gkey = 0;
 void handle_key(uint8_t key) {
 
-    if (key == 0xff) {
+	static uint32_t key_config_debounce = 0;
+    static uint32_t key_ble_debounce = 0;
+    static uint8_t _key;
+
+    if (key == 0xff) {    	
+        if (_key == 0x0B && key_ble_debounce != 0) {
+            treadmill_key_press(pTreadmill, KEY_PROGRAM);
+            _key = key;
+        }
+        key_config_debounce = 0;
+        key_ble_debounce = 0;        
         return;
     }
-
-    gkey = key;
 
     switch (key) {
     case 1: {
@@ -237,7 +244,24 @@ void handle_key(uint8_t key) {
         break;
     }
     case 0x0B: {
-        treadmill_key_press(pTreadmill, KEY_PROGRAM);
+        // treadmill_key_press(pTreadmill, KEY_PROGRAM);
+        if (pTreadmill->scene == SCENE_IDLE){
+            if (key_ble_debounce == 0) {
+                key_ble_debounce = pTreadmill->get_time_ms();
+            } else {                
+                if (pTreadmill->get_time_ms() - key_ble_debounce >= 1200 && pTreadmill->scene != SCENE_BLE_ALLOW_YES_NO) {
+                    memset(pTreadmill->hw.ble.hrm.device_name, 0, sizeof(pTreadmill->hw.ble.hrm.device_name));
+                    uint8_t buffer[64];
+                    uint8_t length;
+                    build_hrm_scan_packet(buffer, &length, 64);
+                    ble_post_message(buffer, "", 0);
+                    treadmill_set_scene(pTreadmill, SCENE_BLE_ALLOW_YES_NO);
+                    key_ble_debounce = 0;
+                }
+            }            
+        } else{
+            treadmill_key_press(pTreadmill, KEY_PROGRAM);
+        }
         break;
     }
     case 0x0C: {
@@ -253,7 +277,15 @@ void handle_key(uint8_t key) {
         break;
     }
     case 0x0F: {
-        treadmill_key_press(pTreadmill, KEY_CONFIG);
+        // treadmill_key_press(pTreadmill, KEY_CONFIG);
+		if (key_config_debounce == 0) {
+			key_config_debounce = pTreadmill->get_time_ms();
+		} else {
+			if (pTreadmill->get_time_ms() - key_config_debounce >= 1200 && pTreadmill->scene != SCENE_CONFIG) {
+				treadmill_key_press(pTreadmill, KEY_CONFIG);
+				key_config_debounce = 0;
+			}
+		}
         break;
     }
     case 0x10: {
