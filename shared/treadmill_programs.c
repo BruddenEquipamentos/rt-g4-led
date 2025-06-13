@@ -28,10 +28,12 @@ static void program_time_key_press(treadmill_t *treadmill, const kbd_key_t key) 
       treadmill_exit_program(treadmill);
       break;
     case KEY_SPEED_INCREMENT:
+    case KEY_EXT_KBD_SPEED_INC:
       if (treadmill->program.p_time.seconds + PROGRAM_TIME_INC_TIME_STEP <= PROGRAM_TIME_MAX_TIME)
         treadmill->program.p_time.seconds += PROGRAM_TIME_INC_TIME_STEP;
       break;
     case KEY_SPEED_DECREMENT:
+    case KEY_EXT_KBD_SPEED_DEC:
       if (treadmill->program.p_time.seconds > PROGRAM_TIME_MIN_TIME)
         treadmill->program.p_time.seconds -= PROGRAM_TIME_INC_TIME_STEP;
       break;
@@ -73,10 +75,12 @@ static void program_distance_key_press(treadmill_t *treadmill, const kbd_key_t k
       treadmill_exit_program(treadmill);
       break;
     case KEY_SPEED_INCREMENT:
+    case KEY_EXT_KBD_SPEED_INC:
       if (treadmill->program.p_distance.meters + PROGRAM_DISTANCE_INC_DISTANCE_STEP <= PROGRAM_DISTANCE_MAX_DISTANCE)
         treadmill->program.p_distance.meters += PROGRAM_DISTANCE_INC_DISTANCE_STEP;
       break;
     case KEY_SPEED_DECREMENT:
+    case KEY_EXT_KBD_SPEED_DEC:
       if (treadmill->program.p_distance.meters > PROGRAM_DISTANCE_MIN_DISTANCE)
         treadmill->program.p_distance.meters -= PROGRAM_DISTANCE_INC_DISTANCE_STEP;
       break;
@@ -118,11 +122,13 @@ static void program_calories_key_press(treadmill_t *treadmill, const kbd_key_t k
       treadmill_exit_program(treadmill);
       break;
     case KEY_SPEED_INCREMENT:
+    case KEY_EXT_KBD_SPEED_INC:
       if ((int)treadmill->program.p_calories.kcal + (int)PROGRAM_CALORIES_INC_CALORIES_STEP <=
           PROGRAM_CALORIES_MAX_CALORIES)
         treadmill->program.p_calories.kcal += PROGRAM_CALORIES_INC_CALORIES_STEP;
       break;
     case KEY_SPEED_DECREMENT:
+    case KEY_EXT_KBD_SPEED_DEC:
       if ((int)treadmill->program.p_calories.kcal - (int)PROGRAM_CALORIES_INC_CALORIES_STEP >=
           PROGRAM_CALORIES_MIN_CALORIES)
         treadmill->program.p_calories.kcal -= PROGRAM_CALORIES_INC_CALORIES_STEP;
@@ -166,11 +172,13 @@ static void program_200k_calories_key_press(treadmill_t *treadmill, const kbd_ke
       treadmill_exit_program(treadmill);
       break;
     case KEY_SPEED_INCREMENT:
+    case KEY_EXT_KBD_SPEED_INC:
       if ((int)treadmill->program.p_200k_calories.kcal + (int)PROGRAM_200K_CALORIES_INC_CALORIES_STEP <=
           PROGRAM_200K_CALORIES_MAX_CALORIES)
         treadmill->program.p_200k_calories.kcal += PROGRAM_200K_CALORIES_INC_CALORIES_STEP;
       break;
     case KEY_SPEED_DECREMENT:
+    case KEY_EXT_KBD_SPEED_DEC:
       if ((int)treadmill->program.p_200k_calories.kcal - (int)PROGRAM_200K_CALORIES_INC_CALORIES_STEP >=
           PROGRAM_200K_CALORIES_MIN_CALORIES)
         treadmill->program.p_200k_calories.kcal -= PROGRAM_200K_CALORIES_INC_CALORIES_STEP;
@@ -246,6 +254,7 @@ static void program_hiit_key_press(treadmill_t *treadmill, const kbd_key_t key) 
       treadmill_exit_program(treadmill);
       break;
     case KEY_SPEED_INCREMENT:
+    case KEY_EXT_KBD_SPEED_INC:
       switch (treadmill->program.param_index) {
         case 0:
           if (treadmill->program.p_hiit.seconds_t1 + PROGRAM_HIIT_TIME_STEP <= PROGRAM_HIIT_MAX_TIME){
@@ -275,6 +284,7 @@ static void program_hiit_key_press(treadmill_t *treadmill, const kbd_key_t key) 
       }
       break;
     case KEY_SPEED_DECREMENT:
+    case KEY_EXT_KBD_SPEED_DEC:
       switch (treadmill->program.param_index) {
         case 0:
           if (treadmill->program.p_hiit.seconds_t1 - PROGRAM_HIIT_TIME_STEP >= PROGRAM_HIIT_MIN_TIME)
@@ -354,10 +364,12 @@ void program_walk_30min_key_press(treadmill_t *treadmill, const kbd_key_t key) {
       treadmill_exit_program(treadmill);
       break;
     case KEY_SPEED_INCREMENT:
+    case KEY_EXT_KBD_SPEED_INC:
       if (treadmill->program.p_walk_30min.target_speed + treadmill->config.speed.step <= PROGRAM_WALK_30MIN_MAX_SPEED)
         treadmill->program.p_walk_30min.target_speed += treadmill->config.speed.step;
       break;
     case KEY_SPEED_DECREMENT:
+    case KEY_EXT_KBD_SPEED_DEC:
       if (treadmill->program.p_walk_30min.target_speed - treadmill->config.speed.step >= PROGRAM_WALK_30MIN_MIN_SPEED)
         treadmill->program.p_walk_30min.target_speed -= treadmill->config.speed.step;
       break;
@@ -401,10 +413,12 @@ void program_walk_08min_key_press(treadmill_t *treadmill, const kbd_key_t key) {
       treadmill_exit_program(treadmill);
       break;
     case KEY_SPEED_INCREMENT:
+    case KEY_EXT_KBD_SPEED_INC:
       if (treadmill->program.p_walk_08min.target_speed + treadmill->config.speed.step <= PROGRAM_WALK_08MIN_MAX_SPEED)
         treadmill->program.p_walk_08min.target_speed += treadmill->config.speed.step;
       break;
     case KEY_SPEED_DECREMENT:
+    case KEY_EXT_KBD_SPEED_DEC:
       if (treadmill->program.p_walk_08min.target_speed - treadmill->config.speed.step >= PROGRAM_WALK_08MIN_MIN_SPEED)
         treadmill->program.p_walk_08min.target_speed -= treadmill->config.speed.step;
       break;
@@ -461,6 +475,7 @@ static void program_fat_burn_key_press(treadmill_t *treadmill, const kbd_key_t k
       treadmill_exit_program(treadmill);
       break;
     case KEY_SPEED_INCREMENT:
+    case KEY_EXT_KBD_SPEED_INC:
       switch (treadmill->program.param_index) {
         case 0:
           if (treadmill->program.p_fat_burn.seconds + PROGRAM_FAT_BURN_TIME_STEP <= PROGRAM_FAT_BURN_MAX_TIME)
@@ -473,6 +488,7 @@ static void program_fat_burn_key_press(treadmill_t *treadmill, const kbd_key_t k
       }
       break;
     case KEY_SPEED_DECREMENT:
+    case KEY_EXT_KBD_SPEED_DEC:
       switch (treadmill->program.param_index) {
         case 0:
           if (treadmill->program.p_fat_burn.seconds - PROGRAM_FAT_BURN_TIME_STEP >= PROGRAM_FAT_BURN_MIN_TIME)
@@ -540,6 +556,7 @@ static void program_super_cardio_key_press(treadmill_t *treadmill, const kbd_key
       treadmill_exit_program(treadmill);
       break;
     case KEY_SPEED_INCREMENT:
+    case KEY_EXT_KBD_SPEED_INC:
       switch (treadmill->program.param_index) {
         case 0:
           if (treadmill->program.p_super_cardio.seconds + PROGRAM_SUPER_CARDIO_TIME_STEP <=
@@ -553,6 +570,7 @@ static void program_super_cardio_key_press(treadmill_t *treadmill, const kbd_key
       }
       break;
     case KEY_SPEED_DECREMENT:
+    case KEY_EXT_KBD_SPEED_DEC:
       switch (treadmill->program.param_index) {
         case 0:
           if (treadmill->program.p_super_cardio.seconds - PROGRAM_SUPER_CARDIO_TIME_STEP >=

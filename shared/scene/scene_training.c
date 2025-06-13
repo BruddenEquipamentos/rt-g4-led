@@ -32,6 +32,13 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
         treadmill_speed_increment(treadmill);
       }
       break;
+    case KEY_EXT_KBD_SPEED_INC: {
+        int speed = (int)treadmill->training.speed + 100;
+        if (speed > treadmill->config.speed.max)
+            speed = treadmill->config.speed.max;
+        treadmill_set_speed(treadmill, (uint16_t)speed);        						
+        break;
+    }    
     case KEY_SPEED_DECREMENT:
       speed_changed = 1;
       if (treadmill->program.id == PROGRAM_WALK_30MIN) {
@@ -50,6 +57,14 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
         treadmill_speed_decrement(treadmill);
       }
       break;
+
+    case KEY_EXT_KBD_SPEED_DEC: {
+        int speed = (int)treadmill->training.speed - 100;
+        if (speed < treadmill->config.speed.min)
+            speed = treadmill->config.speed.min;
+        treadmill_set_speed(treadmill, (uint16_t)speed);						
+        break;
+    }
     case KEY_INCLINE_INCREMENT:
       incline_changed = 1;
       treadmill_incline_increment(treadmill);
