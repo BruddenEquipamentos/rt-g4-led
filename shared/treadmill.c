@@ -14,7 +14,7 @@
 
 char *scene_name[SCENE_TOTALS] = {
     "SCENE_INIT",    "SCENE_IDLE",      "SCENE_EMERGENCY", "SCENE_LUB",    "SCENE_CONFIG",
-    "SCENE_PROGRAM", "SCENE_COUNTDOWN", "SCENE_TRAINING",  "SCENE_PAUSED", "SCENE_REPORT",
+    "SCENE_PROGRAM", "SCENE_COUNTDOWN", "SCENE_TRAINING",  "SCENE_PAUSED", "SCENE_REPORT", "SCENE_BLE_ALLOW_Y_N",
 };
 
 __attribute__((weak)) void beep(beep_t beep) { (void)beep; }

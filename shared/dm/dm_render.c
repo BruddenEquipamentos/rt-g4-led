@@ -494,12 +494,7 @@ void dm_render(treadmill_t *treadmill) {
               dm_render_text_animated(get_string(treadmill, STR_PRESS_START), 100, treadmill->get_time_ms());
             }
           } else {
-            // Pisca NFC enquanto conectado mas não subscrito
-            if (dm_blink(treadmill->get_time_ms(), 1000)) {
-              dm_render_text("NFC", 14);
-            } else {
-              dm_clear_buffer();
-            }
+            treadmill_set_dm_message(treadmill, "  NFC", 4000, 1000);
           }
         }
         else if (treadmill->hw.ble.sh.connected == 1){
@@ -512,21 +507,11 @@ void dm_render(treadmill_t *treadmill) {
               dm_render_text_animated(get_string(treadmill, STR_PRESS_START), 100, treadmill->get_time_ms());
             }
           } else {
-            // Pisca NFC enquanto conectado mas não subscrito
-            if (dm_blink(treadmill->get_time_ms(), 1000)) {
-              dm_render_text("NFC", 14);
-            } else {
-              dm_clear_buffer();
-            }
+            treadmill_set_dm_message(treadmill, "  NFC", 4000, 1000);
           }
         }
         else if (treadmill->hw.ble.ftms.subscribed && treadmill->hw.ble.hrm.bpm > 0){
-            // Pisca NFC enquanto conectado mas não subscrito
-            if (dm_blink(treadmill->get_time_ms(), 1000)) {
-              dm_render_text("NFC", 14);
-            } else {
-              dm_clear_buffer();
-            }
+            treadmill_set_dm_message(treadmill, "  NFC", 4000, 1000);
         }
         else {
           dm_render_text_animated(get_string(treadmill, STR_PRESS_START), 100, treadmill->get_time_ms());
@@ -536,6 +521,18 @@ void dm_render(treadmill_t *treadmill) {
       }
       break;
     }
+    case SCENE_BLE_ALLOW_YES_NO:{
+      if (strlen(treadmill->hw.ble.hrm.device_name) > 0){
+        dm_clear_buffer();
+        dm_render_text_animated(treadmill->hw.ble.hrm.device_name, 100, treadmill->get_time_ms());
+      }
+      else{
+        // treadmill_set_dm_message(treadmill, "  BLE", 3000, 1000);
+        treadmill_set_dm_message(treadmill, " >LE", 3000, 1000);
+      }
+      break;
+    }
+
     case SCENE_TRAINING: {
       if (treadmill->config.modbus) {
         dm_render_mb_param_value(treadmill);
@@ -551,12 +548,7 @@ void dm_render(treadmill_t *treadmill) {
               return;
             }
           } else {
-            // Apenas pisca NFC ou limpa a tela, sem mostrar contexto anterior
-            if (dm_blink(treadmill->get_time_ms(), 1000)) {
-              dm_render_text("NFC", 14);
-            } else {
-              dm_clear_buffer();
-            }
+            treadmill_set_dm_message(treadmill, "  NFC", 4000, 1000);
             return; // Retorna aqui para não mostrar o contexto anterior
           }
         }
@@ -568,12 +560,7 @@ void dm_render(treadmill_t *treadmill) {
               return;
             }
           } else {
-            // Apenas pisca NFC ou limpa a tela, sem mostrar contexto anterior
-            if (dm_blink(treadmill->get_time_ms(), 1000)) {
-              dm_render_text("NFC", 14);
-            } else {
-              dm_clear_buffer();
-            }
+            treadmill_set_dm_message(treadmill, "  NFC", 4000, 1000);
             return; // Retorna aqui para não mostrar o contexto anterior
           }
         }

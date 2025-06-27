@@ -20,7 +20,10 @@ typedef enum ble_init_state {
 typedef enum ble_process_status {
     BLE_PROCESS_STATUS_ERROR = 0,
     BLE_PROCESS_STATUS_OK,
-    BLE_PROCESS_STATUS_IDLE
+    BLE_PROCESS_STATUS_IDLE,
+    BLE_STATUS_WAITING_PERMISSION,
+    BLE_STATUS_PERMISSION_ALLOWED,
+    BLE_STATUS_PERMISSION_DENIED
 } ble_process_status_t;
 
 enum gk_flag {
@@ -43,6 +46,7 @@ typedef struct ble {
 
     ble_state_t state;
     ble_init_state_t init_state;
+    ble_process_status_t status;
 
     send_data_cb send_data;
     recv_data_cb recv_data;

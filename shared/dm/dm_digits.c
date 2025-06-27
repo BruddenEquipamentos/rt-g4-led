@@ -480,6 +480,17 @@ const digit_t dm_bpm_decrease = {
     }
 };
 
+const digit_t dm_ble = {
+    .cols = 5,
+    .data = {
+        0b00110,
+        0b10101,
+        0b01110,
+        0b10101,
+        0b00110,
+    }
+};
+
 
 digit_map_t dm_map[] = {
     {.ch=' ', .dm=&dm_space},
@@ -525,6 +536,7 @@ digit_map_t dm_map[] = {
     {.ch='!', .dm=&dm_exclamation},
     {.ch='.', .dm=&dm_dot},
     {.ch=';', .dm=&dm_bpm_pointer},
+    {.ch='>', .dm=&dm_ble},
 };
 
 const digit_t *dm_number(const int number) {

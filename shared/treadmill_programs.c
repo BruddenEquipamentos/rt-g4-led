@@ -24,6 +24,7 @@ static void program_time_key_press(treadmill_t *treadmill, const kbd_key_t key) 
     case KEY_START:
       treadmill_start_program(treadmill);
       break;
+    case KEY_STOP:
     case KEY_EXT_KBD_STOP:
       treadmill_exit_program(treadmill);
       break;
@@ -71,6 +72,7 @@ static void program_distance_key_press(treadmill_t *treadmill, const kbd_key_t k
     case KEY_START:
       treadmill_start_program(treadmill);
       break;
+    case KEY_STOP:
     case KEY_EXT_KBD_STOP:
       treadmill_exit_program(treadmill);
       break;
@@ -118,6 +120,7 @@ static void program_calories_key_press(treadmill_t *treadmill, const kbd_key_t k
     case KEY_START:
       treadmill_start_program(treadmill);
       break;
+    case KEY_STOP:
     case KEY_EXT_KBD_STOP:
       treadmill_exit_program(treadmill);
       break;
@@ -168,6 +171,7 @@ static void program_200k_calories_key_press(treadmill_t *treadmill, const kbd_ke
     case KEY_START:
       treadmill_start_program(treadmill);
       break;
+    case KEY_STOP:
     case KEY_EXT_KBD_STOP:
       treadmill_exit_program(treadmill);
       break;
@@ -249,6 +253,7 @@ static void program_hiit_key_press(treadmill_t *treadmill, const kbd_key_t key) 
           break;
       }
       break;
+    case KEY_STOP:
     case KEY_EXT_KBD_STOP:
       render_finished = 0; ////////////////
       treadmill_exit_program(treadmill);
@@ -360,6 +365,7 @@ void program_walk_30min_key_press(treadmill_t *treadmill, const kbd_key_t key) {
     case KEY_START:
       treadmill_start_program(treadmill);
       break;
+    case KEY_STOP:
     case KEY_EXT_KBD_STOP:
       treadmill_exit_program(treadmill);
       break;
@@ -409,6 +415,7 @@ void program_walk_08min_key_press(treadmill_t *treadmill, const kbd_key_t key) {
     case KEY_START:
       treadmill_start_program(treadmill);
       break;
+    case KEY_STOP:
     case KEY_EXT_KBD_STOP:
       treadmill_exit_program(treadmill);
       break;
@@ -471,6 +478,7 @@ static void program_fat_burn_key_press(treadmill_t *treadmill, const kbd_key_t k
           break;
       }
       break;
+    case KEY_STOP:
     case KEY_EXT_KBD_STOP:
       treadmill_exit_program(treadmill);
       break;
@@ -552,6 +560,7 @@ static void program_super_cardio_key_press(treadmill_t *treadmill, const kbd_key
           break;
       }
       break;
+    case KEY_STOP:
     case KEY_EXT_KBD_STOP:
       treadmill_exit_program(treadmill);
       break;

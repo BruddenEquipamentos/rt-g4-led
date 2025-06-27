@@ -4,7 +4,7 @@
 
 
 static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
-  if (key == KEY_EXT_KBD_STOP) treadmill_set_scene(treadmill, SCENE_IDLE);
+  if (key == KEY_STOP || key == KEY_EXT_KBD_STOP) treadmill_set_scene(treadmill, SCENE_IDLE);
   treadmill->idle_tick = treadmill->get_time_ms();
 
   // delegate

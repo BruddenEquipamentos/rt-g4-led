@@ -14,6 +14,8 @@
 
 #include <assert.h>
 
+#include <ctype.h>
+
 extern treadmill_t *pTreadmill;
 
 typedef enum ble_command_status {
@@ -163,6 +165,7 @@ static int ble_ftms_control_point(char *ptr) {
 }
 
 char debug_string[128] = {0};
+char hrm_device_name_upper[32] = {0};
 
 void ble_protocol_process(uint8_t *ptr_data, int length) {
     if (!ble_protocol_valid_message(ptr_data, length)) {
@@ -215,7 +218,7 @@ void ble_protocol_process(uint8_t *ptr_data, int length) {
         pTreadmill->hw.ble.heartrate.connecting = 0;
         pTreadmill->hw.ble.hrm.status = HRM_STATUS_DISCONNECTED;
         pTreadmill->hw.ble.hrm.bpm = 0;
-//        memset(pTreadmill->hw.ble.hrm.device_name, 0, sizeof(pTreadmill->hw.ble.hrm.device_name));
+        memset(pTreadmill->hw.ble.hrm.device_name, 0, sizeof(pTreadmill->hw.ble.hrm.device_name));
         break;
     }
     case BP_BLE_HRM: {
@@ -226,9 +229,10 @@ void ble_protocol_process(uint8_t *ptr_data, int length) {
                 char hrm_device_name[32] = {0};
                 for (int i = 0; i < name_length; ++i) {
                     hrm_device_name[i] = next_u8(&ptr);
+                    hrm_device_name_upper[i] = toupper(hrm_device_name[i]);
                 }
                 // Armazena o nome do dispositivo HRM encontrado
-//                strncpy(pTreadmill->hw.ble.hrm.device_name, hrm_device_name, name_length);
+                strncpy(pTreadmill->hw.ble.hrm.device_name, hrm_device_name_upper, name_length);
                 break;
             }
             case BP_BLE_HRM_CONNECTING: {
@@ -246,7 +250,7 @@ void ble_protocol_process(uint8_t *ptr_data, int length) {
             case BP_BLE_HRM_DISCONNECTED: {
                 pTreadmill->hw.ble.hrm.status = HRM_STATUS_DISCONNECTED;
                 pTreadmill->hw.ble.hrm.bpm = 0;
-//                memset(pTreadmill->hw.ble.hrm.device_name, 0, sizeof(pTreadmill->hw.ble.hrm.device_name));
+                memset(pTreadmill->hw.ble.hrm.device_name, 0, sizeof(pTreadmill->hw.ble.hrm.device_name));
                 break;
             }
             default:

@@ -101,6 +101,7 @@ static void render_training_data(treadmill_t *treadmill) {
   if (treadmill->scene == SCENE_PAUSED) {
     sd_set_min_sec(&sd_pace, 0);
     sd_set_kmh(&sd_speed, 0);
+    sd_set_bpm(&sd_bpm, 0);
   }
 
   // if (treadmill->scene == SCENE_REPORT) { //////////////////////////////
@@ -114,22 +115,18 @@ static void render_training_data(treadmill_t *treadmill) {
   //   sd_set_kmh(&sd_speed, speed);
   // }
     if (treadmill->scene == SCENE_REPORT) {
-      switch (report_state) {
-        case 0:
-          uint32_t speed_max = treadmill->training.speed_max;
-          // sd_set_kmh(&sd_speed, speed_max);
-          sd_set_kmh_report(&sd_speed, speed_max);
-          sd_set_min_sec(&sd_pace, treadmill->training.pace_max);
-          sd_set_bpm(&sd_bpm, treadmill->training.bpm_max);
-          break;
-        case 1:
-          uint32_t speed_avg = treadmill->training.average_speed;
-          sd_set_kmh_report(&sd_speed, speed_avg);
-          sd_set_min_sec(&sd_pace, treadmill_calculate_pace(speed_avg));
-          sd_set_bpm(&sd_bpm, treadmill->training.bpm_average);        
-          break;
-        default:
-          break;
+      if (report_state == 0){
+        uint32_t speed_max = treadmill->training.speed_max;
+        // sd_set_kmh(&sd_speed, speed_max);
+        sd_set_kmh_report(&sd_speed, speed_max);
+        sd_set_min_sec(&sd_pace, treadmill->training.pace_max);
+        sd_set_bpm(&sd_bpm, treadmill->training.bpm_max);
+      }
+      else if (report_state == 1) {
+        uint32_t speed_avg = treadmill->training.average_speed;
+        sd_set_kmh_report(&sd_speed, speed_avg);
+        sd_set_min_sec(&sd_pace, treadmill_calculate_pace(speed_avg));
+        sd_set_bpm(&sd_bpm, treadmill->training.bpm_average); 
       }
     }
 
@@ -143,7 +140,7 @@ static void render_training_data(treadmill_t *treadmill) {
   if (treadmill->hw.handgrip.state == HEARTRATE_HG_INITING) {
     sd_set_bpm_detected(&sd_bpm);
     sd_blink(&sd_bpm, treadmill->get_time_ms(), 500);
-  } else {    
+  } else if (treadmill->scene != SCENE_REPORT){    
     sd_set_bpm(&sd_bpm, treadmill->training.bpm);
   }
 }
@@ -309,8 +306,8 @@ void sd_render(treadmill_t *treadmill) {
       // render_training_data(treadmill);
       break;
     }
-    case SCENE_IDLE: {
-
+    case SCENE_IDLE: 
+    case SCENE_BLE_ALLOW_YES_NO: {
       // extern int run_test;
       // extern int test_count;
       // if (run_test == 1) {
