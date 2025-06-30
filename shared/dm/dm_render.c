@@ -150,270 +150,108 @@ void dm_render_hiit(treadmill_t *treadmill, uint16_t interval, interval_t *hiit_
 
 /// new version for walk program (30 min) ////////////
 static void dm_render_time_walk_30(treadmill_t *treadmill) {
-  if (treadmill->training.seconds <= (60 * 5))
-  {
-    dm_render_column_with_height(0, 1, treadmill->get_time_ms(), 800);
-    dm_render_column_with_height(1, 1, treadmill->get_time_ms(), 800);
-    dm_render_column_with_height(2, 1, treadmill->get_time_ms(), 800);
-  }
-  else
-  {
-    dm_render_column_with_height(0, 1, treadmill->get_time_ms(), 0);
-    dm_render_column_with_height(1, 1, treadmill->get_time_ms(), 0);
-    dm_render_column_with_height(2, 1, treadmill->get_time_ms(), 0);
-  } //// interval 0 - 5 min
+  // Definição dos intervalos: {start_min, end_min, col_start, col_end, height}
+  struct {
+    int start_min;
+    int end_min;
+    int col_start;
+    int col_end;
+    int height;
+  } intervals[] = {
+    {  0,  5,  0,  2, 1 },
+    {  5, 10,  3,  5, 2 },
+    { 10, 20,  6,  9, 4 },
+    { 20, 25, 10, 12, 2 },
+    { 25, 30, 13, 15, 1 }
+  };
 
-  if (treadmill->training.seconds > (60 * 5) && treadmill->training.seconds <= (60 * 10))
-  {
-    dm_render_column_with_height(3, 2, treadmill->get_time_ms(), 800);
-    dm_render_column_with_height(4, 2, treadmill->get_time_ms(), 800);
-    dm_render_column_with_height(5, 2, treadmill->get_time_ms(), 800);
-  }
-  else
-  {
-    dm_render_column_with_height(3, 2, treadmill->get_time_ms(), 0);
-    dm_render_column_with_height(4, 2, treadmill->get_time_ms(), 0);
-    dm_render_column_with_height(5, 2, treadmill->get_time_ms(), 0);
-  } //// interval 5 - 10 min
+  int seconds = treadmill->training.seconds;
+  uint32_t time_ms = treadmill->get_time_ms();
 
-  if (treadmill->training.seconds > (60 * 10) && treadmill->training.seconds <= (60 * 20))
-  {
-    dm_render_column_with_height(6, 2, treadmill->get_time_ms(), 800);
-    dm_render_column_with_height(7, 2, treadmill->get_time_ms(), 800);
-    dm_render_column_with_height(8, 2, treadmill->get_time_ms(), 800);
-    dm_render_column_with_height(9, 2, treadmill->get_time_ms(), 800);
+  for (int i = 0; i < sizeof(intervals)/sizeof(intervals[0]); i++) {
+    int start = intervals[i].start_min * 60;
+    int end = intervals[i].end_min * 60;
+    int active = (seconds > start && seconds <= end) || (i == 0 && seconds <= end);
+    for (int col = intervals[i].col_start; col <= intervals[i].col_end; col++) {
+      dm_render_column_with_height(col, intervals[i].height, time_ms, active ? 800 : 0);
+    }
   }
-  else
-  {
-    dm_render_column_with_height(6, 4, treadmill->get_time_ms(), 0);
-    dm_render_column_with_height(7, 4, treadmill->get_time_ms(), 0);
-    dm_render_column_with_height(8, 4, treadmill->get_time_ms(), 0);
-    dm_render_column_with_height(9, 4, treadmill->get_time_ms(), 0);
-  } //// interval 10 - 20 min
-
-  if (treadmill->training.seconds > (60 * 10) && treadmill->training.seconds <= (60 * 20))
-  {
-    dm_render_column_with_height(6, 4, treadmill->get_time_ms(), 800);
-    dm_render_column_with_height(7, 4, treadmill->get_time_ms(), 800);
-    dm_render_column_with_height(8, 4, treadmill->get_time_ms(), 800);
-    dm_render_column_with_height(9, 4, treadmill->get_time_ms(), 800);
-  }
-  else
-  {
-    dm_render_column_with_height(6, 4, treadmill->get_time_ms(), 0);
-    dm_render_column_with_height(7, 4, treadmill->get_time_ms(), 0);
-    dm_render_column_with_height(8, 4, treadmill->get_time_ms(), 0);
-    dm_render_column_with_height(9, 4, treadmill->get_time_ms(), 0);
-  } //// interval 10 - 20 min
-
-  if (treadmill->training.seconds > (60 * 20) && treadmill->training.seconds <= (60 * 25))
-  {
-    dm_render_column_with_height(10, 2, treadmill->get_time_ms(), 800);
-    dm_render_column_with_height(11, 2, treadmill->get_time_ms(), 800);
-    dm_render_column_with_height(12, 2, treadmill->get_time_ms(), 800);
-  }
-  else
-  {
-    dm_render_column_with_height(10, 2, treadmill->get_time_ms(), 0);
-    dm_render_column_with_height(11, 2, treadmill->get_time_ms(), 0);
-    dm_render_column_with_height(12, 2, treadmill->get_time_ms(), 0);
-  } //// interval 20 - 25 min
-
-  if (treadmill->training.seconds > (60 * 25) && treadmill->training.seconds <= (60 * 30))
-  {
-    dm_render_column_with_height(13, 1, treadmill->get_time_ms(), 800);
-    dm_render_column_with_height(14, 1, treadmill->get_time_ms(), 800);
-    dm_render_column_with_height(15, 1, treadmill->get_time_ms(), 800);
-  }
-  else
-  {
-    dm_render_column_with_height(13, 1, treadmill->get_time_ms(), 0);
-    dm_render_column_with_height(14, 1, treadmill->get_time_ms(), 0);
-    dm_render_column_with_height(15, 1, treadmill->get_time_ms(), 0);
-  } //// interval 20 - 25 min
 }
 
 /// new version for walk program (08 min) ---- needs rework
 static void dm_render_time_walk_08(treadmill_t *treadmill) {
-  if (treadmill->training.seconds <= (60 * 1))
-  {
-    dm_render_column_with_height(0, 1, treadmill->get_time_ms(), 800);
-    dm_render_column_with_height(1, 1, treadmill->get_time_ms(), 800);
-  }
-  else
-  {
-    dm_render_column_with_height(0, 1, treadmill->get_time_ms(), 0);
-    dm_render_column_with_height(1, 1, treadmill->get_time_ms(), 0);
-  } //// interval 0 - 1 min
+  // Definição dos intervalos: {start_min, end_min, col_start, col_end, height}
+  struct {
+    int start_min;
+    int end_min;
+    int col_start;
+    int col_end;
+    int height;
+  } intervals[] = {
+    {0, 1, 0, 1, 1},
+    {1, 2, 2, 3, 1},
+    {2, 3, 4, 5, 3},
+    {3, 4, 6, 7, 1},
+    {4, 5, 8, 9, 1},
+    {5, 6, 10, 11, 3},
+    {6, 7, 12, 13, 1},
+    {7, 8, 14, 15, 1}
+  };
 
-  if (treadmill->training.seconds > (60 * 1) && treadmill->training.seconds <= (60 * 2))
-  {
-    dm_render_column_with_height(2, 1, treadmill->get_time_ms(), 800);
-    dm_render_column_with_height(3, 1, treadmill->get_time_ms(), 800);
-  }
-  else
-  {
-    dm_render_column_with_height(2, 1, treadmill->get_time_ms(), 0);
-    dm_render_column_with_height(3, 1, treadmill->get_time_ms(), 0);
-  } //// interval 1 - 2 min
+  int seconds = treadmill->training.seconds;
+  uint32_t time_ms = treadmill->get_time_ms();
 
-  if (treadmill->training.seconds > (60 * 2) && treadmill->training.seconds <= (60 * 3))
-  {
-    dm_render_column_with_height(4, 3, treadmill->get_time_ms(), 800);
-    dm_render_column_with_height(5, 3, treadmill->get_time_ms(), 800);
+  for (int i = 0; i < sizeof(intervals)/sizeof(intervals[0]); i++) {
+    int start = intervals[i].start_min * 60;
+    int end = intervals[i].end_min * 60;
+    int active = (seconds > start && seconds <= end) || (i == 0 && seconds <= end);
+    for (int col = intervals[i].col_start; col <= intervals[i].col_end; col++) {
+      dm_render_column_with_height(col, intervals[i].height, time_ms, active ? 800 : 0);
+    }
   }
-  else
-  {
-    dm_render_column_with_height(4, 3, treadmill->get_time_ms(), 0);
-    dm_render_column_with_height(5, 3, treadmill->get_time_ms(), 0);
-  } //// interval 2 - 3 min
-
-  if (treadmill->training.seconds > (60 * 3) && treadmill->training.seconds <= (60 * 4))
-  {
-    dm_render_column_with_height(6, 1, treadmill->get_time_ms(), 800);
-    dm_render_column_with_height(7, 1, treadmill->get_time_ms(), 800);
-  }
-  else
-  {
-    dm_render_column_with_height(6, 1, treadmill->get_time_ms(), 0);
-    dm_render_column_with_height(7, 1, treadmill->get_time_ms(), 0);
-  } //// interval 3 - 4 min
-
-  if (treadmill->training.seconds > (60 * 4) && treadmill->training.seconds <= (60 * 5))
-  {
-    dm_render_column_with_height(8, 1, treadmill->get_time_ms(), 800);
-    dm_render_column_with_height(9, 1, treadmill->get_time_ms(), 800);
-  }
-  else
-  {
-    dm_render_column_with_height(8, 1, treadmill->get_time_ms(), 0);
-    dm_render_column_with_height(9, 1, treadmill->get_time_ms(), 0);
-  } //// interval 4 - 5 min
-
-  if (treadmill->training.seconds > (60 * 5) && treadmill->training.seconds <= (60 * 6))
-  {
-    dm_render_column_with_height(10, 3, treadmill->get_time_ms(), 800);
-    dm_render_column_with_height(11, 3, treadmill->get_time_ms(), 800);
-  }
-  else
-  {
-    dm_render_column_with_height(10, 3, treadmill->get_time_ms(), 0);
-    dm_render_column_with_height(11, 3, treadmill->get_time_ms(), 0);
-  } //// interval 5 - 6 min
-
-  if (treadmill->training.seconds > (60 * 6) && treadmill->training.seconds <= (60 * 7))
-  {
-    dm_render_column_with_height(12, 1, treadmill->get_time_ms(), 800);
-    dm_render_column_with_height(13, 1, treadmill->get_time_ms(), 800);
-  }
-  else
-  {
-    dm_render_column_with_height(12, 1, treadmill->get_time_ms(), 0);
-    dm_render_column_with_height(13, 1, treadmill->get_time_ms(), 0);
-  } //// interval 6 - 7 min
-
-  if (treadmill->training.seconds > (60 * 7) && treadmill->training.seconds <= (60 * 8))
-  {
-    dm_render_column_with_height(14, 1, treadmill->get_time_ms(), 800);
-    dm_render_column_with_height(15, 1, treadmill->get_time_ms(), 800);
-  }
-  else
-  {
-    dm_render_column_with_height(14, 1, treadmill->get_time_ms(), 0);
-    dm_render_column_with_height(15, 1, treadmill->get_time_ms(), 0);
-  } //// interval 7 - 8 min
 }
 
 /// new render for calorie programs (normal and 200kcal)
 void dm_render_calories(treadmill_t *treadmill) {
-  int calorias = 0;
-  switch (treadmill->program.id) {
-    case PROGRAM_200K_CALORIES:
-      calorias = treadmill->program.p_200k_calories.kcal;
-      break;
-    case PROGRAM_CALORIES:
-      calorias = treadmill->program.p_calories.kcal;
-      break;
-    default:;
-  }
-    if ((treadmill->training.kcal / 1000) <= (15 * calorias / 100)){
-      dm_render_column_with_height(0, 0, treadmill->get_time_ms(), 800);
-      dm_render_column_with_height(1, 0, treadmill->get_time_ms(), 800);
-      dm_render_column_with_height(2, 0, treadmill->get_time_ms(), 800);
+    int calorias = 0;
+    switch (treadmill->program.id) {
+        case PROGRAM_200K_CALORIES:
+            calorias = treadmill->program.p_200k_calories.kcal;
+            break;
+        case PROGRAM_CALORIES:
+            calorias = treadmill->program.p_calories.kcal;
+            break;
+        default:;
     }
-    else if ((treadmill->training.kcal / 1000) > (15 * calorias / 100)) { // else
-      dm_render_column_with_height(0, 0, treadmill->get_time_ms(), 0);
-      dm_render_column_with_height(1, 0, treadmill->get_time_ms(), 0);
-      dm_render_column_with_height(2, 0, treadmill->get_time_ms(), 0);
-    } //// interval 0 - 15%
 
-    if ((treadmill->training.kcal / 1000) >= (16 * calorias / 100) &&
-    (treadmill->training.kcal / 1000) <= (30 * calorias / 100)){
-      dm_render_column_with_height(3, 1, treadmill->get_time_ms(), 800);
-      dm_render_column_with_height(4, 1, treadmill->get_time_ms(), 800);
-      dm_render_column_with_height(5, 1, treadmill->get_time_ms(), 800);
-    }
-    // else{
-    else if ((treadmill->training.kcal / 1000) > (30 * calorias / 100)){
-      dm_render_column_with_height(3, 1, treadmill->get_time_ms(), 0);
-      dm_render_column_with_height(4, 1, treadmill->get_time_ms(), 0);
-      dm_render_column_with_height(5, 1, treadmill->get_time_ms(), 0);
-    } //// interval 16 - 30%
+    struct {
+        int start_pct, end_pct;
+        int cols[3];
+        int ncols;
+        int height;
+    } intervals[] = {
+        { 0, 15,  {0, 1, 2},    3, 0 },
+        {16, 30,  {3, 4, 5},    3, 1 },
+        {31, 50,  {6, 7},       2, 2 },
+        {51, 66,  {8, 9},       2, 2 },
+        {66, 80,  {10,11,12},   3, 3 },
+        {81, 90,  {13,14},      2, 4 },
+        {91,100,  {15},         1, 4 }
+    };
 
-    if ((treadmill->training.kcal / 1000) >= (31 * calorias / 100) &&
-    (treadmill->training.kcal / 1000) <= (50 * calorias / 100)){
-      dm_render_column_with_height(6, 2, treadmill->get_time_ms(), 800);
-      dm_render_column_with_height(7, 2, treadmill->get_time_ms(), 800);
-    }
-    // else{
-    else if ((treadmill->training.kcal / 1000) > (50 * calorias / 100)){
-      dm_render_column_with_height(6, 2, treadmill->get_time_ms(), 0);
-      dm_render_column_with_height(7, 2, treadmill->get_time_ms(), 0);
-    } //// interval 31 - 50%
+    int kcal = treadmill->training.kcal / 1000;
+    for (int i = 0; i < sizeof(intervals)/sizeof(intervals[0]); i++) {
+        int start = intervals[i].start_pct * calorias / 100;
+        int end   = intervals[i].end_pct   * calorias / 100;
+        int active = (kcal >= start && kcal <= end);
+        int off = (kcal > end);
 
-    if ((treadmill->training.kcal / 1000) >= (51 * calorias / 100) &&
-    (treadmill->training.kcal / 1000) <= (66 * calorias / 100)){
-      dm_render_column_with_height(8, 2, treadmill->get_time_ms(), 800);
-      dm_render_column_with_height(9, 2, treadmill->get_time_ms(), 800);
+        for (int c = 0; c < intervals[i].ncols; c++) {
+            int col = intervals[i].cols[c];
+            int height = active ? 800 : (off ? 0 : 0);
+            dm_render_column_with_height(col, intervals[i].height, treadmill->get_time_ms(), height);
+        }
     }
-    // else{
-    else if ((treadmill->training.kcal / 1000) > (66 * calorias / 100)){
-      dm_render_column_with_height(8, 2, treadmill->get_time_ms(), 0);
-      dm_render_column_with_height(9, 2, treadmill->get_time_ms(), 0);
-    } //// interval 51 - 65%
-
-    if ((treadmill->training.kcal / 1000) >= (66 * calorias / 100) &&
-    (treadmill->training.kcal / 1000) <= (80 * calorias / 100)){
-      dm_render_column_with_height(10, 3, treadmill->get_time_ms(), 800);
-      dm_render_column_with_height(11, 3, treadmill->get_time_ms(), 800);
-      dm_render_column_with_height(12, 3, treadmill->get_time_ms(), 800);
-    }
-    // else{
-    else if ((treadmill->training.kcal / 1000) > (80 * calorias / 100)){
-      dm_render_column_with_height(10, 3, treadmill->get_time_ms(), 0);
-      dm_render_column_with_height(11, 3, treadmill->get_time_ms(), 0);
-      dm_render_column_with_height(12, 3, treadmill->get_time_ms(), 0);
-    } //// interval 66 - 80%
-
-    if ((treadmill->training.kcal / 1000) >= (81 * calorias / 100) &&
-    (treadmill->training.kcal / 1000) <= (90 * calorias / 100)){
-      dm_render_column_with_height(13, 4, treadmill->get_time_ms(), 800);
-      dm_render_column_with_height(14, 4, treadmill->get_time_ms(), 800);
-    }
-    // else{
-    else if ((treadmill->training.kcal / 1000) > (90 * calorias / 100)){
-      dm_render_column_with_height(13, 4, treadmill->get_time_ms(), 0);
-      dm_render_column_with_height(14, 4, treadmill->get_time_ms(), 0);
-    } //// interval 81 - 90%
-
-    if ((treadmill->training.kcal / 1000) > (90 * calorias / 100) &&
-    (treadmill->training.kcal / 1000) <= (100 * calorias / 100)){ // (treadmill->training.kcal / 1000) <= (100 * calorias / 100)){
-      dm_render_column_with_height(15, 4, treadmill->get_time_ms(), 800);
-    }
-    // else{
-    else if ((treadmill->training.kcal / 1000) > (100 * calorias / 100)){
-      dm_render_column_with_height(15, 4, treadmill->get_time_ms(), 0);
-    } //// interval 91 - 100%
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -494,7 +332,7 @@ void dm_render(treadmill_t *treadmill) {
               dm_render_text_animated(get_string(treadmill, STR_PRESS_START), 100, treadmill->get_time_ms());
             }
           } else {
-            treadmill_set_dm_message(treadmill, "  NFC", 4000, 1000);
+            treadmill_set_dm_message(treadmill, "  NFC", 1000, 1000);
           }
         }
         else if (treadmill->hw.ble.sh.connected == 1){
@@ -507,11 +345,11 @@ void dm_render(treadmill_t *treadmill) {
               dm_render_text_animated(get_string(treadmill, STR_PRESS_START), 100, treadmill->get_time_ms());
             }
           } else {
-            treadmill_set_dm_message(treadmill, "  NFC", 4000, 1000);
+            treadmill_set_dm_message(treadmill, "  NFC", 1000, 1000);
           }
         }
         else if (treadmill->hw.ble.ftms.subscribed && treadmill->hw.ble.hrm.bpm > 0){
-            treadmill_set_dm_message(treadmill, "  NFC", 4000, 1000);
+            treadmill_set_dm_message(treadmill, "  NFC", 1000, 1000);
         }
         else {
           dm_render_text_animated(get_string(treadmill, STR_PRESS_START), 100, treadmill->get_time_ms());
@@ -528,7 +366,7 @@ void dm_render(treadmill_t *treadmill) {
       }
       else{
         // treadmill_set_dm_message(treadmill, "  BLE", 3000, 1000);
-        treadmill_set_dm_message(treadmill, " >LE", 3000, 1000);
+        treadmill_set_dm_message(treadmill, " >LE", 1000, 1000);
       }
       break;
     }
@@ -548,7 +386,7 @@ void dm_render(treadmill_t *treadmill) {
               return;
             }
           } else {
-            treadmill_set_dm_message(treadmill, "  NFC", 4000, 1000);
+            treadmill_set_dm_message(treadmill, "  NFC", 1000, 1000);
             return; // Retorna aqui para não mostrar o contexto anterior
           }
         }
@@ -560,7 +398,7 @@ void dm_render(treadmill_t *treadmill) {
               return;
             }
           } else {
-            treadmill_set_dm_message(treadmill, "  NFC", 4000, 1000);
+            treadmill_set_dm_message(treadmill, "  NFC", 1000, 1000);
             return; // Retorna aqui para não mostrar o contexto anterior
           }
         }

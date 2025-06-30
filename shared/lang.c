@@ -28,7 +28,8 @@ const char *strings[RT_LED_CONFIG_LNG_TOTALS][STR_TOTALS] = {
         "PROG",
         "MAX",
         "MED",
-        "META CONCLUIDA"
+        "META CONCLUIDA",
+        "MONITOR CARDIACO"
     },
     [RT_LED_CONFIG_LNG_EN_US] = {
         "PRESS START OR CHOOSE A PROGRAM",
@@ -54,7 +55,8 @@ const char *strings[RT_LED_CONFIG_LNG_TOTALS][STR_TOTALS] = {
         "PROG",
         "MAX",
         "AVG",
-        "GOAL COMPLETED"
+        "GOAL COMPLETED",
+        "HEART MONITOR"
     },
     [RT_LED_CONFIG_LNG_ES_ES] = {
         "PRESIONE START O ELIJA UN PROGRAMA",
@@ -80,23 +82,7 @@ const char *strings[RT_LED_CONFIG_LNG_TOTALS][STR_TOTALS] = {
         "PROG",
         "MAX",
         "MED",
-        "META COMPLETADA"
+        "META COMPLETADA",
+        "MONITOR CARDIACO"
     }
 };
-
-// void set_language(rt_led_config_language_params_t lang) {
-//     if (lang >= 0 && lang < RT_LED_CONFIG_LNG_TOTALS) {
-//         treadmill->config.language = lang;
-//     }
-// }
-
-// set_language(LANG_EN);
-
-// printf("%s\n", get_string(STR_PRESS_START));       // EN
-// printf("%s\n", get_string(STR_META_CONCLUIDA));    // EN
-
-// set_language(LANG_ES);
-// printf("%s\n", get_string(STR_50_PERCENT));        // ES
-
-// set_language(LANG_PT);
-// printf("%s\n", get_string(STR_PROG));              // PT

@@ -260,6 +260,17 @@ const digit_t dm_J = {
     }
 };
 
+const digit_t dm_K = {
+    .cols = 3,
+    .data = {
+        0b101,
+        0b110,
+        0b100,
+        0b110,
+        0b101,
+    }
+};
+
 const digit_t dm_L = {
     .cols = 2,
     .data = {
@@ -312,6 +323,17 @@ const digit_t dm_P = {
         0b111,
         0b100,
         0b100,
+    }
+};
+
+const digit_t dm_Q = {
+    .cols = 4,
+    .data = {
+        0b0110,
+        0b1001,
+        0b1001,
+        0b1001,
+        0b0111,
     }
 };
 
@@ -400,6 +422,28 @@ const digit_t dm_x = {
         0b101,
         0b010,
         0b101,
+    }
+};
+
+const digit_t dm_Y = {
+    .cols = 3,
+    .data = {
+        0b101,
+        0b101,
+        0b111,
+        0b010,
+        0b010,
+    }
+};
+
+const digit_t dm_Z = {
+    .cols = 3,
+    .data = {
+        0b111,
+        0b001,
+        0b010,
+        0b100,
+        0b111,
     }
 };
 
@@ -520,11 +564,13 @@ digit_map_t dm_map[] = {
     {.ch='H', .dm=&dm_H},
     {.ch='I', .dm=&dm_I},
     {.ch='J', .dm=&dm_J},
+    {.ch='K', .dm=&dm_K},
     {.ch='L', .dm=&dm_L},
     {.ch='M', .dm=&dm_M},
     {.ch='N', .dm=&dm_N},
     {.ch='O', .dm=&dm_O},
     {.ch='P', .dm=&dm_P},
+    {.ch='Q', .dm=&dm_Q},
     {.ch='R', .dm=&dm_R},
     {.ch='S', .dm=&dm_S},
     {.ch='T', .dm=&dm_T},
@@ -533,6 +579,8 @@ digit_map_t dm_map[] = {
     {.ch='W', .dm=&dm_W},
     {.ch='X', .dm=&dm_X},
     {.ch='x', .dm=&dm_x},
+    {.ch='Y', .dm=&dm_Y},
+    {.ch='Z', .dm=&dm_Z},
     {.ch='!', .dm=&dm_exclamation},
     {.ch='.', .dm=&dm_dot},
     {.ch=';', .dm=&dm_bpm_pointer},

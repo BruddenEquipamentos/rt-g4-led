@@ -67,8 +67,8 @@ void ext_i2c_kbd_handler(void) {
             break;
         }
 
-//        memmove(&_keys_debug[0], &_keys_debug[1], 31);
-//        _keys_debug[31] = read_buffer[0];
+    //    memmove(&_keys_debug[0], &_keys_debug[1], 31);
+    //    _keys_debug[31] = read_buffer[0];
 
         handle_key(read_buffer[0]);
 
@@ -96,14 +96,15 @@ void ext_i2c_kbd_handler(void) {
             }
 
             state_tick = HAL_GetTick();
-//            memmove(&_keys_debug[0], &_keys_debug[1], 31);
-//            _keys_debug[31] = read_buffer[0];
+            // memmove(&_keys_debug[0], &_keys_debug[1], 31);
+            // _keys_debug[31] = read_buffer[0];
 
             if (read_buffer[0] == 0xff) {
                 ext_kbd_state = EXT_KBD_STATE_IDLE;
                 state_tick = HAL_GetTick();
                 repeat_tick = 0;
                 repeat_presses_count = 0;
+                handle_key(read_buffer[0]); ///
                 return;
             }
 
@@ -294,4 +295,6 @@ void handle_key(uint8_t key) {
     default:
         break;
     }
+
+    _key = key;
 }

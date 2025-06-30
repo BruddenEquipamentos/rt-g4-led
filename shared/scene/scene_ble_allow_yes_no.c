@@ -32,6 +32,7 @@ static void keypress(treadmill_t* treadmill, const kbd_key_t key) {
            treadmill->hw.ble.hrm.status = HRM_STATUS_DISCONNECTED; //Lucas
            memset(&treadmill->hw.ble.hrm, 0, sizeof(treadmill->hw.ble.hrm)); //Lucas -- disconnect from BLE strap only
            // TODO: Disconnect
+           dm_clear_buffer();
            treadmill_set_scene(treadmill, SCENE_IDLE);
            break;
        }

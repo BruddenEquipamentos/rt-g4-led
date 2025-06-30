@@ -30,6 +30,7 @@ enum {
     STR_MAX,
     STR_MED,
     STR_META_CONCLUIDA,
+    STR_HRM,
     STR_TOTALS
 };
 

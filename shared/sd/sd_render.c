@@ -101,7 +101,6 @@ static void render_training_data(treadmill_t *treadmill) {
   if (treadmill->scene == SCENE_PAUSED) {
     sd_set_min_sec(&sd_pace, 0);
     sd_set_kmh(&sd_speed, 0);
-    sd_set_bpm(&sd_bpm, 0);
   }
 
   // if (treadmill->scene == SCENE_REPORT) { //////////////////////////////

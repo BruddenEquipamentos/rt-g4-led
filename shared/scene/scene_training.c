@@ -127,8 +127,7 @@ static void update(treadmill_t *treadmill) {
 
   if (treadmill->ms - treadmill->training.ms >= 1000) {
     int32_t ms_delta = (int32_t)1000 - (treadmill->ms - treadmill->training.ms);		
-	treadmill->training.ms = treadmill->ms + ms_delta;
-
+	  treadmill->training.ms = treadmill->ms + ms_delta;
     treadmill->training.seconds++;
     treadmill->training.remaining_seconds--;
 
@@ -156,7 +155,7 @@ static void update(treadmill_t *treadmill) {
 
     // treadmill->training.kcal += treadmill_calculate_calories(treadmill); //Lucas 25/02
 
-    if (treadmill->hw.ble.connected && treadmill->hw.ble.hrm.bpm <= 0) {
+    if (treadmill->hw.ble.connected && treadmill->hw.ble.hrm.bpm <= 0 && treadmill->hw.ble.gk.connected == 0 && treadmill->hw.ble.sh.connected == 0) {
       treadmill->hw.ble.hrm.bpm = 0;
       // do nothing
     } 
@@ -167,6 +166,7 @@ static void update(treadmill_t *treadmill) {
     else if (treadmill->hw.ble.gk.connected == 1) {
       treadmill->training.bpm = (uint8_t)treadmill->hw.ble.gk.bpm;
     }
+    
     else if (treadmill->hw.ble.sh.connected == 1 || (treadmill->hw.ble.hrm.bpm > 0)){
       treadmill->training.bpm = (uint8_t)treadmill->hw.ble.hrm.bpm; //Lucas - use this for SH HR
     }

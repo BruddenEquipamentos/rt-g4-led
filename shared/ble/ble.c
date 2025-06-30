@@ -7,6 +7,7 @@
 #include "./ble_protocol/ble_ftms_treadmill.h"
 #include "./ble_protocol/ble_protocol_helper.h"
 #include "ble_legacy.h"
+#include "lang.h"
 
 // TEMP
 #include "../treadmill.h"
@@ -166,6 +167,7 @@ static int ble_ftms_control_point(char *ptr) {
 
 char debug_string[128] = {0};
 char hrm_device_name_upper[32] = {0};
+const char *generic_device_name = get_string(pTreadmill, STR_HRM);
 
 void ble_protocol_process(uint8_t *ptr_data, int length) {
     if (!ble_protocol_valid_message(ptr_data, length)) {
@@ -231,8 +233,15 @@ void ble_protocol_process(uint8_t *ptr_data, int length) {
                     hrm_device_name[i] = next_u8(&ptr);
                     hrm_device_name_upper[i] = toupper(hrm_device_name[i]);
                 }
+                if(strlen(hrm_device_name) == 0){
+                    strncpy(pTreadmill->hw.ble.hrm.device_name, generic_device_name, strlen(generic_device_name));
+                }
+                else{
+                    strncpy(pTreadmill->hw.ble.hrm.device_name, hrm_device_name_upper, name_length);
+                }
+
                 // Armazena o nome do dispositivo HRM encontrado
-                strncpy(pTreadmill->hw.ble.hrm.device_name, hrm_device_name_upper, name_length);
+                // strncpy(pTreadmill->hw.ble.hrm.device_name, hrm_device_name_upper, name_length);
                 break;
             }
             case BP_BLE_HRM_CONNECTING: {
