@@ -167,7 +167,7 @@ static int ble_ftms_control_point(char *ptr) {
 
 char debug_string[128] = {0};
 char hrm_device_name_upper[32] = {0};
-const char *generic_device_name = get_string(pTreadmill, STR_HRM);
+// const char *generic_device_name = get_string(pTreadmill, STR_HRM);
 
 void ble_protocol_process(uint8_t *ptr_data, int length) {
     if (!ble_protocol_valid_message(ptr_data, length)) {
@@ -234,6 +234,7 @@ void ble_protocol_process(uint8_t *ptr_data, int length) {
                     hrm_device_name_upper[i] = toupper(hrm_device_name[i]);
                 }
                 if(strlen(hrm_device_name) == 0){
+                    const char *generic_device_name = get_string(pTreadmill, STR_HRM);
                     strncpy(pTreadmill->hw.ble.hrm.device_name, generic_device_name, strlen(generic_device_name));
                 }
                 else{

@@ -260,6 +260,10 @@ void treadmill_update(treadmill_t *treadmill) {
 }
 
 void treadmill_emergency_pressed(treadmill_t *treadmill) {
+  uint8_t buffer[64];
+  uint8_t length;
+  build_hrm_disconnect_packet(buffer, &length, 64);
+  ble_post_message(buffer, "", 0);
   if (treadmill->on_update_fms_callback) { //Lucas 23/03
     uint8_t stopped = 0x01;
     treadmill->on_update_fms_callback(treadmill, StoppedOrPausedByTheUser, &stopped);

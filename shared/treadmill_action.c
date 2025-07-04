@@ -38,6 +38,13 @@ void treadmill_start_training(treadmill_t *treadmill) {
   //////////////////// max pace max speed max bpm
   treadmill_set_speed(treadmill, treadmill->config.speed.min);  //Lucas --- no tft10 não tem
 
+  // disable gymkit pairing for training session after start
+  ble_post_message(
+          "\x02"
+          "SET_BLE_FLAGS,32\n",
+          "AOK", 1000);
+
+
   treadmill_set_scene(treadmill, SCENE_TRAINING);
   if (treadmill->on_update_fms_callback) {
     treadmill->on_update_fms_callback(treadmill, StartedOrResumedByTheUser, NULL);
@@ -96,7 +103,20 @@ void treadmill_finish_training(treadmill_t *treadmill) {
   treadmill_set_incline(treadmill, 0);
   treadmill_set_scene(treadmill, SCENE_REPORT);
   report_state = 0; ///////////////////////////
+
+  uint8_t buffer[64];
+  uint8_t length;
+  build_hrm_disconnect_packet(buffer, &length, 64);
+  ble_post_message(buffer, "", 0); 
+
   memset(&treadmill->hw.ble.hrm, 0, sizeof(treadmill->hw.ble.hrm)); //Lucas -- disconnect from BLE strap only
+ 
+  // enable gymkit pairing for training session after start
+  ble_post_message(
+          "\x02"
+          "SET_BLE_FLAGS,0\n",
+          "AOK", 1000);
+ 
   if (treadmill->on_update_fms_callback) {
     uint8_t stopped = 0x01;
     treadmill->on_update_fms_callback(treadmill, StoppedOrPausedByTheUser, &stopped);
@@ -120,6 +140,11 @@ void treadmill_close_report(treadmill_t *treadmill) {
   treadmill_reset_training(treadmill);
   treadmill->program.id = PROGRAM_NONE;
   treadmill_set_scene(treadmill, SCENE_IDLE);
+  
+  if (treadmill->on_update_fms_callback) {
+    uint8_t stopped = 0x01;
+    treadmill->on_update_fms_callback(treadmill, StoppedOrPausedByTheUser, &stopped);
+  }
 }
 
 void treadmill_speed_increment(treadmill_t *treadmill) {
