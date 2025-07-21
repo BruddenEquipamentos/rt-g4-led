@@ -33,6 +33,7 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
       }
       break;
     case KEY_EXT_KBD_SPEED_INC: {
+        speed_changed = 1;
         int speed = (int)treadmill->training.speed + 100;
         if (speed > treadmill->config.speed.max)
             speed = treadmill->config.speed.max;
@@ -59,6 +60,7 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
       break;
 
     case KEY_EXT_KBD_SPEED_DEC: {
+        speed_changed = 1;
         int speed = (int)treadmill->training.speed - 100;
         if (speed < treadmill->config.speed.min)
             speed = treadmill->config.speed.min;
