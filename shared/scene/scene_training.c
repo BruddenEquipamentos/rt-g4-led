@@ -163,17 +163,16 @@ static void update(treadmill_t *treadmill) {
     } 
     else if (treadmill->hw.ble.connected && treadmill->hw.ble.hrm.bpm > 0){
       treadmill->training.bpm = treadmill->hw.ble.hrm.bpm;
-    } //Lucas - 23/03
+    } // Lucas - 23/03
 
-    else if (treadmill->hw.ble.gk.connected == 1) {
+    else if (treadmill->hw.ble.gk.connected){
       treadmill->training.bpm = (uint8_t)treadmill->hw.ble.gk.bpm;
     }
-    
-    else if (treadmill->hw.ble.sh.connected == 1 || (treadmill->hw.ble.hrm.bpm > 0)){
-      treadmill->training.bpm = (uint8_t)treadmill->hw.ble.hrm.bpm; //Lucas - use this for SH HR
+    else if (treadmill->hw.ble.sh.connected || (treadmill->hw.ble.hrm.bpm > 0)){
+      treadmill->training.bpm = treadmill->hw.ble.hrm.bpm;
     }
-    else if (treadmill->hw.ble.hrm.status == HRM_STATUS_CONNECTED) {
-      treadmill->training.bpm = (uint8_t)treadmill->hw.ble.hrm.bpm; //Lucas
+    else if (treadmill->hw.ble.hrm.status == HRM_STATUS_CONNECTED || (treadmill->hw.ble.hrm.bpm > 0)){
+      treadmill->training.bpm = (uint8_t)treadmill->hw.ble.hrm.bpm; // Lucas
     }
 
     else if ((treadmill->hw.handgrip.state == HEARTRATE_HG_DISABLED) && treadmill->hw.ble.connected == 0){
@@ -259,4 +258,4 @@ static void update(treadmill_t *treadmill) {
   treadmill_scene_training_programs_update(treadmill);
 }
 
-scene_t scene_training = {.id = SCENE_TRAINING, .name = "IDLE", .keypress = keypress, .update = update};
+scene_t scene_training = {.id = SCENE_TRAINING, .name = "TRAINING", .keypress = keypress, .update = update};

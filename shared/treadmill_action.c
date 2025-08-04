@@ -42,10 +42,11 @@ void treadmill_start_training(treadmill_t *treadmill) {
   ble_post_message(
           "\x02"
           "SET_BLE_FLAGS,32\n",
-          "AOK", 1000);
+          "", 1000);
 
 
   treadmill_set_scene(treadmill, SCENE_TRAINING);
+
   if (treadmill->on_update_fms_callback) {
     treadmill->on_update_fms_callback(treadmill, StartedOrResumedByTheUser, NULL);
   }  
@@ -115,7 +116,7 @@ void treadmill_finish_training(treadmill_t *treadmill) {
   ble_post_message(
           "\x02"
           "SET_BLE_FLAGS,0\n",
-          "AOK", 1000);
+          "", 1000);
  
   if (treadmill->on_update_fms_callback) {
     uint8_t stopped = 0x01;

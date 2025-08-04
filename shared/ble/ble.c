@@ -59,18 +59,20 @@ int ble_post_message(const char *data, const char *response, const uint32_t time
 }
 
 // static void temp_debug_print(const char *response, const int length) {
-//     DPRINT("Recv: %s", response);
-//     for (int i = 0; i < length; ++i) {
-//         DPRINT("%02X ", response[i]);
-//     }
-//     DPRINT("\n");
+//   DPRINT("Recv: %s", response);
+//   for (int i = 0; i < length; ++i) {
+//     DPRINT("%02X ", response[i]);
+//   }
+//   DPRINT("\n");
 // }
 
 static int is_expected_response(ble_command_t *cmd, const char *response, const int length) {
+    (void)length;
     return strstr(response, cmd->response) != NULL;
 }
 
 static int is_error_response(ble_command_t *cmd, const char *response, const int length) {
+    (void)length;
     if (strcmp(cmd->response, "AOK") == 0) {
         if (strstr(response, "ERR")) {
             DPRINT("GOT ERROR\n");
@@ -167,7 +169,6 @@ static int ble_ftms_control_point(char *ptr) {
 
 char debug_string[128] = {0};
 char hrm_device_name_upper[32] = {0};
-// const char *generic_device_name = get_string(pTreadmill, STR_HRM);
 
 void ble_protocol_process(uint8_t *ptr_data, int length) {
     if (!ble_protocol_valid_message(ptr_data, length)) {
@@ -176,8 +177,6 @@ void ble_protocol_process(uint8_t *ptr_data, int length) {
 
     char *ptr = (char *)&ptr_data[1];
     uint8_t opcode = next_u8(&ptr);
-
-    sprintf(debug_string, "%02X", opcode);
 
     switch (opcode) {
     case BP_SUBSCRIBE: {
@@ -356,72 +355,9 @@ void ble_protocol_process(uint8_t *ptr_data, int length) {
     }
 }
 
-static void ble_connected(ble_t *ble) { ble->connected = 1; }
-
-static void ble_disconnected(ble_t *ble) {
-    ble->connected = 0;
-    ble->ftms.control_point_allowed = 0;
-    ble->ftms.subscribed = 0;
-    ble->connection.interval = 0;
-    ble->connection.latency = 0;
-    ble->connection.timeout = 0;
-    ble->connection.mtu = 0;
-}
-
-static void ble_interpret_message_bytes(ble_t *ble, char *data, int length) {
-    // TODO: refactor. It is this way in case recepetion is made up with smaller
-    // messages
-    static uint8_t mBuffer[256] = {0};
-    static int mBufferIndex = 0;
-    for (int i = 0; i < length; ++i) {
-        uint8_t byte = (uint8_t)data[i];
-        switch (byte) {
-        case 0x01:
-        case 0x02:
-            mBufferIndex = 0;
-            break;
-
-        case 0x03:
-        case 0x04:
-        case 0x0A: {
-            mBuffer[mBufferIndex] = 0;
-            ble_legacy_commands_handler((char *)mBuffer); // ok
-            break;
-        }
-
-        case 0xF0:
-        case 0xF1:
-            mBufferIndex = 0;
-            mBuffer[mBufferIndex++] = byte;
-            break;
-
-        case 0xF5:
-        case 0xF6:
-            mBuffer[mBufferIndex] = '\0';
-            ble_protocol_process(mBuffer, mBufferIndex); // ok
-            break;
-
-        case 0x0F:
-            ble_connected(ble); // ok
-            break;
-
-        case 0x19:
-        case 0x0E:
-            ble_disconnected(ble); // ok
-            break;
-
-        default: {
-            mBuffer[mBufferIndex] = byte;
-            mBufferIndex = (mBufferIndex + 1) % 256;
-        }
-        }
-    }
-}
-
 int ble_process_received(ble_t *ble, char *data, int length) {
     // ble_interpret_message_bytes(ble, data, length);
     //  If there's a command processing
-
     if (tail != head) {
         ble_command_t *cmd = &commands[tail];
         switch (cmd->status) {
