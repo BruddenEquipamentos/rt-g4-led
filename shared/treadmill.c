@@ -56,6 +56,47 @@ void treadmill_set_scene(treadmill_t *treadmill, treadmill_scene_t scene) {
   // if (treadmill->on_state_changed_callback) {
   //   treadmill->on_state_changed_callback(treadmill, scene);
   // }
+switch (scene) {
+        case SCENE_TRAINING: {
+            ble_post_message(
+            "\x02"
+            "SET_BLE_FLAGS,32\n",
+            "AOK", 1000);
+            break;
+        }
+        case SCENE_PAUSED: {
+            ble_post_message(
+            "\x02"
+            "SET_BLE_FLAGS,8\n",
+            "AOK", 1000);
+            break;
+        }
+        case SCENE_EMERGENCY: {
+            ble_post_message(
+            "\x02"
+            "SET_BLE_FLAGS,128\n", // check this later
+            "AOK", 1000);
+            break;
+        }
+        case SCENE_BLE_ALLOW_YES_NO: {
+            if (treadmill->hw.ble.connected == 1){
+              ble_post_message(
+              "\x02"
+              "SET_BLE_FLAGS,4\n",
+              "AOK", 1000);
+            }
+            else{}
+            break;
+        }
+        default: {
+            ble_post_message(
+            "\x02"
+            "SET_BLE_FLAGS,16\n",
+            "AOK", 1000);
+            break;
+        }
+    }
+
 }
 uint32_t treadmill_calculate_pace(const uint16_t speed) {
   extern treadmill_t *pTreadmill;
