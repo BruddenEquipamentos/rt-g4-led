@@ -52,6 +52,7 @@ static void update(treadmill_t* treadmill) {
     // }
     if ((treadmill->hw.ble.status != BLE_STATUS_PERMISSION_ALLOWED) && (treadmill->get_time_ms() - treadmill->scene_tick >= 15 * 1000)) {
         treadmill_set_scene(treadmill, SCENE_IDLE);
+        ble_allowed = 0;
     }
 
 }
