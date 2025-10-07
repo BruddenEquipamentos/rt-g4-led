@@ -144,7 +144,7 @@ void treadmill_close_report(treadmill_t *treadmill) {
   treadmill->program.id = PROGRAM_NONE;
   treadmill_set_scene(treadmill, SCENE_IDLE);
 
-  extern uint8_t ble_allowed; //Lucas
+  ble_allowed = 0; //Lucas
   
   if (treadmill->on_update_fms_callback) {
     uint8_t stopped = 0x01;
