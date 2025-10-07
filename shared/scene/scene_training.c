@@ -3,6 +3,11 @@
 #include "scene.h"
 #include "sd/sd_render.h" /////////
 
+// New includes for BLE commands and helpers
+#include "../shared/ble/ble_protocol/ble_protocol_command.h"
+#include "../shared/ble/ble.h"
+#include <string.h>
+
 uint8_t speed_changed = 0;
 uint8_t incline_changed = 0;
 
@@ -179,6 +184,54 @@ static void update(treadmill_t *treadmill) {
       treadmill->training.bpm = 0;
     }
 
+    // Auto-reconnect logic for BLE HRM (if module present and HRM lost)
+    {
+      extern uint8_t ble_allowed;
+      static uint32_t hrm_reconnect_tick = 0;
+      static uint8_t hrm_reconnect_attempts = 0;
+      static uint8_t hrm_connect_sent = 0;
+      // Only try when BLE permission is given and HRM is disconnected
+      if (ble_allowed && treadmill->hw.ble.hrm.status == HRM_STATUS_DISCONNECTED) {
+        uint32_t now = (treadmill->get_time_ms) ? treadmill->get_time_ms() : treadmill->ms;
+        if (hrm_reconnect_tick == 0) hrm_reconnect_tick = now;
+        // attempt scan every 0.5 seconds
+        if ((now - hrm_reconnect_tick) >= 500) {
+          hrm_reconnect_tick = now;
+          hrm_reconnect_attempts++;
+          uint8_t buffer[128];
+          uint8_t length = 0;
+          // send scan to rediscover straps
+          build_hrm_scan_packet(buffer, &length, 128);
+          ble_post_message(buffer, "", 0);
+
+          // process received bytes/messages right away (parse scan response if already arrived)
+          extern void treadmill_ble_process(treadmill_t *treadmill);
+          // treadmill_ble_process(treadmill);
+
+          // if scan populated a device name, and we haven't already requested connect, do it now
+          if (treadmill->hw.ble.hrm.device_name[0] != '\0' && treadmill->hw.ble.hrm.status == HRM_STATUS_DISCONNECTED) {
+            length = 0;
+            build_hrm_connect_packet(buffer, &length, 128);
+            treadmill->hw.ble.status = BLE_STATUS_PERMISSION_ALLOWED;
+            ble_post_message(buffer, "", 0);
+
+            // process possible immediate responses after connect
+            treadmill_ble_process(treadmill);
+
+            hrm_connect_sent = 1;
+          }
+
+          // keep attempts bounded (wrap)
+          if (hrm_reconnect_attempts >= 12) hrm_reconnect_attempts = 0;
+        }
+      } else {
+        // reset attempts & connect flag when HRM is ok or BLE not available
+        hrm_reconnect_tick = 0;
+        hrm_reconnect_attempts = 0;
+        hrm_connect_sent = 0;
+      }
+     }
+    
     // if ((treadmill->hw.handgrip.state == HEARTRATE_HG_DISABLED) && (treadmill->hw.ble.gk.connected == 0) && (treadmill->hw.ble.hrm.status == HRM_STATUS_DISCONNECTED) && (treadmill->hw.ble.sh.connected == 0)) {
     //   treadmill->training.bpm = 0;
     // }    //Lucas check here
