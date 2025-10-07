@@ -250,6 +250,7 @@ void ble_protocol_process(uint8_t *ptr_data, int length) {
             }
             case BP_BLE_HRM_CONNECTED: {
                 pTreadmill->hw.ble.hrm.status = HRM_STATUS_CONNECTED;
+                pTreadmill->hw.ble.connected = 1; //Lucas 07-10
                 break;
             }
             case BP_BLE_HRM_NOTIFICATION: {
@@ -259,6 +260,7 @@ void ble_protocol_process(uint8_t *ptr_data, int length) {
             case BP_BLE_HRM_DISCONNECTED: {
                 pTreadmill->hw.ble.hrm.status = HRM_STATUS_DISCONNECTED;
                 pTreadmill->hw.ble.hrm.bpm = 0;
+                pTreadmill->hw.ble.connected = 0; //Lucas 07-10
                 memset(pTreadmill->hw.ble.hrm.device_name, 0, sizeof(pTreadmill->hw.ble.hrm.device_name));
                 break;
             }

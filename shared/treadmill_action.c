@@ -11,6 +11,8 @@
 #include "../shared/dm/dm.h"
 extern int completed_goal;
 
+extern uint8_t ble_allowed; //Lucas
+
 int report_state = 0; // alternate between avg and max value on report
 int incline_limit_reached = 0; ///////////// if user tries to change incline outside boundaries
 
@@ -141,6 +143,8 @@ void treadmill_close_report(treadmill_t *treadmill) {
   treadmill_reset_training(treadmill);
   treadmill->program.id = PROGRAM_NONE;
   treadmill_set_scene(treadmill, SCENE_IDLE);
+
+  extern uint8_t ble_allowed; //Lucas
   
   if (treadmill->on_update_fms_callback) {
     uint8_t stopped = 0x01;

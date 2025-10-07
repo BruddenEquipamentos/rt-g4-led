@@ -5,6 +5,8 @@
 // #include "treadmill_ble.h" //Lucas
 #include "../shared/ble/ble_protocol/ble_protocol_command.h" //Lucas
 #include "../shared/treadmill_action.h" //Lucas
+
+uint8_t ble_allowed = 0; //Lucas
  
 static void keypress(treadmill_t* treadmill, const kbd_key_t key) {
    switch (key) {
@@ -16,6 +18,7 @@ static void keypress(treadmill_t* treadmill, const kbd_key_t key) {
                ble_post_message(buffer, "", 0);
                treadmill->hw.ble.status = BLE_STATUS_PERMISSION_ALLOWED;
                treadmill_set_scene(treadmill, SCENE_IDLE);
+               ble_allowed = 1;
            }
            else{
 
@@ -34,6 +37,7 @@ static void keypress(treadmill_t* treadmill, const kbd_key_t key) {
            // TODO: Disconnect
            dm_clear_buffer();
            treadmill_set_scene(treadmill, SCENE_IDLE);
+           ble_allowed = 0;
            break;
        }
        default:;
