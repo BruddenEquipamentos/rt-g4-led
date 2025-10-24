@@ -249,11 +249,13 @@ void treadmill_load_config(treadmill_t *treadmill) {
     treadmill->config.unit = RT_LED_CONFIG_UNIT_KM;
   }
 
-  uint8_t name = 0;
-  if (nvm.NVM_ReadVariable8bits(NVM_U8_NAME, &name)) {
-    treadmill->config.device_name_id = name;
+  uint8_t name_id = 0;
+  if (nvm.NVM_ReadVariable8bits(NVM_U8_NAME, &name_id)) {
+    treadmill->config.device_name_id = name_id;
+    rt_led_ble_name_update(treadmill);
   } else {
     treadmill->config.device_name_id = 1; //default name id
+    rt_led_ble_name_update(treadmill);
   }
 
   char ns[22];
