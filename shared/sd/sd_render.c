@@ -210,6 +210,11 @@ static void render_config_data(treadmill_t *treadmill) {
       sd_set_value(&sd_pace, treadmill->config.model);
       break;
     }
+    case CONFIG_OPTION_NAME: {
+      sd_set_visible(&sd_pace, true);
+      sd_set_value(&sd_pace, treadmill->config.device_name_id);
+      break;
+    }
     case CONFIG_OPTION_LANGUAGE: {
       sd_set_visible(&sd_pace, true);
       sd_set_value(&sd_pace, treadmill->config.language);

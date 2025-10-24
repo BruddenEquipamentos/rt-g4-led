@@ -57,6 +57,24 @@ void rt_led_render(treadmill_t *treadmill) {
 
 extern uint8_t __new_display;
 
+void rt_led_ble_name_update(treadmill_t *treadmill) {
+  char device_name_id[15];  // espaço para o nome + número + null terminator
+  if (treadmill->config.model == RT_LED_MODEL_150_FREQ || treadmill->config.model == RT_LED_MODEL_150_USART) {
+    memcpy(device_name_id, "ARIA LED ", 9);  // Copia "ARIA LED " para device_name_id
+    device_name_id[9] = '0' + (treadmill->config.device_name_id / 10);
+    device_name_id[10] = '0' + (treadmill->config.device_name_id % 10);
+    device_name_id[11] = '\0';
+  } else if (treadmill->config.model == RT_LED_MODEL_250_USART) {
+    memcpy(device_name_id, "ARIA iLED ", 10);  // Copia "ARIA iLED " para device_name_id
+    device_name_id[10] = '0' + (treadmill->config.device_name_id / 10);
+    device_name_id[11] = '0'+ (treadmill->config.device_name_id % 10);
+    device_name_id[12] = '\0';
+  } else {
+    return; // Modelo desconhecido, não faz nada
+  }
+  strncpy(treadmill->config.device_name, device_name_id, 15);
+}
+
 void rt_led_load_model_params(treadmill_t *treadmill, rt_led_model_t model) {
   treadmill->config.model = model;
   switch (model) {
@@ -74,8 +92,9 @@ void rt_led_load_model_params(treadmill_t *treadmill, rt_led_model_t model) {
       treadmill->config.language = RT_LED_CONFIG_LNG_PT_BR;
 
       treadmill->hw.inverter.comm_type = MOTOR_COMMUNICATION_TYPE_FREQ;
+      
+      rt_led_ble_name_update(treadmill);
 
-      strncpy(treadmill->config.device_name, "ARIA LED", 15);
       __new_display = 1;
       break;
     }
@@ -94,7 +113,8 @@ void rt_led_load_model_params(treadmill_t *treadmill, rt_led_model_t model) {
 
       treadmill->hw.inverter.comm_type = MOTOR_COMMUNICATION_TYPE_UART;
 
-      strncpy(treadmill->config.device_name, "ARIA LED", 15);
+      rt_led_ble_name_update(treadmill);
+
       __new_display = 1;
       break;
     }
@@ -113,7 +133,8 @@ void rt_led_load_model_params(treadmill_t *treadmill, rt_led_model_t model) {
 
       treadmill->hw.inverter.comm_type = MOTOR_COMMUNICATION_TYPE_UART;
 
-      strncpy(treadmill->config.device_name, "ARIA iLED", 15);
+      rt_led_ble_name_update(treadmill);
+
       __new_display = 1;
       break;
     }

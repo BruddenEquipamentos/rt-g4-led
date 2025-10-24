@@ -249,6 +249,13 @@ void treadmill_load_config(treadmill_t *treadmill) {
     treadmill->config.unit = RT_LED_CONFIG_UNIT_KM;
   }
 
+  uint8_t name = 0;
+  if (nvm.NVM_ReadVariable8bits(NVM_U8_NAME, &name)) {
+    treadmill->config.device_name_id = name;
+  } else {
+    treadmill->config.device_name_id = 1; //default name id
+  }
+
   char ns[22];
   if (nvm.NVM_ReadString(NVM_NSU_START_ADDRESS, (uint8_t *)ns, 22)) {
     strncpy(treadmill->config.nsu, ns, 22);
@@ -280,6 +287,11 @@ void treadmill_save_config(treadmill_t *treadmill) {
   if (treadmill->previous_config.unit != treadmill->config.unit) {
     nvm.NVM_WriteVariable8bits(NVM_U8_UNIT, treadmill->config.unit);
   }
+
+  if (treadmill->previous_config.device_name_id != treadmill->config.device_name_id) {
+    nvm.NVM_WriteVariable8bits(NVM_U8_NAME, treadmill->config.device_name_id);
+    rt_led_ble_name_update(treadmill);
+  }
   // if (treadmill->previous_config.lub_param_km != treadmill->config.lub_param_km) {
   //   nvm.NVM_WriteVariable32bits(NVM_U32_LUB_DISTANCE_PARAM, treadmill->config.lub_param_km);
   // }
@@ -289,6 +301,7 @@ void treadmill_save_config(treadmill_t *treadmill) {
   if (treadmill->previous_config.max_time != treadmill->config.max_time) {  ////// config max time
     nvm.NVM_WriteVariable32bits(NVM_U32_MAX_TIME_PARAM, treadmill->config.max_time);
   }
+  treadmill_ble_restart(treadmill);
 }
 
 void treadmill_update(treadmill_t *treadmill) {
@@ -363,4 +376,7 @@ const char *get_string(treadmill_t *treadmill, int str_id) {
 
 
 
-void treadmill_ble_restart(treadmill_t *treadmill) { treadmill->hw.ble.init_state = BLE_INIT_STATE_INIT; }
+void treadmill_ble_restart(treadmill_t *treadmill) { 
+  treadmill->hw.ble.state = BLE_STATE_INIT; 
+  treadmill->hw.ble.init_state = BLE_INIT_STATE_INIT;
+}

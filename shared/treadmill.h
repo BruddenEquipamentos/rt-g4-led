@@ -10,6 +10,7 @@
 
 #define TREADMILL_INCL_TINE_SHOWN 2000 // TIME WHICH INCLINATION APPEARS ON DOT MATRIX 
 #define TREADMILL_INCL_TIME 30000 // TIME BETWEEN INCLINATION APPEARS ON THE DOT MATRIX WHEN DIFF THAN ZERO
+#define MAX_DEVICE_NAME_ID (99) // to differentiate treadmills in the gym
 
 #define NVM_U8_MODEL 0x0001
 #define NVM_U32_TOTAL_DISTANCE_METERS 0x0002
@@ -20,7 +21,8 @@
 #define NVM_U32_LUB_DISTANCE_PARAM 0x0007
 #define NVM_U32_MAX_TIME_PARAM 0x0008 /////////////////// SAVE MAX TIME CONFIG
 #define NVM_U8_LANG 0x0009 //Lucas 14/04 language
-#define NVM_U8_UNIT 0x0010 //Lucas 14/04 unit
+#define NVM_U8_UNIT 0x000A //Lucas 14/04 unit
+#define NVM_U8_NAME 0x000B //Lucas 22/10 ble name id
 
 // Exemplo de NSU "818790500000007067703"
 #define NVM_NS_MAX_LENGTH (22)
@@ -179,6 +181,7 @@ typedef struct treadmill {
     char nsi[22];  // legado
 
     char device_name[15];
+    uint8_t device_name_id; // to differentiate treadmills in the gym
 
     int language;
     int unit;
@@ -198,6 +201,7 @@ typedef struct treadmill {
     int16_t incline;
     uint32_t ms;
     uint32_t max_time;
+    uint8_t device_name_id;
   } countdown;
 
   struct debug {

@@ -135,6 +135,32 @@ static void change_config_lub(treadmill_t *treadmill, const kbd_key_t key) {
   }
 }
 
+/////// new config ble name
+static void change_config_name(treadmill_t *treadmill, const kbd_key_t key) {
+  switch (key) {
+    case KEY_SPEED_INCREMENT: 
+    case KEY_EXT_KBD_SPEED_INC: {
+      if (treadmill->config.device_name_id + 1 < MAX_DEVICE_NAME_ID){
+          treadmill->config.device_name_id += 1;
+      }
+      else{
+          treadmill->config.device_name_id = 1;
+      }
+      break;
+    }
+    case KEY_SPEED_DECREMENT: 
+    case KEY_EXT_KBD_SPEED_DEC:{
+      if (treadmill->config.device_name_id - 1 >= 1){
+        treadmill->config.device_name_id -= 1;
+      }else{
+        treadmill->config.device_name_id = 1;
+      }
+      break;
+    }
+    default:;
+  }
+}
+
 static void change_config_modbus(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_SPEED_INCREMENT:
@@ -256,6 +282,10 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
         //   change_config_lub(treadmill, key);
         //   break;
         // }
+        case CONFIG_OPTION_NAME: {
+          change_config_name(treadmill, key);
+          break;
+        }
         case CONFIG_OPTION_MODBUS: {
           change_config_modbus(treadmill, key);
           break;

@@ -529,7 +529,11 @@ void dm_render(treadmill_t *treadmill) {
         // case CONFIG_OPTION_LUB: {
         //   dm_render_text("LUB", 16);
         //   break;
-//        }  // LUB
+        // }  // LUB
+        case CONFIG_OPTION_NAME: {
+          dm_render_text("NAM", 16);
+          break;
+        }  // LUB
         case CONFIG_OPTION_VER: {
           dm_render_text("VER", 16);
           break;

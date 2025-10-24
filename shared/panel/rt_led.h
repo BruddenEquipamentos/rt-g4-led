@@ -14,12 +14,13 @@
 extern uint16_t fw_version;
 
 typedef enum scene_config_option {
-  CONFIG_OPTION_MODEL,           // MDL
+  CONFIG_OPTION_MODEL = 0,       // MDL
   CONFIG_OPTION_LANGUAGE,        // LNG
   CONFIG_OPTION_UNIT,            // UNT
   CONFIG_OPTION_WEIGHT,          // WGT
   CONFIG_OPTION_MA,              // MA
   // CONFIG_OPTION_LUB,             // LUB
+  CONFIG_OPTION_NAME,           // NAM
   CONFIG_OPTION_VER,             // VER
   CONFIG_OPTION_TOTAL_DISTANCE,  // TD
   CONFIG_OPTION_TOTAL_HOURS,     // THR
@@ -81,5 +82,7 @@ void rt_led_update(treadmill_t *treadmill);
 void rt_led_render(treadmill_t *treadmill);
 
 void rt_led_load_model_params(treadmill_t *treadmill, rt_led_model_t model);
+
+void rt_led_ble_name_update(treadmill_t *treadmill);
 
 #endif

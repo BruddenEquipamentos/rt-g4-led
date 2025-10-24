@@ -1452,6 +1452,8 @@ void BeepTask(void const * argument)
   /* Infinite loop */
   for (;;) {
     if (xQueueReceive(beepEventQueueHandle, &beep, portMAX_DELAY) == pdPASS) {
+      // continue; //debug only
+      
       HAL_TIM_PWM_Stop(&htim16, TIM_CHANNEL_1);
       switch (beep) {
         case BEEP_KEYPRESS_ACK: {
