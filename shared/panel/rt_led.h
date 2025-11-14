@@ -9,7 +9,7 @@
 
 #define MAJOR 1
 #define MINOR 1
-#define REVISION 3 ////
+#define REVISION 4 ////
 
 extern uint16_t fw_version;
 
@@ -84,5 +84,7 @@ void rt_led_render(treadmill_t *treadmill);
 void rt_led_load_model_params(treadmill_t *treadmill, rt_led_model_t model);
 
 void rt_led_ble_name_update(treadmill_t *treadmill);
+
+void rt_led_send_training_data(treadmill_t *treadmill);
 
 #endif

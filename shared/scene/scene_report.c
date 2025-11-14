@@ -26,6 +26,9 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
     case KEY_STOP:
       dm_reset_frame(); //////////
       report_goal = 0;
+
+      rt_led_send_training_data(treadmill); ///////////////////////////
+
       // Enable NFC on report screen (TODO: only for Samsung)
       ble_post_message(
           "\x02"

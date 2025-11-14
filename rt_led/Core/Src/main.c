@@ -358,7 +358,7 @@ int main(void)
   MX_CRC_Init();
   MX_TIM6_Init();
   MX_TIM14_Init();
-//  MX_TIM17_Init(); //Lucas Polar: remove to avoid ghost BPM
+  // MX_TIM17_Init();
   MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
 
@@ -1446,7 +1446,7 @@ void BeepTask(void const * argument)
 {
   /* USER CODE BEGIN BeepTask */
   beep_t beep;
-
+    continue; ///////////////////////////
   beep = BEEP_KEYPRESS_ACK;
   xQueueSend(beepEventQueueHandle, &beep, 0);
   /* Infinite loop */
