@@ -28,7 +28,7 @@ typedef enum ble_command_status {
 } ble_command_status_t;
 
 typedef struct ble_command {
-    char data[32];
+    char data[192];
     char response[16];
     ble_command_status_t status;
     uint32_t tick;

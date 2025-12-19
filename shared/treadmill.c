@@ -76,7 +76,7 @@ void treadmill_set_scene(treadmill_t *treadmill, treadmill_scene_t scene) {
           "", 1000);
       break;
     }
-    case SCENE_ALERT:
+    case SCENE_EMERGENCY:
     {
       ble_post_message(
           "\x02"

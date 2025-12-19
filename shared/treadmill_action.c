@@ -323,6 +323,7 @@ static void build_ftms_data_packet(treadmill_t *treadmill, uint8_t *buffer, uint
     uint16_t elapsed_time = treadmill->training.seconds;
     uint16_t inclination = treadmill->training.incline;
     uint16_t calories = treadmill->training.kcal / 1000;
+    uint8_t heart_rate = treadmill->training.speed/10; // to test without handgrip
 
     buffer[(*size)++] = BLE_PROTOCOL_MESSAGE_START;
     flat_bin_to_ascii_8(buffer, size, max_size, BP_NOTIFY);
@@ -361,7 +362,7 @@ static void build_ftms_data_packet(treadmill_t *treadmill, uint8_t *buffer, uint
     }
 
     if (flags & TD_HEART_RATE_PRESENT) {
-        flat_bin_to_ascii_8(buffer, size, max_size, 0);
+        flat_bin_to_ascii_8(buffer, size, max_size, heart_rate);
     }
 
     if (flags & TD_ELAPSED_TIME_PRESENT) {
@@ -409,6 +410,7 @@ int treadmill_send_ftms_data(treadmill_t *treadmill) {
       flags |= TD_INCLINATION_RAMP_ANGLE_SETTING_PRESENT; // -ok
       flags |= TD_ELEVATION_GAIN_PRESENT; // -ok
       flags |= TD_EXPENDED_ENERGY_PRESENT; // -ok
+      flags |= TD_HEART_RATE_PRESENT; // -ok
       build_ftms_data_packet(treadmill, buffer, BUFSIZE, &bindex, flags);
   } else {
       // single packet
@@ -419,7 +421,7 @@ int treadmill_send_ftms_data(treadmill_t *treadmill) {
       flags |= TD_INCLINATION_RAMP_ANGLE_SETTING_PRESENT; // -ok
       flags |= TD_ELEVATION_GAIN_PRESENT; // -ok
       flags |= TD_EXPENDED_ENERGY_PRESENT; // -ok
-      // // flags |= TD_HEART_RATE_PRESENT;
+      flags |= TD_HEART_RATE_PRESENT; // -ok
       flags |= TD_ELAPSED_TIME_PRESENT; // -ok
       build_ftms_data_packet(treadmill, buffer, BUFSIZE, &bindex, flags);        
   }

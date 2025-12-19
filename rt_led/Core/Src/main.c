@@ -1446,14 +1446,11 @@ void BeepTask(void const * argument)
 {
   /* USER CODE BEGIN BeepTask */
   beep_t beep;
-    continue; ///////////////////////////
   beep = BEEP_KEYPRESS_ACK;
   xQueueSend(beepEventQueueHandle, &beep, 0);
   /* Infinite loop */
   for (;;) {
-    if (xQueueReceive(beepEventQueueHandle, &beep, portMAX_DELAY) == pdPASS) {
-      // continue; //debug only
-      
+    if (xQueueReceive(beepEventQueueHandle, &beep, portMAX_DELAY) == pdPASS) {     
       HAL_TIM_PWM_Stop(&htim16, TIM_CHANNEL_1);
       switch (beep) {
         case BEEP_KEYPRESS_ACK: {
