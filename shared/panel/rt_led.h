@@ -7,9 +7,9 @@
 #include "../dm/dm_render.h"
 #include "../sd/sd_render.h"
 
-#define MAJOR 1
-#define MINOR 1
-#define REVISION 4 ////
+#define MAJOR 0
+#define MINOR 0
+#define REVISION 1 ////
 
 extern uint16_t fw_version;
 

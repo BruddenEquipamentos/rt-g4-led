@@ -29,7 +29,7 @@ int ble_legacy_commands_handler(char *ptr) {
       treadmill_save_nsi(pTreadmill, ptr, strlen(ptr));
     } else if (set_position_after(&ptr, "time=")) {
       char timestr[16];
-      uint32_t timestamp;
+      uint32_t timestamp = 0;
       strcpy(timestr, ptr);
       timestamp = strtoul(ptr, NULL, 16);
       pTreadmill->hw.update_rtc(timestamp);

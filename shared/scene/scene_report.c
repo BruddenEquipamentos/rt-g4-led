@@ -1,5 +1,5 @@
 #include "scene.h"
-
+#include "../panel/rt_led.h"
 #include "treadmill_action.h" ///////
 
 extern int report_state;
@@ -17,7 +17,7 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
       ble_post_message(
           "\x02"
           "NFC,1\n",
-          "AOK", 1000);
+          "", 1000);
 
       treadmill_close_report(treadmill);
       nfc_tick_ms = 0; // temp
@@ -27,13 +27,13 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
       dm_reset_frame(); //////////
       report_goal = 0;
 
-      rt_led_send_training_data(treadmill); ///////////////////////////
+      // rt_led_send_training_data(treadmill); ///////////////////////////
 
       // Enable NFC on report screen (TODO: only for Samsung)
       ble_post_message(
           "\x02"
           "NFC,1\n",
-          "AOK", 1000);
+          "", 1000);
 
       treadmill_close_report(treadmill);
       nfc_tick_ms = 0; // temp
@@ -49,11 +49,12 @@ static void update(treadmill_t *treadmill) {
   if (nfc_tick_ms == 0) {
     nfc_tick_ms = treadmill->get_time_ms();
   } else if (nfc_tick_ms != 0xffffffff) {
+    rt_led_send_training_data(treadmill); ///////////////////////////
     if (treadmill->get_time_ms() - nfc_tick_ms >= 1500) {
       ble_post_message(
         "\x02"
         "NFC,0\n",
-        "AOK", 1000);
+        "", 1000);
       nfc_tick_ms = 0xffffffff;
     }
   }
@@ -78,7 +79,7 @@ static void update(treadmill_t *treadmill) {
     ble_post_message(
         "\x02"
         "NFC,1\n",
-        "AOK", 1000);
+        "", 1000);
     treadmill_close_report(treadmill);
     nfc_tick_ms = 0; // temp
   }

@@ -107,6 +107,8 @@ void ble_reset(ble_t *ble);
 void ble_clear_commands(void);
 int ble_post_message(const char *data, const char *response, const uint32_t timeout_tick);
 
+int ble_post_long_message(const char *data, const char *response, const uint32_t timeout_tick); //Lucas testing
+
 int ble_process_received(ble_t *ble, char *data, int length);
 int ble_process_commands(ble_t *ble);
 

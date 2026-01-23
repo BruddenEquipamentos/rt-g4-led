@@ -15,6 +15,11 @@ extern scene_t scene_report;
 extern scene_t scene_programs;
 extern scene_t scene_ble_allow_yes_no;
 
+char training_json[192];
+static const char *treadmill_persisted_data =
+       "{\"duration\":%u,\"dist\":%u,\"cal\":%u,\"avgSpd\":%u,\"maxSpd\":%u,"
+       "\"avgPace\":%u,\"avgHR\":%u,\"maxHR\":%u}";
+
 uint16_t fw_version = MAJOR*100 + MINOR*10 + REVISION;
 
 static const scene_t *rt_led_scenes[] = {
@@ -144,16 +149,13 @@ void rt_led_load_model_params(treadmill_t *treadmill, rt_led_model_t model) {
 
 // lucas testing 27/10
 void rt_led_send_training_data(treadmill_t *treadmill) {
-    // send persisted training data via BLE on entering report scene
-    static const char *treadmill_persisted_data =
-        "{\"duration\":%04u,\"dist\":%05u,\"cal\":%08u,\"avgSpd\":%04u,\"maxSpd\":%04u,"
-        "\"avgPace\":%04u,\"avgHR\":%03u,\"maxHR\":%03u}";
-
-    static char datetime[32] = {0};
-//    RTC_GetFormattedDatetime(datetime, sizeof(datetime));
+    // send persisted training data via BLE on entering report scene - static
+    
+    // static char datetime[32] = {0};
+    // RTC_GetFormattedDatetime(datetime, sizeof(datetime));
 
     /* build JSON payload with the fields from struct training / totals */
-    char training_json[192] = {0};
+    // char training_json[192] = {0};
     snprintf(training_json, 192, treadmill_persisted_data,
              (unsigned)treadmill->training.seconds,            // duration (s)
              (unsigned)treadmill->training.meters,             // distance (m)
@@ -163,17 +165,18 @@ void rt_led_send_training_data(treadmill_t *treadmill) {
              (unsigned)treadmill->training.pace,               // avgPace
              (unsigned)treadmill->training.bpm_average,        // avgHR
              (unsigned)treadmill->training.bpm_max            // maxHR
-             );                                        // timestamp (formatted)
+             );                                        // timestamp (formatted) TODO
 
     /* set BLE flags then send the MD command with the JSON payload */
-    // ble_post_message("\x02"
-    //                  "SET_BLE_FLAGS,32\n",
-    //                  "", 1000);
+    ble_post_message("\x02"
+                     "SET_BLE_FLAGS,32\n",
+                     "", 1000);
 
     char data[192] = {0};
     snprintf(data, 192,
              "\x02"
              "MD,%s\n",
              training_json);
-    // ble_post_long_message(data, "AOK", 1000); // Lucas testing - just for MD command
+
+   ble_post_long_message(data, "AOK", 1000); // Lucas testing - just for MD command
 }

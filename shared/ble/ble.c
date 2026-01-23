@@ -58,6 +58,18 @@ int ble_post_message(const char *data, const char *response, const uint32_t time
     return 1;
 }
 
+// Lucas testing
+int ble_post_long_message(const char *data, const char *response, const uint32_t timeout_tick) {
+    ble_command_t *cmd = &commands[head];
+    strncpy(cmd->data, data, 192);
+    strncpy(cmd->response, response, 16);
+    cmd->tick = 0;
+    cmd->timeout_tick = timeout_tick;
+    cmd->status = BLE_COMMAND_STATUS_PENDING;
+    head = (head + 1) % MAX_NUM_COMMANDS;
+    return 1;
+}
+
 // static void temp_debug_print(const char *response, const int length) {
 //   DPRINT("Recv: %s", response);
 //   for (int i = 0; i < length; ++i) {

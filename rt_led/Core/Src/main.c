@@ -398,6 +398,7 @@ int main(void)
 
   /* definition and creation of keyboardTask */
   osThreadDef(keyboardTask, KeyboardTask, osPriorityNormal, 0, 128);
+  // osThreadDef(keyboardTask, KeyboardTask, osPriorityNormal, 0, 256);
   keyboardTaskHandle = osThreadCreate(osThread(keyboardTask), NULL);
 
   /* definition and creation of beepTask */
@@ -1451,6 +1452,7 @@ void BeepTask(void const * argument)
   /* Infinite loop */
   for (;;) {
     if (xQueueReceive(beepEventQueueHandle, &beep, portMAX_DELAY) == pdPASS) {     
+      // continue; //debug only
       HAL_TIM_PWM_Stop(&htim16, TIM_CHANNEL_1);
       switch (beep) {
         case BEEP_KEYPRESS_ACK: {
