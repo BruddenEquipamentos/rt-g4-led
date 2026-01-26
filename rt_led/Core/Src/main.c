@@ -1396,6 +1396,10 @@ static void handle_key_press(void) {
     return;
   }
 
+  
+
+
+  #if 0 //original handler
   if (pressed != KEY_NONE && pressed != previous) {
     treadmill_key_press(&treadmill, pressed);
     key_tick = 0;
@@ -1418,7 +1422,12 @@ static void handle_key_press(void) {
     slow_repeat_count = 0;
     treadmill_key_press_clear(&treadmill);
   }
+
+#endif 0
+
 }
+
+
 
 /* USER CODE END Header_KeyboardTask */
 void KeyboardTask(void const * argument)
