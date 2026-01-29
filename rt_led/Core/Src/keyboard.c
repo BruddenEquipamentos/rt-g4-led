@@ -4,20 +4,22 @@
 #include "keyboard.h"
 #include "treadmill.h"
 
-#define ROW0 TS00_GPIO_Port, TS00_Pin
-#define ROW1 TS01_GPIO_Port, TS01_Pin
-#define ROW2 TS02_GPIO_Port, TS02_Pin
+#define ROW0 TS00_GPIO_Port, TS00_Pin // ok
+#define ROW1 TS01_GPIO_Port, TS01_Pin // ok
+#define ROW2 TS02_GPIO_Port, TS02_Pin // ok
 #define ROW3 TS03_GPIO_Port, TS03_Pin
 #define ROW4 TS04_GPIO_Port, TS04_Pin
 #define ROW5 TS05_GPIO_Port, TS05_Pin
+#define ROW6 TS10_GPIO_Port, TS10_Pin // ok -- MUST CHANGE TO INPUT
+#define ROW7 TS11_GPIO_Port, TS11_Pin
 
-#define COL0 TS06_GPIO_Port, TS06_Pin
-#define COL1 TS07_GPIO_Port, TS07_Pin
-#define COL2 TS08_GPIO_Port, TS08_Pin
+#define COL0 TS06_GPIO_Port, TS06_Pin // ok
+#define COL1 TS07_GPIO_Port, TS07_Pin // ok
+#define COL2 TS08_GPIO_Port, TS08_Pin // ok
 
-#define COL3 TS09_GPIO_Port, TS09_Pin
-#define COL4 TS10_GPIO_Port, TS10_Pin
-#define COL5 TS11_GPIO_Port, TS11_Pin
+#define COL3 TS09_GPIO_Port, TS09_Pin // ok
+// #define COL4 TS10_GPIO_Port, TS10_Pin
+// #define COL5 TS11_GPIO_Port, TS11_Pin
 
 extern treadmill_t *pTreadmill;
 
@@ -30,8 +32,8 @@ static void set_columns_to_high(void) {
   HAL_GPIO_WritePin(COL1, GPIO_PIN_SET);
   HAL_GPIO_WritePin(COL2, GPIO_PIN_SET);
   HAL_GPIO_WritePin(COL3, GPIO_PIN_SET);
-  HAL_GPIO_WritePin(COL4, GPIO_PIN_SET);
-  HAL_GPIO_WritePin(COL5, GPIO_PIN_SET);
+  // HAL_GPIO_WritePin(COL4, GPIO_PIN_SET);
+  // HAL_GPIO_WritePin(COL5, GPIO_PIN_SET);
 }
 
 #define READ_KEYS_STATE(ptr_keys, col, row, key) \
@@ -53,44 +55,38 @@ enum key  get_key_pressed(void) {
     kPtr = &keys[i];                                  // 16 ms
 
     if (treadmill_has_incline(pTreadmill)) {
-        READ_KEYS_STATE(kPtr, COL4, ROW5, KEY_STOP);      // 1
-        READ_KEYS_STATE(kPtr, COL2, ROW0, KEY_SPEED_DECREMENT); // 2
-        READ_KEYS_STATE(kPtr, COL1, ROW0, KEY_SPEED_6);   // 3
-        READ_KEYS_STATE(kPtr, COL0, ROW0, KEY_SPEED_9);   // 4
-        READ_KEYS_STATE(kPtr, COL0, ROW1, KEY_SPEED_12)   // 5
-        READ_KEYS_STATE(kPtr, COL0, ROW2, KEY_SPEED_15);  // 6
-        READ_KEYS_STATE(kPtr, COL2, ROW1, KEY_SPEED_INCREMENT); // 7
-        READ_KEYS_STATE(kPtr, COL1, ROW2, KEY_START);     // 8
-        READ_KEYS_STATE(kPtr, COL4, ROW4, KEY_PROGRAM);   // 9
-        READ_KEYS_STATE(kPtr, COL5, ROW4, KEY_INCLINE_DECREMENT); // 10
-        READ_KEYS_STATE(kPtr, COL5, ROW3, KEY_INCLINE_INCREMENT); // 11
-        READ_KEYS_STATE(kPtr, COL4, ROW3, KEY_INCLINE_3);   // 12
-        READ_KEYS_STATE(kPtr, COL3, ROW3, KEY_INCLINE_6);   // 13
-        READ_KEYS_STATE(kPtr, COL3, ROW4, KEY_INCLINE_9);   // 14
-        READ_KEYS_STATE(kPtr, COL3, ROW5, KEY_INCLINE_12);  // 15
-        READ_KEYS_STATE(kPtr, COL1, ROW1, KEY_SAC);         // 16
-    } else {
-        READ_KEYS_STATE(kPtr, COL4, ROW5, KEY_STOP);      // 1
-
-//        READ_KEYS_STATE(kPtr, COL2, ROW0, KEY_SPEED_DECREMENT); // 2
-        READ_KEYS_STATE(kPtr, COL5, ROW3, KEY_SPEED_DECREMENT);   // 2
-
-        READ_KEYS_STATE(kPtr, COL1, ROW0, KEY_SPEED_6);   // 3
-        READ_KEYS_STATE(kPtr, COL0, ROW0, KEY_SPEED_9);   // 4
-        READ_KEYS_STATE(kPtr, COL0, ROW1, KEY_SPEED_12)   // 5
-        READ_KEYS_STATE(kPtr, COL0, ROW2, KEY_SPEED_15);  // 6
-        READ_KEYS_STATE(kPtr, COL2, ROW1, KEY_SPEED_INCREMENT); // 7
-        READ_KEYS_STATE(kPtr, COL1, ROW2, KEY_START);     // 8
-        READ_KEYS_STATE(kPtr, COL4, ROW4, KEY_PROGRAM);   // 9
-
-//        READ_KEYS_STATE(kPtr, COL5, ROW4, KEY_INCLINE_DECREMENT); // 10
-//        READ_KEYS_STATE(kPtr, COL5, ROW3, KEY_INCLINE_INCREMENT); // 11
-
-        READ_KEYS_STATE(kPtr, COL4, ROW3, KEY_INCLINE_3);   // 12
-        READ_KEYS_STATE(kPtr, COL3, ROW3, KEY_INCLINE_6);   // 13
-        READ_KEYS_STATE(kPtr, COL3, ROW4, KEY_INCLINE_9);   // 14
-        READ_KEYS_STATE(kPtr, COL3, ROW5, KEY_INCLINE_12);  // 15
-        READ_KEYS_STATE(kPtr, COL1, ROW1, KEY_SAC);         // 16
+        READ_KEYS_STATE(kPtr, COL2, ROW2, KEY_STOP);      // 1 -- ok
+        READ_KEYS_STATE(kPtr, COL2, ROW0, KEY_SPEED_DECREMENT); // 2 -- ok
+        READ_KEYS_STATE(kPtr, COL1, ROW0, KEY_SPEED_6);   // 3 -- wrong
+        READ_KEYS_STATE(kPtr, COL0, ROW0, KEY_SPEED_9);   // 4 -- wrong
+        READ_KEYS_STATE(kPtr, COL0, ROW1, KEY_SPEED_12)   // 5 -- wrong
+        READ_KEYS_STATE(kPtr, COL0, ROW2, KEY_SPEED_15);  // 6 -- wrong
+        READ_KEYS_STATE(kPtr, COL2, ROW1, KEY_SPEED_INCREMENT); // 7 -- ok
+        READ_KEYS_STATE(kPtr, COL3, ROW1, KEY_START);     // 8 -- ok
+        READ_KEYS_STATE(kPtr, COL0, ROW6, KEY_PROGRAM);   // 9 -- ok
+        READ_KEYS_STATE(kPtr, COL1, ROW2, KEY_INCLINE_DECREMENT); // 10 -- ok
+        READ_KEYS_STATE(kPtr, COL1, ROW1, KEY_INCLINE_INCREMENT); // 11 -- ok
+        // READ_KEYS_STATE(kPtr, COL4, ROW3, KEY_INCLINE_3);   // 12 --
+        READ_KEYS_STATE(kPtr, COL1, ROW6, KEY_INCLINE_6);   // 13 -- ok
+        READ_KEYS_STATE(kPtr, COL2, ROW6, KEY_INCLINE_9);   // 14 -- ok
+        READ_KEYS_STATE(kPtr, COL3, ROW6, KEY_INCLINE_12);  // 15 -- ok
+        // READ_KEYS_STATE(kPtr, COL1, ROW1, KEY_SAC);         // 16
+    } else { // CHECK
+        READ_KEYS_STATE(kPtr, COL2, ROW2, KEY_STOP);      // 1 -- ok
+        // READ_KEYS_STATE(kPtr, COL2, ROW0, KEY_SPEED_DECREMENT); // 2 -- ok
+        READ_KEYS_STATE(kPtr, COL1, ROW0, KEY_SPEED_6);   // 3 -- wrong
+        READ_KEYS_STATE(kPtr, COL0, ROW0, KEY_SPEED_9);   // 4 -- wrong
+        READ_KEYS_STATE(kPtr, COL0, ROW1, KEY_SPEED_12)   // 5 -- wrong
+        READ_KEYS_STATE(kPtr, COL0, ROW2, KEY_SPEED_15);  // 6 -- wrong
+        READ_KEYS_STATE(kPtr, COL2, ROW1, KEY_SPEED_INCREMENT); // 7 -- ok
+        READ_KEYS_STATE(kPtr, COL3, ROW1, KEY_START);     // 8 -- ok
+        READ_KEYS_STATE(kPtr, COL0, ROW6, KEY_PROGRAM);   // 9 -- ok
+        // READ_KEYS_STATE(kPtr, COL1, ROW2, KEY_INCLINE_DECREMENT); // 10 -- ok
+        READ_KEYS_STATE(kPtr, COL1, ROW1, KEY_SPEED_DECREMENT); // 11 -- ok
+        // READ_KEYS_STATE(kPtr, COL4, ROW3, KEY_INCLINE_3);   // 12 --
+        READ_KEYS_STATE(kPtr, COL1, ROW6, KEY_INCLINE_6);   // 13 -- ok
+        READ_KEYS_STATE(kPtr, COL2, ROW6, KEY_INCLINE_9);   // 14 -- ok
+        READ_KEYS_STATE(kPtr, COL3, ROW6, KEY_INCLINE_12);  // 15 -- ok
     }
 
 

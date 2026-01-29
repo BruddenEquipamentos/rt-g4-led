@@ -80,22 +80,26 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
       incline_changed = 1;
       treadmill_incline_decrement(treadmill);
       break;
-    case KEY_EXT_KBD_SPEED_6:
+      case KEY_SPEED_6:
+      case KEY_EXT_KBD_SPEED_6:
       // treadmill_set_bpm_value(treadmill, 40); //debug
       speed_changed = 1;
       treadmill_set_speed(treadmill, 600);
       break;
-    case KEY_EXT_KBD_SPEED_9:
+      case KEY_SPEED_9:
+      case KEY_EXT_KBD_SPEED_9:
       // treadmill_set_bpm_value(treadmill, treadmill->training.bpm - 10); //debug
       speed_changed = 1;
       treadmill_set_speed(treadmill, 900);
       break;
-    case KEY_EXT_KBD_SPEED_12:
+      case KEY_SPEED_12:
+      case KEY_EXT_KBD_SPEED_12:
       // treadmill_set_bpm_value(treadmill, treadmill->training.bpm + 10); //debug
       speed_changed = 1;
       treadmill_set_speed(treadmill, 1200);
       break;
-    case KEY_EXT_KBD_SPEED_15:
+      case KEY_SPEED_15:
+      case KEY_EXT_KBD_SPEED_15:
       speed_changed = 1;
       treadmill_set_speed(treadmill, 1500);
       break;
