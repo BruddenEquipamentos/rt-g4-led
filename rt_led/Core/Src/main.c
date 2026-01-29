@@ -1071,10 +1071,22 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(CONTR_GPIO_Port, CONTR_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : LED_Pin TS10_Pin TS11_Pin */
-  GPIO_InitStruct.Pin = LED_Pin|TS10_Pin|TS11_Pin;
+  // GPIO_InitStruct.Pin = LED_Pin|TS10_Pin|TS11_Pin;
+  // GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  // GPIO_InitStruct.Pull = GPIO_NOPULL;
+  // GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  // HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  GPIO_InitStruct.Pin = LED_Pin|TS11_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  // NEW KBD
+  GPIO_InitStruct.Pin = TS10_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : INC_MINUS_Pin SP_MINUS_Pin SP_PLUS_Pin INC_PLUS_Pin
