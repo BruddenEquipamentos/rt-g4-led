@@ -57,10 +57,10 @@ enum key  get_key_pressed(void) {
     if (treadmill_has_incline(pTreadmill)) {
         READ_KEYS_STATE(kPtr, COL2, ROW2, KEY_STOP);      // 1 -- ok
         READ_KEYS_STATE(kPtr, COL2, ROW0, KEY_SPEED_DECREMENT); // 2 -- ok
-        READ_KEYS_STATE(kPtr, COL1, ROW0, KEY_SPEED_6);   // 3 -- wrong
-        READ_KEYS_STATE(kPtr, COL0, ROW0, KEY_SPEED_9);   // 4 -- wrong
-        READ_KEYS_STATE(kPtr, COL0, ROW1, KEY_SPEED_12)   // 5 -- wrong
-        READ_KEYS_STATE(kPtr, COL0, ROW2, KEY_SPEED_15);  // 6 -- wrong
+        READ_KEYS_STATE(kPtr, COL1, ROW0, KEY_SPEED_6);   // 3 -- ok
+        READ_KEYS_STATE(kPtr, COL0, ROW0, KEY_SPEED_9);   // 4 -- ok
+        READ_KEYS_STATE(kPtr, COL0, ROW1, KEY_SPEED_12)   // 5 -- ok
+        READ_KEYS_STATE(kPtr, COL0, ROW2, KEY_SPEED_15);  // 6 -- ok
         READ_KEYS_STATE(kPtr, COL2, ROW1, KEY_SPEED_INCREMENT); // 7 -- ok
         READ_KEYS_STATE(kPtr, COL3, ROW1, KEY_START);     // 8 -- ok
         READ_KEYS_STATE(kPtr, COL0, ROW6, KEY_PROGRAM);   // 9 -- ok
@@ -74,10 +74,10 @@ enum key  get_key_pressed(void) {
     } else { // CHECK
         READ_KEYS_STATE(kPtr, COL2, ROW2, KEY_STOP);      // 1 -- ok
         // READ_KEYS_STATE(kPtr, COL2, ROW0, KEY_SPEED_DECREMENT); // 2 -- ok
-        READ_KEYS_STATE(kPtr, COL1, ROW0, KEY_SPEED_6);   // 3 -- wrong
-        READ_KEYS_STATE(kPtr, COL0, ROW0, KEY_SPEED_9);   // 4 -- wrong
-        READ_KEYS_STATE(kPtr, COL0, ROW1, KEY_SPEED_12)   // 5 -- wrong
-        READ_KEYS_STATE(kPtr, COL0, ROW2, KEY_SPEED_15);  // 6 -- wrong
+        READ_KEYS_STATE(kPtr, COL1, ROW0, KEY_SPEED_6);   // 3 -- ok
+        READ_KEYS_STATE(kPtr, COL0, ROW0, KEY_SPEED_9);   // 4 -- ok
+        READ_KEYS_STATE(kPtr, COL0, ROW1, KEY_SPEED_12)   // 5 -- ok
+        READ_KEYS_STATE(kPtr, COL0, ROW2, KEY_SPEED_15);  // 6 -- ok
         READ_KEYS_STATE(kPtr, COL2, ROW1, KEY_SPEED_INCREMENT); // 7 -- ok
         READ_KEYS_STATE(kPtr, COL3, ROW1, KEY_START);     // 8 -- ok
         READ_KEYS_STATE(kPtr, COL0, ROW6, KEY_PROGRAM);   // 9 -- ok
@@ -96,7 +96,11 @@ enum key  get_key_pressed(void) {
     key &= keys[i];
   }
 
-  if (key & KEY_START && key & KEY_STOP) { //Lucas rework that 15/05 - wait for seconds see tft firmware 
+  if (key & KEY_PROGRAM && pTreadmill->scene == SCENE_IDLE) {
+      return;
+  }
+
+  if (key & KEY_START && key & KEY_STOP) {
       key &= ~(KEY_START | KEY_STOP);
       key |= KEY_CONFIG;
   } else {

@@ -38,6 +38,7 @@
 #include "ext_i2c_kbd.h"
 #include "../shared/ble/ble_protocol/ble_protocol_helper.h"
 #include "../shared/ble/ble_protocol/ble_ftms_treadmill.h"
+#include "../shared/ble/ble_protocol/ble_protocol_command.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -1372,9 +1373,22 @@ static int handle_combined_or_single_key_press(enum key singles, enum key combin
     if (*key_tick == 0) {
       *key_tick = HAL_GetTick();
     } else if (HAL_GetTick() - *key_tick >= 50) {
-      if (pressed != combined && *previous == KEY_NONE) {
+      if (pressed != KEY_PROGRAM && pressed != combined && *previous == KEY_NONE) {
         treadmill_key_press(&treadmill, pressed);
         *previous = pressed;
+        return 1;
+      } else if (pressed == KEY_PROGRAM && treadmill.scene == SCENE_IDLE){
+          if (HAL_GetTick() - *key_tick >= 2000) {
+            // treadmill_key_press(&treadmill, pressed);
+            memset(treadmill.hw.ble.hrm.device_name, 0, sizeof(treadmill.hw.ble.hrm.device_name));
+            uint8_t buffer[64];
+            uint8_t length;
+            build_hrm_scan_packet(buffer, &length, 64);
+            ble_post_message(buffer, "", 0);
+            treadmill_set_scene(&treadmill, SCENE_BLE_ALLOW_YES_NO);
+            *previous = pressed;
+          }
+        /* short-press is handled on key release (handled in handle_key_press) */
         return 1;
       } else {
         if (pressed == combined) {
@@ -1399,24 +1413,28 @@ static void handle_key_press(void) {
   static uint8_t slow_repeat_count = 0;
   pressed = get_key_pressed();
 
-  if (handle_combined_or_single_key_press((KEY_START | KEY_STOP), KEY_CONFIG, pressed, &previous, &key_tick)) {
+  if (handle_combined_or_single_key_press((KEY_START | KEY_STOP | KEY_PROGRAM), KEY_CONFIG, pressed, &previous, &key_tick)) {
     return;
   }
+  // if (handle_combined_or_single_key_press((KEY_START | KEY_STOP), KEY_CONFIG, pressed, &previous, &key_tick)) {
+  //   return;
+  // }
 
   if (handle_combined_or_single_key_press((KEY_SPEED_INCREMENT | KEY_SPEED_DECREMENT), KEY_LUB, pressed, &previous,
                                           &key_tick)) {
     return;
   }
-
-  
-
-
   
   if (pressed != KEY_NONE && pressed != previous) {
-    treadmill_key_press(&treadmill, pressed);
-    key_tick = 0;
-    slow_repeat_count = 0;
-    previous = pressed;
+    if (treadmill.scene == SCENE_IDLE && pressed == KEY_PROGRAM) {
+      previous = pressed;
+      // treadmill_key_press(&treadmill, pressed);
+    } else{
+      treadmill_key_press(&treadmill, pressed);
+      key_tick = 0;
+      slow_repeat_count = 0;
+      previous = pressed;
+    }
   } else if (pressed != KEY_NONE) {
     if (slow_repeat_count <= 10) {
       osDelay(25);
@@ -1429,6 +1447,12 @@ static void handle_key_press(void) {
     if (slow_repeat_count <= 10) return;
     treadmill_key_press(&treadmill, pressed);
   } else {
+    if (previous == KEY_PROGRAM && treadmill.scene == SCENE_IDLE && key_tick != 0) {
+      uint32_t duration = HAL_GetTick() - key_tick;
+      if (duration < 2000) {
+        treadmill_key_press(&treadmill, KEY_PROGRAM);
+      }
+    }
     key_tick = 0;
     previous = pressed;
     slow_repeat_count = 0;
@@ -1471,7 +1495,7 @@ void BeepTask(void const * argument)
   /* Infinite loop */
   for (;;) {
     if (xQueueReceive(beepEventQueueHandle, &beep, portMAX_DELAY) == pdPASS) {
-      // continue; //debug only
+      continue; //debug only
       
       HAL_TIM_PWM_Stop(&htim16, TIM_CHANNEL_1);
       switch (beep) {
