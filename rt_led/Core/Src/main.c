@@ -1416,9 +1416,6 @@ static void handle_key_press(void) {
   if (handle_combined_or_single_key_press((KEY_START | KEY_STOP | KEY_PROGRAM), KEY_CONFIG, pressed, &previous, &key_tick)) {
     return;
   }
-  // if (handle_combined_or_single_key_press((KEY_START | KEY_STOP), KEY_CONFIG, pressed, &previous, &key_tick)) {
-  //   return;
-  // }
 
   if (handle_combined_or_single_key_press((KEY_SPEED_INCREMENT | KEY_SPEED_DECREMENT), KEY_LUB, pressed, &previous,
                                           &key_tick)) {
@@ -1436,6 +1433,11 @@ static void handle_key_press(void) {
       previous = pressed;
     }
   } else if (pressed != KEY_NONE) {
+    /* Only allow auto-repeat during training for incline +/- keys */
+    if (treadmill.scene == SCENE_TRAINING && !(pressed & (KEY_INCLINE_INCREMENT | KEY_INCLINE_DECREMENT))) {
+      /* Don't perform continuous activation for other keys while held during training. */
+      return;
+    }
     if (slow_repeat_count <= 10) {
       osDelay(25);
     } else if (slow_repeat_count < 21) {
