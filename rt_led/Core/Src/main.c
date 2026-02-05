@@ -1078,12 +1078,17 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : INC_MINUS_Pin SP_MINUS_Pin SP_PLUS_Pin INC_PLUS_Pin
                            TS05_Pin TS00_Pin */
-  GPIO_InitStruct.Pin = INC_MINUS_Pin|SP_MINUS_Pin|SP_PLUS_Pin|INC_PLUS_Pin
-                          |TS05_Pin|TS00_Pin;
+  // GPIO_InitStruct.Pin = INC_MINUS_Pin|SP_MINUS_Pin|SP_PLUS_Pin|INC_PLUS_Pin
+  //                         |TS05_Pin|TS00_Pin;
+  // GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  // GPIO_InitStruct.Pull = GPIO_PULLUP;
+  // HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  GPIO_InitStruct.Pin = TS05_Pin|TS00_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
+  
   /*Configure GPIO pins : RESET_N_Pin TS09_Pin */
   GPIO_InitStruct.Pin = RESET_N_Pin|TS09_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -1549,6 +1554,20 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE END Callback 0 */
   if (htim->Instance == TIM1) {
     HAL_IncTick();
+
+    extern int enable_shortcut_keys_reading;
+    if (enable_shortcut_keys_reading == 1) {
+      // put external shortcut keys filter logic here.
+      // Call for each shortcut key (using GPIO definitions from main.h):
+      // SPD_INC: SP_MINUS_GPIO_Port/SP_MINUS_Pin -> KEY_EXT_KBD_SPEED_INC
+      update_handle_shortcut_keys(SP_MINUS_GPIO_Port, SP_MINUS_Pin, KEY_SHORTCUT_SPD_INC, KEY_EXT_KBD_SPEED_INC);
+      // SPD_DEC: SP_PLUS_GPIO_Port/SP_PLUS_Pin -> KEY_EXT_KBD_SPEED_DEC
+      update_handle_shortcut_keys(SP_PLUS_GPIO_Port, SP_PLUS_Pin, KEY_SHORTCUT_SPD_DEC, KEY_EXT_KBD_SPEED_DEC);
+      // START: INC_MINUS_GPIO_Port/INC_MINUS_Pin -> KEY_START
+      update_handle_shortcut_keys(INC_MINUS_GPIO_Port, INC_MINUS_Pin, KEY_SHORTCUT_INC_DEC, KEY_START);
+      // STOP: INC_PLUS_GPIO_Port/INC_PLUS_Pin -> KEY_STOP
+      update_handle_shortcut_keys(INC_PLUS_GPIO_Port, INC_PLUS_Pin, KEY_SHORTCUT_INC_INC, KEY_STOP);
+    }
   }
   /* USER CODE BEGIN Callback 1 */
   else if (htim->Instance == TIM6) {    
