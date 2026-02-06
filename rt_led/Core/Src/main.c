@@ -1078,13 +1078,8 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : INC_MINUS_Pin SP_MINUS_Pin SP_PLUS_Pin INC_PLUS_Pin
                            TS05_Pin TS00_Pin */
-  // GPIO_InitStruct.Pin = INC_MINUS_Pin|SP_MINUS_Pin|SP_PLUS_Pin|INC_PLUS_Pin
-  //                         |TS05_Pin|TS00_Pin;
-  // GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  // GPIO_InitStruct.Pull = GPIO_PULLUP;
-  // HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  GPIO_InitStruct.Pin = TS05_Pin|TS00_Pin;
+  GPIO_InitStruct.Pin = INC_MINUS_Pin|SP_MINUS_Pin|SP_PLUS_Pin|INC_PLUS_Pin
+                          |TS05_Pin|TS00_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -1227,6 +1222,8 @@ void StartDefaultTask(void const * argument)
   for (;;) {
     stats.mainloop.start = HAL_GetTick();
 
+//    enable_shortcut_keys_reading = 1;
+
     bpm_read_handler();
 
     treadmill_ble_process(&treadmill);
@@ -1259,90 +1256,213 @@ void StartDefaultTask(void const * argument)
  * @param argument: Not used
  * @retval None
  */
-static void handle_shortcut_keys(void) {
-  static uint32_t debounce = 0;
-#define SHORTCUT_ACKED (0xffffffff)
-  if (treadmill.scene != SCENE_TRAINING){
-    if (HAL_GPIO_ReadPin(INC_MINUS_GPIO_Port, INC_MINUS_Pin) == GPIO_PIN_RESET) {
-      if (debounce == 0) debounce = HAL_GetTick();
-      if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
-        debounce = SHORTCUT_ACKED;
 
-        // changed behavior - start
-        treadmill_key_press(&treadmill, KEY_START);
-        treadmill.hw.beep(BEEP_KEYPRESS_ACK);
-      }
+#define SP_SPD_INC_PIN SP_MINUS_Pin
+#define SP_SPD_DEC_PIN SP_PLUS_Pin
+#define SP_START_PIN INC_MINUS_Pin
+#define SP_STOP_PIN INC_PLUS_Pin
 
-    } else if (HAL_GPIO_ReadPin(INC_PLUS_GPIO_Port, INC_PLUS_Pin) == GPIO_PIN_RESET) {
-      if (debounce == 0) debounce = HAL_GetTick();
-      if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
-        debounce = SHORTCUT_ACKED;
-        // changed behavior - stop 
-        treadmill_key_press(&treadmill, KEY_STOP);
-        treadmill.hw.beep(BEEP_KEYPRESS_ACK);
-      }
-    }
-    else if (HAL_GPIO_ReadPin(SP_MINUS_GPIO_Port, SP_MINUS_Pin) == GPIO_PIN_RESET) {
-      if (debounce == 0) debounce = HAL_GetTick();
-      if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
-        debounce = SHORTCUT_ACKED;
-        treadmill.hw.beep(BEEP_KEYPRESS_ACK);
-        treadmill_key_press(&treadmill, KEY_EXT_KBD_SPEED_DEC);
-      }
+#define SP_SPD_INC_PORT SP_MINUS_GPIO_Port
+#define SP_SPD_DEC_PORT SP_PLUS_GPIO_Port
+#define SP_START_PORT INC_MINUS_GPIO_Port
+#define SP_STOP_PORT INC_PLUS_GPIO_Port
 
-    } else if (HAL_GPIO_ReadPin(SP_PLUS_GPIO_Port, SP_PLUS_Pin) == GPIO_PIN_RESET) {
-      if (debounce == 0) debounce = HAL_GetTick();
-      if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
-        debounce = SHORTCUT_ACKED;
-        treadmill.hw.beep(BEEP_KEYPRESS_ACK);
-        treadmill_key_press(&treadmill, KEY_EXT_KBD_SPEED_INC);
-      }
-    }
-    else{
-      debounce = 0;
-    }
-  }
-  else {
-    if (HAL_GPIO_ReadPin(SP_MINUS_GPIO_Port, SP_MINUS_Pin) == GPIO_PIN_RESET) {
-      if (debounce == 0) debounce = HAL_GetTick();
-      if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
-        debounce = SHORTCUT_ACKED;
-        treadmill.hw.beep(BEEP_KEYPRESS_ACK);
-        treadmill_key_press(&treadmill, KEY_EXT_KBD_SPEED_DEC);
-      }
+static void configure_shortcut_speed_keys_to_output_high(void) {
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+	GPIO_InitStruct.Pin = SP_SPD_INC_PIN;	
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-    } else if (HAL_GPIO_ReadPin(SP_PLUS_GPIO_Port, SP_PLUS_Pin) == GPIO_PIN_RESET) {
-      if (debounce == 0) debounce = HAL_GetTick();
-      if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
-        debounce = SHORTCUT_ACKED;
-        treadmill.hw.beep(BEEP_KEYPRESS_ACK);
-        treadmill_key_press(&treadmill, KEY_EXT_KBD_SPEED_INC);
-      }
+	GPIO_InitStruct.Pin = SP_SPD_DEC_PIN;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-    } else if (HAL_GPIO_ReadPin(INC_MINUS_GPIO_Port, INC_MINUS_Pin) == GPIO_PIN_RESET) {
-      if (debounce == 0) debounce = HAL_GetTick();
-      if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
-        debounce = SHORTCUT_ACKED;
+	// GPIO_InitStruct.Pin = SP_SPD_DEC_PIN|SP_START_PIN|SP_STOP_PIN;
+	// GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	// GPIO_InitStruct.Pull = GPIO_NOPULL;
+	// GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	// HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
-        treadmill.hw.beep(BEEP_KEYPRESS_ACK);
-        // changed behavior - start
-        treadmill_key_press(&treadmill, KEY_START);
-      }
-
-    } else if (HAL_GPIO_ReadPin(INC_PLUS_GPIO_Port, INC_PLUS_Pin) == GPIO_PIN_RESET) {
-      if (debounce == 0) debounce = HAL_GetTick();
-      if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
-        debounce = SHORTCUT_ACKED;
-        // changed behavior - stop 
-        treadmill.hw.beep(BEEP_KEYPRESS_ACK);
-        treadmill_key_press(&treadmill, KEY_STOP);
-      }
-
-    } else {
-      debounce = 0;
-    }
-  }
+	/* Output 3.3V (HIGH) to charge capacitors or stabilize external circuit */
+	HAL_GPIO_WritePin(SP_SPD_INC_PORT, SP_SPD_INC_PIN, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(SP_SPD_DEC_PORT, SP_SPD_DEC_PIN, GPIO_PIN_SET);
 }
+
+static void configure_shortcut_speed_keys_to_input(void) {
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+	GPIO_InitStruct.Pin = SP_SPD_INC_PIN;
+	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+	GPIO_InitStruct.Pull = GPIO_PULLUP;
+	/* Speed field not needed for input mode, but clearing it for clarity */
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin = SP_SPD_DEC_PIN;
+	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+	GPIO_InitStruct.Pull = GPIO_PULLUP;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+	// GPIO_InitStruct.Pin = SP_SPD_DEC_PIN|SP_START_PIN|SP_STOP_PIN;
+	// GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+	// GPIO_InitStruct.Pull = GPIO_PULLUP;
+	// GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	// HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
+}
+
+static void configure_shortcut_start_stop_keys_to_output(void) {
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+	GPIO_InitStruct.Pin = SP_START_PIN | SP_STOP_PIN;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+}
+
+struct key_shortcut_state {
+	uint32_t tick_since_high;
+	uint32_t tick_since_low;
+
+	uint32_t delta_high;
+	uint32_t delta_low;
+
+	uint8_t pressed;
+
+	uint32_t count;
+};
+
+struct key_shortcut_state keys_shortcut[KEY_SHORTCUT_COUNT] = {0};
+
+void update_handle_shortcut_keys(GPIO_TypeDef *port, uint16_t pin, enum key_shortcut shortcut_index, kbd_key_t action_key) {
+	GPIO_PinState state = HAL_GPIO_ReadPin(port, pin);
+	if (keys_shortcut[shortcut_index].tick_since_high == 0) {
+		if (state == GPIO_PIN_SET && HAL_GetTick() > 0) {
+			keys_shortcut[shortcut_index].tick_since_high = HAL_GetTick();
+			keys_shortcut[shortcut_index].delta_high = 0;
+		}
+	} 
+
+	if (keys_shortcut[shortcut_index].tick_since_low == 0) {
+		if (state == GPIO_PIN_RESET) {
+			keys_shortcut[shortcut_index].tick_since_low = HAL_GetTick();
+			keys_shortcut[shortcut_index].delta_low = 0;
+		}
+	}
+
+	if (keys_shortcut[shortcut_index].delta_high == 0) {
+		if (state == GPIO_PIN_RESET && keys_shortcut[shortcut_index].tick_since_high > 0) {
+			keys_shortcut[shortcut_index].delta_high = HAL_GetTick() - keys_shortcut[shortcut_index].tick_since_high;
+			keys_shortcut[shortcut_index].tick_since_high = 0;
+		}
+	}
+
+	if (state == GPIO_PIN_RESET) {								
+		keys_shortcut[shortcut_index].tick_since_high = 0;
+		keys_shortcut[shortcut_index].delta_low = HAL_GetTick() - keys_shortcut[shortcut_index].tick_since_low;		
+		if (keys_shortcut[shortcut_index].delta_high > 0 && keys_shortcut[shortcut_index].delta_high >= 50
+			&& keys_shortcut[shortcut_index].delta_low  > 0 && keys_shortcut[shortcut_index].delta_low >= 50) {
+			treadmill_key_press(pTreadmill, action_key);
+			keys_shortcut[shortcut_index].count++;
+			keys_shortcut[shortcut_index].delta_high = 0;
+			keys_shortcut[shortcut_index].delta_low  = 0;
+		}
+	} else {		
+		keys_shortcut[shortcut_index].tick_since_low = 0;
+		keys_shortcut[shortcut_index].delta_low = 0;
+	}
+} 
+
+int enable_shortcut_keys_reading = 0;
+void handle_shortcut_keys(void) {}
+
+// static void handle_shortcut_keys(void) {
+//   static uint32_t debounce = 0;
+// #define SHORTCUT_ACKED (0xffffffff)
+//   if (treadmill.scene != SCENE_TRAINING){
+//     if (HAL_GPIO_ReadPin(INC_MINUS_GPIO_Port, INC_MINUS_Pin) == GPIO_PIN_RESET) {
+//       if (debounce == 0) debounce = HAL_GetTick();
+//       if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
+//         debounce = SHORTCUT_ACKED;
+
+//         // changed behavior - start
+//         treadmill_key_press(&treadmill, KEY_START);
+//         treadmill.hw.beep(BEEP_KEYPRESS_ACK);
+//       }
+
+//     } else if (HAL_GPIO_ReadPin(INC_PLUS_GPIO_Port, INC_PLUS_Pin) == GPIO_PIN_RESET) {
+//       if (debounce == 0) debounce = HAL_GetTick();
+//       if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
+//         debounce = SHORTCUT_ACKED;
+//         // changed behavior - stop 
+//         treadmill_key_press(&treadmill, KEY_STOP);
+//         treadmill.hw.beep(BEEP_KEYPRESS_ACK);
+//       }
+//     }
+//     else if (HAL_GPIO_ReadPin(SP_MINUS_GPIO_Port, SP_MINUS_Pin) == GPIO_PIN_RESET) {
+//       if (debounce == 0) debounce = HAL_GetTick();
+//       if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
+//         debounce = SHORTCUT_ACKED;
+//         treadmill.hw.beep(BEEP_KEYPRESS_ACK);
+//         treadmill_key_press(&treadmill, KEY_EXT_KBD_SPEED_DEC);
+//       }
+
+//     } else if (HAL_GPIO_ReadPin(SP_PLUS_GPIO_Port, SP_PLUS_Pin) == GPIO_PIN_RESET) {
+//       if (debounce == 0) debounce = HAL_GetTick();
+//       if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
+//         debounce = SHORTCUT_ACKED;
+//         treadmill.hw.beep(BEEP_KEYPRESS_ACK);
+//         treadmill_key_press(&treadmill, KEY_EXT_KBD_SPEED_INC);
+//       }
+//     }
+//     else{
+//       debounce = 0;
+//     }
+//   }
+//   else {
+//     if (HAL_GPIO_ReadPin(SP_MINUS_GPIO_Port, SP_MINUS_Pin) == GPIO_PIN_RESET) {
+//       if (debounce == 0) debounce = HAL_GetTick();
+//       if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
+//         debounce = SHORTCUT_ACKED;
+//         treadmill.hw.beep(BEEP_KEYPRESS_ACK);
+//         treadmill_key_press(&treadmill, KEY_EXT_KBD_SPEED_DEC);
+//       }
+
+//     } else if (HAL_GPIO_ReadPin(SP_PLUS_GPIO_Port, SP_PLUS_Pin) == GPIO_PIN_RESET) {
+//       if (debounce == 0) debounce = HAL_GetTick();
+//       if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
+//         debounce = SHORTCUT_ACKED;
+//         treadmill.hw.beep(BEEP_KEYPRESS_ACK);
+//         treadmill_key_press(&treadmill, KEY_EXT_KBD_SPEED_INC);
+//       }
+
+//     } else if (HAL_GPIO_ReadPin(INC_MINUS_GPIO_Port, INC_MINUS_Pin) == GPIO_PIN_RESET) {
+//       if (debounce == 0) debounce = HAL_GetTick();
+//       if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
+//         debounce = SHORTCUT_ACKED;
+
+//         treadmill.hw.beep(BEEP_KEYPRESS_ACK);
+//         // changed behavior - start
+//         treadmill_key_press(&treadmill, KEY_START);
+//       }
+
+//     } else if (HAL_GPIO_ReadPin(INC_PLUS_GPIO_Port, INC_PLUS_Pin) == GPIO_PIN_RESET) {
+//       if (debounce == 0) debounce = HAL_GetTick();
+//       if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
+//         debounce = SHORTCUT_ACKED;
+//         // changed behavior - stop 
+//         treadmill.hw.beep(BEEP_KEYPRESS_ACK);
+//         treadmill_key_press(&treadmill, KEY_STOP);
+//       }
+
+//     } else {
+//       debounce = 0;
+//     }
+//   }
+// }
 
 static void handle_emergency(void) {
   static uint32_t debounce = 0;
@@ -1359,7 +1479,7 @@ static void handle_emergency(void) {
   }
 }
 
-static int handle_combined_or_single_key_press(enum key singles, enum key combined, enum key pressed,
+static inline int handle_combined_or_single_key_press(enum key singles, enum key combined, enum key pressed,
                                                enum key *previous, uint32_t *key_tick) {
   if (pressed & (singles | combined)) {
     if (*key_tick == 0) {
@@ -1385,7 +1505,7 @@ static int handle_combined_or_single_key_press(enum key singles, enum key combin
   return 0;
 }
 
-static void handle_key_press(void) {
+static inline void handle_key_press(void) {
   static enum key pressed = KEY_NONE;
   static enum key previous = KEY_NONE;
   static uint32_t key_tick = 0;
@@ -1432,7 +1552,8 @@ void KeyboardTask(void const * argument)
   /* Infinite loop */
   for (;;) {
     handle_emergency();
-    handle_shortcut_keys();
+    enable_shortcut_keys_reading = 1;
+    // handle_shortcut_keys();
     handle_key_press();
     ext_i2c_kbd_handler();    
     osDelay(1);  // 2 ms

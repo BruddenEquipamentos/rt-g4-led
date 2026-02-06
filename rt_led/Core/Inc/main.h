@@ -28,6 +28,7 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32g0xx_hal.h"
+#include "treadmill_key.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -36,7 +37,13 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
-
+enum key_shortcut {
+	KEY_SHORTCUT_SPD_DEC = 0,
+	KEY_SHORTCUT_SPD_INC = 1,
+	KEY_SHORTCUT_INC_DEC = 2,
+	KEY_SHORTCUT_INC_INC = 3,
+	KEY_SHORTCUT_COUNT = 4,
+};
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -54,6 +61,7 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
 void MX_I2C2_Init(void);
+void update_handle_shortcut_keys(GPIO_TypeDef *port, uint16_t pin, enum key_shortcut shortcut_index, kbd_key_t action_key);
 
 /* USER CODE BEGIN EFP */
 

@@ -168,6 +168,7 @@ void TIM1_BRK_UP_TRG_COM_IRQHandler(void)
   /* USER CODE END TIM1_BRK_UP_TRG_COM_IRQn 0 */
   HAL_TIM_IRQHandler(&htim1);
   /* USER CODE BEGIN TIM1_BRK_UP_TRG_COM_IRQn 1 */
+  // HAL_GPIO_WritePin(GPIOA, INC_MINUS_Pin, HAL_GPIO_ReadPin(GPIOA, SP_MINUS_Pin)); //Mirror speed dec to start/stop button for testing purposes.
 
   /* USER CODE END TIM1_BRK_UP_TRG_COM_IRQn 1 */
 }
