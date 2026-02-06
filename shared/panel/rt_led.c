@@ -78,6 +78,16 @@ void rt_led_ble_name_update(treadmill_t *treadmill) {
     return; // Modelo desconhecido, não faz nada
   }
   strncpy(treadmill->config.device_name, device_name_id, 15);
+
+  if (treadmill->config.device_name_id == 1){
+    strncpy(treadmill->config.nsu, "5000000597694",22);
+  }
+  if (treadmill->config.device_name_id == 2){
+    strncpy(treadmill->config.nsu, "5000000597692",22);
+  }
+  if (treadmill->config.device_name_id == 3){
+    strncpy(treadmill->config.nsu, "5000000597693",22);
+  }
 }
 
 void rt_led_load_model_params(treadmill_t *treadmill, rt_led_model_t model) {

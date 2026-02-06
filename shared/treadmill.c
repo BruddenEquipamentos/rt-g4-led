@@ -263,29 +263,29 @@ void treadmill_load_config(treadmill_t *treadmill) {
     rt_led_ble_name_update(treadmill);
   }
 
-  char ns[22];
-  if (nvm.NVM_ReadString(NVM_NSU_START_ADDRESS, (uint8_t *)ns, 22)) {
-    strncpy(treadmill->config.nsu, ns, 22);
-  }
+//  char ns[22];
+//  if (nvm.NVM_ReadString(NVM_NSU_START_ADDRESS, (uint8_t *)ns, 22)) {
+//    strncpy(treadmill->config.nsu, ns, 22);
+//  }
 
   // gambiarra extrema para Garça
-  if (treadmill->config.device_name == "ARIA LED 01"){
-    treadmill->config.nsu = "5000000597694";
-  }
-  else if (treadmill->config.device_name == "ARIA LED 02"){
-    treadmill->config.nsu = "5000000597692";
-  }
-  else if (treadmill->config.device_name == "ARIA LED 03"){
-    treadmill->config.nsu = "5000000597693";
-  }
+  // if (treadmill->config.device_name == "ARIA LED 01"){
+  //   strncpy(treadmill->config.nsu, "5000000597694",22);
+  // }
+  // if (treadmill->config.device_name == "ARIA LED 02"){
+  //   strncpy(treadmill->config.nsu, "5000000597692",22);
+  // }
+  // if (treadmill->config.device_name == "ARIA LED 03"){
+  //   strncpy(treadmill->config.nsu, "5000000597693",22);
+  // }
 
-  if (nvm.NVM_ReadString(NVM_NSP_START_ADDRESS, (uint8_t *)ns, 22)) {
-    strncpy(treadmill->config.nsp, ns, 22);
-  }
-
-  if (nvm.NVM_ReadString(NVM_NSI_START_ADDRESS, (uint8_t *)ns, 22)) {
-    strncpy(treadmill->config.nsi, ns, 22);
-  }
+//  if (nvm.NVM_ReadString(NVM_NSP_START_ADDRESS, (uint8_t *)ns, 22)) {
+//    strncpy(treadmill->config.nsp, ns, 22);
+//  }
+//
+//  if (nvm.NVM_ReadString(NVM_NSI_START_ADDRESS, (uint8_t *)ns, 22)) {
+//    strncpy(treadmill->config.nsi, ns, 22);
+//  }
 
   DPRINT("nsu:%s\n", treadmill->config.nsu);
   DPRINT("nsp:%s\n", treadmill->config.nsp);
