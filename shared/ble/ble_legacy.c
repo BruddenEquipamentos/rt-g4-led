@@ -29,10 +29,10 @@ int ble_legacy_commands_handler(char *ptr) {
       treadmill_save_nsi(pTreadmill, ptr, strlen(ptr));
     } else if (set_position_after(&ptr, "time=")) {
       char timestr[16];
-      uint32_t timestamp;
-      strcpy(timestr, ptr);
-      timestamp = strtoul(ptr, NULL, 16);
-      pTreadmill->hw.update_rtc(timestamp);
+      // uint32_t timestamp;
+      // strcpy(timestr, ptr);
+      // timestamp = strtoul(ptr, NULL, 16);
+      // pTreadmill->hw.update_rtc(timestamp);
     } else if (set_position_after(&ptr, "td=")) {
       uint32_t total_distance_in_meters;
       total_distance_in_meters = strtoul(ptr, NULL, 10);

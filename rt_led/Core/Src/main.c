@@ -1257,13 +1257,13 @@ void StartDefaultTask(void const * argument)
  * @retval None
  */
 
-#define SP_SPD_INC_PIN SP_MINUS_Pin
-#define SP_SPD_DEC_PIN SP_PLUS_Pin
+#define SP_SPD_INC_PIN SP_PLUS_Pin
+#define SP_SPD_DEC_PIN SP_MINUS_Pin
 #define SP_START_PIN INC_MINUS_Pin
 #define SP_STOP_PIN INC_PLUS_Pin
 
-#define SP_SPD_INC_PORT SP_MINUS_GPIO_Port
-#define SP_SPD_DEC_PORT SP_PLUS_GPIO_Port
+#define SP_SPD_INC_PORT SP_PLUS_GPIO_Port
+#define SP_SPD_DEC_PORT SP_MINUS_GPIO_Port
 #define SP_START_PORT INC_MINUS_GPIO_Port
 #define SP_STOP_PORT INC_PLUS_GPIO_Port
 
@@ -1333,6 +1333,8 @@ struct key_shortcut_state {
 	uint8_t pressed;
 
 	uint32_t count;
+
+	uint32_t last_press_time;  // Timestamp do último press (para throttling de 1 segundo)
 };
 
 struct key_shortcut_state keys_shortcut[KEY_SHORTCUT_COUNT] = {0};
@@ -1365,8 +1367,27 @@ void update_handle_shortcut_keys(GPIO_TypeDef *port, uint16_t pin, enum key_shor
 		keys_shortcut[shortcut_index].delta_low = HAL_GetTick() - keys_shortcut[shortcut_index].tick_since_low;		
 		if (keys_shortcut[shortcut_index].delta_high > 0 && keys_shortcut[shortcut_index].delta_high >= 50
 			&& keys_shortcut[shortcut_index].delta_low  > 0 && keys_shortcut[shortcut_index].delta_low >= 50) {
-			treadmill_key_press(pTreadmill, action_key);
-			keys_shortcut[shortcut_index].count++;
+			
+			// Throttle para KEY_EXT_KBD_SPEED_INC: apenas permite a cada 1 segundo
+			uint32_t current_time = HAL_GetTick();
+			int allow_press = 1;
+			
+			if (action_key == KEY_EXT_KBD_SPEED_INC) {
+				if (keys_shortcut[shortcut_index].last_press_time == 0) {
+					// Primeiro press, sempre permite
+					allow_press = 1;
+				} else if (current_time - keys_shortcut[shortcut_index].last_press_time < 1000) {
+					// Menos de 1 segundo desde o último press, não permite
+					allow_press = 0;
+				}
+			}
+			
+			if (allow_press) {
+				treadmill_key_press(pTreadmill, action_key);
+				keys_shortcut[shortcut_index].count++;
+				keys_shortcut[shortcut_index].last_press_time = current_time;
+			}
+			
 			keys_shortcut[shortcut_index].delta_high = 0;
 			keys_shortcut[shortcut_index].delta_low  = 0;
 		}
@@ -1681,9 +1702,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       // put external shortcut keys filter logic here.
       // Call for each shortcut key (using GPIO definitions from main.h):
       // SPD_INC: SP_MINUS_GPIO_Port/SP_MINUS_Pin -> KEY_EXT_KBD_SPEED_INC
-      update_handle_shortcut_keys(SP_MINUS_GPIO_Port, SP_MINUS_Pin, KEY_SHORTCUT_SPD_INC, KEY_EXT_KBD_SPEED_INC);
+      update_handle_shortcut_keys(SP_MINUS_GPIO_Port, SP_PLUS_Pin, KEY_SHORTCUT_SPD_INC, KEY_EXT_KBD_SPEED_INC);
       // SPD_DEC: SP_PLUS_GPIO_Port/SP_PLUS_Pin -> KEY_EXT_KBD_SPEED_DEC
-      update_handle_shortcut_keys(SP_PLUS_GPIO_Port, SP_PLUS_Pin, KEY_SHORTCUT_SPD_DEC, KEY_EXT_KBD_SPEED_DEC);
+      update_handle_shortcut_keys(SP_PLUS_GPIO_Port, SP_MINUS_Pin, KEY_SHORTCUT_SPD_DEC, KEY_EXT_KBD_SPEED_DEC);
       // START: INC_MINUS_GPIO_Port/INC_MINUS_Pin -> KEY_START
       update_handle_shortcut_keys(INC_MINUS_GPIO_Port, INC_MINUS_Pin, KEY_SHORTCUT_INC_DEC, KEY_START);
       // STOP: INC_PLUS_GPIO_Port/INC_PLUS_Pin -> KEY_STOP
