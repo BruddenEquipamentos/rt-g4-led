@@ -38,11 +38,30 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
       }
       break;
     case KEY_EXT_KBD_SPEED_INC: {
-        speed_changed = 1;
+      speed_changed = 1;
+      if (treadmill->program.id == PROGRAM_WALK_30MIN) {
+        if (treadmill->program.p_walk_30min.target_speed + treadmill->config.speed.step <=
+            treadmill->config.speed.max) {
+          treadmill->program.p_walk_30min.target_speed += treadmill->config.speed.step;
+        }
+      }
+      if (treadmill->program.id == PROGRAM_WALK_08MIN) { //////////// new program
+        if (treadmill->program.p_walk_08min.target_speed + treadmill->config.speed.step <=
+            treadmill->config.speed.max) {
+          treadmill->program.p_walk_08min.target_speed += treadmill->config.speed.step;
+        }
+      }
+      else {
         int speed = (int)treadmill->training.speed + 50;
         if (speed > treadmill->config.speed.max)
             speed = treadmill->config.speed.max;
-        treadmill_set_speed(treadmill, (uint16_t)speed);        						
+        treadmill_set_speed(treadmill, (uint16_t)speed);  
+      }
+        // speed_changed = 1;
+        // int speed = (int)treadmill->training.speed + 50;
+        // if (speed > treadmill->config.speed.max)
+        //     speed = treadmill->config.speed.max;
+        // treadmill_set_speed(treadmill, (uint16_t)speed);        						
         break;
     }    
     case KEY_SPEED_DECREMENT:
@@ -65,11 +84,30 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
       break;
 
     case KEY_EXT_KBD_SPEED_DEC: {
-        speed_changed = 1;
+      speed_changed = 1;
+      if (treadmill->program.id == PROGRAM_WALK_30MIN) {
+        if ((int)treadmill->program.p_walk_30min.target_speed - treadmill->config.speed.step >=
+            treadmill->config.speed.min) {
+          treadmill->program.p_walk_30min.target_speed -= treadmill->config.speed.step;
+        }
+      } 
+      if (treadmill->program.id == PROGRAM_WALK_08MIN) { /////////// new program
+        if ((int)treadmill->program.p_walk_08min.target_speed - treadmill->config.speed.step >=
+            treadmill->config.speed.min) {
+          treadmill->program.p_walk_08min.target_speed -= treadmill->config.speed.step;
+        }
+      }      
+      else {
         int speed = (int)treadmill->training.speed - 100;
         if (speed < treadmill->config.speed.min)
             speed = treadmill->config.speed.min;
-        treadmill_set_speed(treadmill, (uint16_t)speed);						
+        treadmill_set_speed(treadmill, (uint16_t)speed);	
+      }
+        // speed_changed = 1;
+        // int speed = (int)treadmill->training.speed - 100;
+        // if (speed < treadmill->config.speed.min)
+        //     speed = treadmill->config.speed.min;
+        // treadmill_set_speed(treadmill, (uint16_t)speed);						
         break;
     }
     case KEY_INCLINE_INCREMENT:
