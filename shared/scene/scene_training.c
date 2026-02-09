@@ -40,15 +40,15 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
     case KEY_EXT_KBD_SPEED_INC: {
       speed_changed = 1;
       if (treadmill->program.id == PROGRAM_WALK_30MIN) {
-        if (treadmill->program.p_walk_30min.target_speed + treadmill->config.speed.step <=
+        if (treadmill->program.p_walk_30min.target_speed + 50 <=
             treadmill->config.speed.max) {
-          treadmill->program.p_walk_30min.target_speed += treadmill->config.speed.step;
+          treadmill->program.p_walk_30min.target_speed += 50;
         }
       }
       if (treadmill->program.id == PROGRAM_WALK_08MIN) { //////////// new program
-        if (treadmill->program.p_walk_08min.target_speed + treadmill->config.speed.step <=
+        if (treadmill->program.p_walk_08min.target_speed + 50 <=
             treadmill->config.speed.max) {
-          treadmill->program.p_walk_08min.target_speed += treadmill->config.speed.step;
+          treadmill->program.p_walk_08min.target_speed += 50;
         }
       }
       else {
@@ -86,15 +86,15 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
     case KEY_EXT_KBD_SPEED_DEC: {
       speed_changed = 1;
       if (treadmill->program.id == PROGRAM_WALK_30MIN) {
-        if ((int)treadmill->program.p_walk_30min.target_speed - treadmill->config.speed.step >=
+        if ((int)treadmill->program.p_walk_30min.target_speed - 100 >=
             treadmill->config.speed.min) {
-          treadmill->program.p_walk_30min.target_speed -= treadmill->config.speed.step;
+          treadmill->program.p_walk_30min.target_speed -= 100;
         }
       } 
       if (treadmill->program.id == PROGRAM_WALK_08MIN) { /////////// new program
-        if ((int)treadmill->program.p_walk_08min.target_speed - treadmill->config.speed.step >=
+        if ((int)treadmill->program.p_walk_08min.target_speed - 100 >=
             treadmill->config.speed.min) {
-          treadmill->program.p_walk_08min.target_speed -= treadmill->config.speed.step;
+          treadmill->program.p_walk_08min.target_speed -= 100;
         }
       }      
       else {
