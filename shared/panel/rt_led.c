@@ -141,19 +141,3 @@ void rt_led_load_model_params(treadmill_t *treadmill, rt_led_model_t model) {
     default:;
   }
 }
-
-void rt_led_save_errors(treadmill_t *treadmill) {
-
-  // if (treadmill->previous_config.model != treadmill->config.model) {
-  //   nvm.NVM_WriteVariable8bits(NVM_U8_MODEL, treadmill->config.model);
-  // }
-  // if (treadmill->previous_config.weight != treadmill->config.weight) {
-  //   nvm.NVM_WriteVariable8bits(NVM_U8_WEIGHT, treadmill->config.weight);
-  // }
-  // if (treadmill->previous_config.language != treadmill->config.language) {
-  //   nvm.NVM_WriteVariable8bits(NVM_U8_LANG, treadmill->config.language);
-  // }
-  // if (treadmill->previous_config.unit != treadmill->config.unit) {
-  //   nvm.NVM_WriteVariable8bits(NVM_U8_UNIT, treadmill->config.unit);
-  // }
-}

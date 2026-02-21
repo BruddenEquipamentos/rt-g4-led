@@ -376,9 +376,35 @@ const char *get_string(treadmill_t *treadmill, int str_id) {
   return str;
 }
 
-
-
 void treadmill_ble_restart(treadmill_t *treadmill) { 
   treadmill->hw.ble.state = BLE_STATE_INIT; 
   treadmill->hw.ble.init_state = BLE_INIT_STATE_INIT;
+}
+
+void treadmill_save_errors(treadmill_t *treadmill) {
+  nvm.NVM_WriteVariable16bits(NVM_U16_INVERTER_ERROR_0_COUNT, treadmill->hw.inverter.error[0].count);
+  nvm.NVM_WriteVariable16bits(NVM_U16_INVERTER_ERROR_1_COUNT, treadmill->hw.inverter.error[1].count);
+  nvm.NVM_WriteVariable16bits(NVM_U16_INVERTER_ERROR_2_COUNT, treadmill->hw.inverter.error[2].count);
+  nvm.NVM_WriteVariable16bits(NVM_U16_INVERTER_ERROR_3_COUNT, treadmill->hw.inverter.error[3].count);
+  nvm.NVM_WriteVariable16bits(NVM_U16_INVERTER_ERROR_4_COUNT, treadmill->hw.inverter.error[4].count);
+  nvm.NVM_WriteVariable16bits(NVM_U16_INVERTER_ERROR_5_COUNT, treadmill->hw.inverter.error[5].count);
+  nvm.NVM_WriteVariable16bits(NVM_U16_INVERTER_ERROR_6_COUNT, treadmill->hw.inverter.error[6].count);
+  nvm.NVM_WriteVariable16bits(NVM_U16_INVERTER_ERROR_7_COUNT, treadmill->hw.inverter.error[7].count);
+  nvm.NVM_WriteVariable8bits(NVM_U8_INVERTER_LAST_ERROR_0, treadmill->hw.inverter.last_errors[0]);
+  nvm.NVM_WriteVariable8bits(NVM_U8_INVERTER_LAST_ERROR_1, treadmill->hw.inverter.last_errors[1]);
+  nvm.NVM_WriteVariable8bits(NVM_U8_INVERTER_LAST_ERROR_2, treadmill->hw.inverter.last_errors[2]);
+}
+
+void treadmill_load_errors(treadmill_t *treadmill) {
+  treadmill->hw.inverter.error[0].count = nvm.NVM_ReadVariable16bits(NVM_U16_INVERTER_ERROR_0_COUNT);
+  treadmill->hw.inverter.error[1].count = nvm.NVM_ReadVariable16bits(NVM_U16_INVERTER_ERROR_1_COUNT);
+  treadmill->hw.inverter.error[2].count = nvm.NVM_ReadVariable16bits(NVM_U16_INVERTER_ERROR_2_COUNT);
+  treadmill->hw.inverter.error[3].count = nvm.NVM_ReadVariable16bits(NVM_U16_INVERTER_ERROR_3_COUNT);
+  treadmill->hw.inverter.error[4].count = nvm.NVM_ReadVariable16bits(NVM_U16_INVERTER_ERROR_4_COUNT);
+  treadmill->hw.inverter.error[5].count = nvm.NVM_ReadVariable16bits(NVM_U16_INVERTER_ERROR_5_COUNT);
+  treadmill->hw.inverter.error[6].count = nvm.NVM_ReadVariable16bits(NVM_U16_INVERTER_ERROR_6_COUNT);
+  treadmill->hw.inverter.error[7].count = nvm.NVM_ReadVariable16bits(NVM_U16_INVERTER_ERROR_7_COUNT);
+  treadmill->hw.inverter.last_errors[0] = nvm.NVM_ReadVariable8bits(NVM_U8_INVERTER_LAST_ERROR_0);
+  treadmill->hw.inverter.last_errors[1] = nvm.NVM_ReadVariable8bits(NVM_U8_INVERTER_LAST_ERROR_1);
+  treadmill->hw.inverter.last_errors[2] = nvm.NVM_ReadVariable8bits(NVM_U8_INVERTER_LAST_ERROR_2);
 }

@@ -195,7 +195,7 @@ uint8_t config_error_index = 0;
 static void change_config_errors(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_SPEED_INCREMENT:{
-      if (config_error_index + 1 < 8) {
+      if (config_error_index + 1 < 11) {
         config_error_index++;
       }
       else{

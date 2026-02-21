@@ -28,17 +28,16 @@
 #define NVM_U8_INVERTER_LAST_ERROR_0 0x000C
 #define NVM_U8_INVERTER_LAST_ERROR_1 0x000D
 #define NVM_U8_INVERTER_LAST_ERROR_2 0x000E
-#define NVM_U8_INVERTER_LAST_ERROR_INDEX 0x000F
 
 // Contadores individuais dos 8 tipos de erro
-#define NVM_U16_INVERTER_ERROR_COUNT_0 0x0010  // Sobretensão
-#define NVM_U16_INVERTER_ERROR_COUNT_1 0x0011  // Subtensão
-#define NVM_U16_INVERTER_ERROR_COUNT_2 0x0012  // Subtensão DC
-#define NVM_U16_INVERTER_ERROR_COUNT_3 0x0013  // Sobretemperatura
-#define NVM_U16_INVERTER_ERROR_COUNT_4 0x0014  // Sobrecorrente
-#define NVM_U16_INVERTER_ERROR_COUNT_5 0x0015  // Falha de comunicação
-#define NVM_U16_INVERTER_ERROR_COUNT_6 0x0016  // Falha motor de inclinação
-#define NVM_U16_INVERTER_ERROR_COUNT_7 0x0017  // MPHV
+#define NVM_U16_INVERTER_ERROR_0_COUNT 0x0010  // Sobretensão
+#define NVM_U16_INVERTER_ERROR_1_COUNT 0x0011  // Subtensão
+#define NVM_U16_INVERTER_ERROR_2_COUNT 0x0012  // Subtensão DC
+#define NVM_U16_INVERTER_ERROR_3_COUNT 0x0013  // Sobretemperatura
+#define NVM_U16_INVERTER_ERROR_4_COUNT 0x0014  // Sobrecorrente
+#define NVM_U16_INVERTER_ERROR_5_COUNT 0x0015  // Falha de comunicação
+#define NVM_U16_INVERTER_ERROR_6_COUNT 0x0016  // Falha motor de inclinação
+#define NVM_U16_INVERTER_ERROR_7_COUNT 0x0017  // MPHV
 
 // Exemplo de NSU "818790500000007067703"
 #define NVM_NS_MAX_LENGTH (22)
@@ -320,6 +319,10 @@ void treadmill_ble_restart(treadmill_t *treadmill);
 
 uint32_t treadmill_current_average_speed(treadmill_t* treadmill);
 
-const char *get_string(treadmill_t* treadmill, int id); /////////
+const char *get_string(treadmill_t* treadmill, int id);
+
+void treadmill_save_errors(treadmill_t *treadmill);
+
+void treadmill_load_errors(treadmill_t *treadmill);
 
 #endif

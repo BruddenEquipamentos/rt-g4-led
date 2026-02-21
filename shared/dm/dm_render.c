@@ -9,7 +9,7 @@
 #include "../sd/sd_render.h"
 
 #include "treadmill_programs.h"
-#include "treadmill_programs_update.h" /////////////////
+#include "treadmill_programs_update.h"
 
 #include "lang.h" //Language options
 
@@ -96,19 +96,6 @@ static int dm_get_frame_from_speed(const uint16_t speed) {
   else
     return frames[5];
 }
-
-// static void dm_render_time(treadmill_t *treadmill) {
-//   int height = dm_get_height_for_speed(treadmill->training.speed);
-
-//   for (int i = 0; i < 16; i++) {
-//     if (i == treadmill->aux.average_history_index) {
-//       dm_render_column_with_height(i, height, treadmill->get_time_ms(), 800);
-//     } else {
-//       int h = dm_get_height_for_speed(treadmill->aux.average_history[i].average_speed);
-//       dm_render_column_with_height(i, h, 0, 0);
-//     }
-//   }
-// }
 
 static void dm_render_default(treadmill_t *treadmill) {
   int height = dm_get_height_for_speed(treadmill->training.speed);
@@ -330,7 +317,7 @@ void dm_render(treadmill_t *treadmill) {
       dm_render_line(0);
       break;
     }
-    case SCENE_IDLE: { /////// new message
+    case SCENE_IDLE: {
       if (treadmill->config.modbus) {
         dm_render_mb_param_value(treadmill);
       } else {
@@ -340,7 +327,6 @@ void dm_render(treadmill_t *treadmill) {
             if (treadmill->get_time_ms() - treadmill->hw.ble.gk.connected_at <= 4000) {
               dm_render_text("NFC", 14);
             } else {
-              // dm_render_text_animated("APERTE START OU ESCOLHA UM PROGRAMA", 100, treadmill->get_time_ms());             
               dm_render_text_animated(get_string(treadmill, STR_PRESS_START), 100, treadmill->get_time_ms());
             }
           } else {
@@ -353,7 +339,6 @@ void dm_render(treadmill_t *treadmill) {
             if (treadmill->get_time_ms() - treadmill->hw.ble.sh.connected_at <= 4000) {
               dm_render_text("NFC", 14);
             } else {
-              // dm_render_text_animated("APERTE START OU ESCOLHA UM PROGRAMA", 100, treadmill->get_time_ms());
               dm_render_text_animated(get_string(treadmill, STR_PRESS_START), 100, treadmill->get_time_ms());
             }
           } else {
@@ -377,7 +362,6 @@ void dm_render(treadmill_t *treadmill) {
         dm_render_text_animated(treadmill->hw.ble.hrm.device_name, 100, treadmill->get_time_ms());
       }
       else{
-        // treadmill_set_dm_message(treadmill, "  BLE", 3000, 1000);
         treadmill_set_dm_message(treadmill, " >LE", 1000, 1000);
       }
       break;
@@ -389,7 +373,7 @@ void dm_render(treadmill_t *treadmill) {
       } else {
         dm_clear_buffer();
         
-        // Lógica de exibição do NFC
+        // Exibição do NFC
         if (treadmill->hw.ble.gk.connected){
           if (treadmill->hw.ble.ftms.subscribed == 1) {
             // Mostra NFC fixo por 1 segundo após subscrição
@@ -399,7 +383,7 @@ void dm_render(treadmill_t *treadmill) {
             }
           } else {
             treadmill_set_dm_message(treadmill, "  NFC", 1000, 1000);
-            return; // Retorna aqui para não mostrar o contexto anterior
+            return; 
           }
         }
         else if (treadmill->hw.ble.sh.connected){
@@ -411,7 +395,7 @@ void dm_render(treadmill_t *treadmill) {
             }
           } else {
             treadmill_set_dm_message(treadmill, "  NFC", 1000, 1000);
-            return; // Retorna aqui para não mostrar o contexto anterior
+            return;
           }
         }
 
@@ -451,7 +435,6 @@ void dm_render(treadmill_t *treadmill) {
           case PROGRAM_200K_CALORIES: /// percentage of calorie target completion
             int meta_50per = treadmill->program.p_200k_calories.kcal / 2;
             if ((treadmill->training.kcal / 1000) >= (meta_50per) && (treadmill->training.kcal / 1000) <= (meta_50per + 2)) {
-              // dm_render_text_animated("50%% DA META", 70, treadmill->get_time_ms());
               dm_render_text_animated(get_string(treadmill, STR_50_PERCENT), 70, treadmill->get_time_ms());
             }
             else {
@@ -460,7 +443,6 @@ void dm_render(treadmill_t *treadmill) {
             break;
           case PROGRAM_CALORIES: {
             if ((treadmill->training.kcal / 1000) >= (treadmill->program.p_calories.kcal / 2) && (treadmill->training.kcal / 1000) <= ((treadmill->program.p_calories.kcal / 2) + 2)) {
-              // dm_render_text_animated("50%% DA META", 70, treadmill->get_time_ms());
               dm_render_text_animated(get_string(treadmill, STR_50_PERCENT), 70, treadmill->get_time_ms());
             }
             else {
@@ -502,20 +484,14 @@ void dm_render(treadmill_t *treadmill) {
     }
     case SCENE_EMERGENCY: {
       treadmill_clear_dm_message(treadmill);
-      // dm_render_text_animated("EMERGENCIA", 70, treadmill->get_time_ms());
       dm_render_text_animated(get_string(treadmill, STR_EMERGENCY), 70, treadmill->get_time_ms());
       break;
     }
     case SCENE_PAUSED: {
       treadmill_clear_dm_message(treadmill);
-      // dm_render_text_animated("PAUSA * APERTE STOP PARA ENCERRAR", 70, treadmill->get_time_ms());
       dm_render_text_animated(get_string(treadmill, STR_PAUSE_STOP), 70, treadmill->get_time_ms());
       break;
     }
-    // case SCENE_LUB: {
-    //   dm_render_text("LUB", 13);
-    //   break;
-    // }
     case SCENE_CONFIG: {
       switch (treadmill->config.option) {
         case CONFIG_OPTION_MODEL: {
@@ -571,7 +547,12 @@ void dm_render(treadmill_t *treadmill) {
           break;
         }  // TEST
         case CONFIG_OPTION_ERRORS: {
-          snprintf(error_code, 16, "E*%X", error_codes[config_error_index]);
+          if (config_error_index < 8) {
+            snprintf(error_code, 16, "E*%X", error_codes[config_error_index]);
+          }
+          else {
+            snprintf(error_code, 16, "L*%X", treadmill->hw.inverter.last_errors[config_error_index-8]);
+          }
           dm_render_text(error_code, 16);
           break;
         }  // ERR
@@ -586,49 +567,39 @@ void dm_render(treadmill_t *treadmill) {
     case SCENE_PROGRAM: {
         switch(treadmill->program.id){
           case PROGRAM_TIME:{
-            // dm_render_text_animated("P1 * TEMPO", 100, treadmill->get_time_ms());
             dm_render_text_animated(get_string(treadmill, STR_P1_TEMPO), 100, treadmill->get_time_ms());
             break;
           }
           case PROGRAM_DISTANCE:{
             dm_clear_buffer();
-            // dm_render_text_animated("P2 * DIST", 100, treadmill->get_time_ms());
             dm_render_text_animated(get_string(treadmill, STR_P2_DIST), 100, treadmill->get_time_ms());
             break;
           }
           case PROGRAM_CALORIES:{
             dm_clear_buffer();
-            // dm_render_text_animated("P3 * CAL", 100, treadmill->get_time_ms());
             dm_render_text_animated(get_string(treadmill, STR_P3_CAL), 100, treadmill->get_time_ms());
             break;
           }
           case PROGRAM_HIIT:{
             treadmill->scene_tick = treadmill->get_time_ms();
             if ((treadmill->get_time_ms() - treadmill->scene_tick <= 2 * 1000) && (render_finished == 0)) {
-              // render_finished = dm_render_text_animated("P4 * INT", 100, treadmill->get_time_ms());
               render_finished = dm_render_text_animated(get_string(treadmill, STR_P4_INT), 100, treadmill->get_time_ms());
-              // treadmill->scene_tick = treadmill->get_time_ms();
             }
             else{
               switch (treadmill->program.param_index) {
                 case 0:
-                  // dm_render_text("T1", 11);
                   dm_render_text(get_string(treadmill, STR_T1), 11);
                   break;
                 case 1:
-                  // dm_render_text("V1", 12);
                   dm_render_text(get_string(treadmill, STR_V1), 12);
                   break;
                 case 2:
-                  // dm_render_text("T2", 11);
                   dm_render_text(get_string(treadmill, STR_T2), 11);
                   break;
                 case 3:
-                  // dm_render_text("V2", 13);
                   dm_render_text(get_string(treadmill, STR_V2), 13);
                   break;
                 case 4:
-                  // dm_render_text_animated("SERIES", 100, treadmill->get_time_ms());
                   dm_render_text_animated(get_string(treadmill, STR_SERIES), 100, treadmill->get_time_ms());
                   break;
                 default:;
@@ -637,14 +608,12 @@ void dm_render(treadmill_t *treadmill) {
             break;
           }
           case PROGRAM_WALK_30MIN:{
-            // dm_render_text_animated("P5 * 30 MIN", 100, treadmill->get_time_ms());
             dm_render_text_animated(get_string(treadmill, STR_P5_30MIN), 100, treadmill->get_time_ms());
             break;
           }
           case PROGRAM_FAT_BURN:{
             treadmill->scene_tick = treadmill->get_time_ms();
             if ((treadmill->get_time_ms() - treadmill->scene_tick <= 2 * 1000) && (render_finished == 0)) {
-              // render_finished = dm_render_text_animated("P6 * MOD", 100, treadmill->get_time_ms());
               render_finished = dm_render_text_animated(get_string(treadmill, STR_P6_MOD), 100, treadmill->get_time_ms());
             }
             else{
@@ -653,19 +622,16 @@ void dm_render(treadmill_t *treadmill) {
                   dm_render_text_animated(get_string(treadmill, STR_TEMPO), 100, treadmill->get_time_ms());
                   break;
                 case 1:
-                  // dm_render_text_animated("IDADE", 100, treadmill->get_time_ms());
                   dm_render_text_animated(get_string(treadmill, STR_IDADE), 100, treadmill->get_time_ms());
                   break;  
                 default:;
               }
             }
-            // dm_render_text_animated("P6 * MOD", 100, treadmill->get_time_ms());
             break;
           }
           case PROGRAM_SUPER_CARDIO:{
             treadmill->scene_tick = treadmill->get_time_ms();
             if ((treadmill->get_time_ms() - treadmill->scene_tick <= 2 * 1000) && (render_finished == 0)) {
-              // render_finished = dm_render_text_animated("P7 * VIG", 100, treadmill->get_time_ms());
               render_finished = dm_render_text_animated(get_string(treadmill, STR_P7_VIG), 100, treadmill->get_time_ms());
             }
             else{
@@ -674,22 +640,18 @@ void dm_render(treadmill_t *treadmill) {
                   dm_render_text_animated(get_string(treadmill, STR_TEMPO), 100, treadmill->get_time_ms());
                   break;
                 case 1:
-                  // dm_render_text_animated("IDADE", 100, treadmill->get_time_ms());
                   dm_render_text_animated(get_string(treadmill, STR_IDADE), 100, treadmill->get_time_ms());
                   break;  
                 default:;
               }
             }
-            // dm_render_text_animated("P7 * VIG", 100, treadmill->get_time_ms());
             break;
           }
           case PROGRAM_WALK_08MIN:{
-            // dm_render_text_animated("P8 * 8 MIN", 100, treadmill->get_time_ms());
             dm_render_text_animated(get_string(treadmill, STR_P8_8MIN), 100, treadmill->get_time_ms());
             break;
           }
           case PROGRAM_200K_CALORIES:{
-            // dm_render_text_animated("P9 * 200 CAL", 100, treadmill->get_time_ms());
             dm_render_text_animated(get_string(treadmill, STR_P9_200CAL), 100, treadmill->get_time_ms());
             break;
           }
@@ -703,28 +665,22 @@ void dm_render(treadmill_t *treadmill) {
       treadmill_clear_dm_message(treadmill);
       if (treadmill->program.id == PROGRAM_NONE || (completed_goal == 0)){
         if (report_state == 0) {
-          // dm_render_text("MAX", 16);
           dm_render_text(get_string(treadmill, STR_MAX), 16);
         }       
         else if (report_state == 1) {
-          // dm_render_text("MED", 14);
           dm_render_text(get_string(treadmill, STR_MED), 14);
         }
       }
       else if (completed_goal == 1) {
-        // report_goal = dm_render_text_animated("META CONCLUIDA", 100, treadmill->get_time_ms());
         uint32_t tick_message = treadmill->get_time_ms();
         if ((treadmill->get_time_ms() - tick_message <= 2 * 1000) && (report_goal == 0)) {
-          // report_goal = dm_render_text_animated("META CONCLUIDA", 100, treadmill->get_time_ms());
           report_goal = dm_render_text_animated(get_string(treadmill, STR_META_CONCLUIDA), 100, treadmill->get_time_ms());
         }
         else {
           if (report_state == 0) {
-            // dm_render_text("MAX", 16);
             dm_render_text(get_string(treadmill, STR_MAX), 16);
           }
           else if (report_state == 1) {
-            // dm_render_text("MED", 16);
             dm_render_text(get_string(treadmill, STR_MED), 14);
           }
         }
