@@ -31,12 +31,12 @@ enum {
     STR_MED,
     STR_META_CONCLUIDA,
     STR_HRM,
+    STR_ERR,
+    STR_WHEEL,
     STR_TOTALS
 };
 
 extern const char *strings[RT_LED_CONFIG_LNG_TOTALS][STR_TOTALS];
 extern rt_led_config_language_params_t language;
-
-// const char *get_string(int id);
 
 #endif // LANG_H

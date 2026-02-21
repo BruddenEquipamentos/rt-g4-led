@@ -24,6 +24,22 @@
 #define NVM_U8_UNIT 0x000A //Lucas 14/04 unit
 #define NVM_U8_NAME 0x000B //Lucas 22/10 ble name id
 
+// Últimos 3 erros
+#define NVM_U8_INVERTER_LAST_ERROR_0 0x000C
+#define NVM_U8_INVERTER_LAST_ERROR_1 0x000D
+#define NVM_U8_INVERTER_LAST_ERROR_2 0x000E
+#define NVM_U8_INVERTER_LAST_ERROR_INDEX 0x000F
+
+// Contadores individuais dos 8 tipos de erro
+#define NVM_U16_INVERTER_ERROR_COUNT_0 0x0010  // Sobretensão
+#define NVM_U16_INVERTER_ERROR_COUNT_1 0x0011  // Subtensão
+#define NVM_U16_INVERTER_ERROR_COUNT_2 0x0012  // Subtensão DC
+#define NVM_U16_INVERTER_ERROR_COUNT_3 0x0013  // Sobretemperatura
+#define NVM_U16_INVERTER_ERROR_COUNT_4 0x0014  // Sobrecorrente
+#define NVM_U16_INVERTER_ERROR_COUNT_5 0x0015  // Falha de comunicação
+#define NVM_U16_INVERTER_ERROR_COUNT_6 0x0016  // Falha motor de inclinação
+#define NVM_U16_INVERTER_ERROR_COUNT_7 0x0017  // MPHV
+
 // Exemplo de NSU "818790500000007067703"
 #define NVM_NS_MAX_LENGTH (22)
 #define NVM_NSU_START_ADDRESS (100)
@@ -38,6 +54,25 @@
 #define DEFAULT_LUB_DISTANCE_PARAM (0)
 #define DEFAULT_AGE (30)
 #define LUB_NOTIFICATION_DISTANCE_REMAINING_KM (100)
+
+// Códigos de erro do inversor
+typedef enum inverter_error_code {
+	INVERTER_ERROR_NONE = 0x00,
+	INVERTER_ERROR_OVERVOLTAGE = 0x37,        // Sobretensão
+	INVERTER_ERROR_UNDERVOLTAGE = 0x34,       // Subtensão
+	INVERTER_ERROR_DC_UNDERVOLTAGE = 0x43,    // Subtensão no barramento DC
+	INVERTER_ERROR_OVERTEMPERATURE = 0x3A,    // Sobretemperatura
+	INVERTER_ERROR_OVERCURRENT = 0x3D,        // Sobrecorrente
+	INVERTER_ERROR_COMMUNICATION = 0x55,      // Falha na comunicação
+	INVERTER_ERROR_INCLINE_MOTOR = 0x52,      // Falha no motor de inclinação
+	INVERTER_ERROR_MPHV = 0x49                // MPHV
+} inverter_error_code_t;
+
+typedef struct {
+    inverter_error_code_t code;
+    uint16_t count;
+	  uint32_t error_time_ms;
+} inverter_error_t;
 
 typedef enum inverter_comm_type {
   MOTOR_COMMUNICATION_TYPE_FREQ = 0,
@@ -221,6 +256,9 @@ typedef struct treadmill {
       int (*change_frequency)(uint16_t period);
       inverter_comm_type_t comm_type;
       uart_protocol_state_t protocol;
+			inverter_error_code_t error_code;
+			inverter_error_t error[8];
+    	inverter_error_code_t last_errors[3];
     } inverter;
 
     struct {

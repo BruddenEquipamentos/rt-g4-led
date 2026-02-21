@@ -38,6 +38,7 @@
 #include "ext_i2c_kbd.h"
 #include "../shared/ble/ble_protocol/ble_protocol_helper.h"
 #include "../shared/ble/ble_protocol/ble_ftms_treadmill.h"
+#include "lang.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -1205,7 +1206,7 @@ static inline void bpm_read_handler(void) {
         ICCapturedWheelLastTick = HAL_GetTick();
       else if (HAL_GetTick() - ICCapturedWheelLastTick >= 5000) {
        treadmill_stop_procedure(&treadmill);
-       treadmill_set_dm_message(&treadmill, "ERRO RODA", 3000, 0);
+       treadmill_set_dm_message(&treadmill, get_string(&treadmill, STR_WHEEL), 3000, 0);
        ICCapturedWheelLastTick = 0;
       }
     } else {

@@ -190,6 +190,23 @@ static void change_config_test(treadmill_t *treadmill, const kbd_key_t key) {
   }
 }
 
+uint8_t config_error_index = 0;
+
+static void change_config_errors(treadmill_t *treadmill, const kbd_key_t key) {
+  switch (key) {
+    case KEY_SPEED_INCREMENT:{
+      if (config_error_index + 1 < 8) {
+        config_error_index++;
+      }
+      else{
+        config_error_index = 0;
+      }
+      break;
+    }
+    default:;
+  }
+}
+
 /////// new config MAX TIME
 static void change_config_max_time(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
@@ -253,6 +270,7 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
     }
     case KEY_STOP:
     case KEY_EXT_KBD_STOP: {
+      config_error_index = 0;
       treadmill_exit_config(treadmill);
       break;
     }
@@ -278,10 +296,6 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
           change_config_weight(treadmill, key);
           break;
         }
-        // case CONFIG_OPTION_LUB: {
-        //   change_config_lub(treadmill, key);
-        //   break;
-        // }
         case CONFIG_OPTION_NAME: {
           change_config_name(treadmill, key);
           break;
@@ -292,6 +306,10 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
         }
         case CONFIG_OPTION_TEST: {
           change_config_test(treadmill, key);
+          break;
+        }
+        case CONFIG_OPTION_ERRORS: {
+          change_config_errors(treadmill, key);
           break;
         }
         case CONFIG_OPTION_MAX_TIME: {

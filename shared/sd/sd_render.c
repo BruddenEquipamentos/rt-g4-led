@@ -14,6 +14,7 @@ distance time speed
 calories pace bpm
 */
 extern int report_state;
+extern uint8_t config_error_index;
 
 sd_t sd_distance = {.flag = SD_FLAG_VISIBLE};
 sd_t sd_time = {.flag = SD_FLAG_VISIBLE};
@@ -234,13 +235,6 @@ static void render_config_data(treadmill_t *treadmill) {
       sd_set_visible(&sd_pace, false);
       break;
     }
-
-    // case CONFIG_OPTION_LUB: { // no more versions with lub
-    //   sd_set_visible(&sd_pace, true);
-    //   sd_set_value(&sd_pace, treadmill->config.lub_param_km);
-    //   break;
-    // }
-
     case CONFIG_OPTION_VER: {
       sd_set_visible(&sd_pace, true);
       sd_set_version(&sd_pace, MAJOR, MINOR, REVISION);
@@ -282,6 +276,11 @@ static void render_config_data(treadmill_t *treadmill) {
     case CONFIG_OPTION_TEST: {
       sd_set_visible(&sd_pace, true);
       sd_set_value(&sd_pace, treadmill->config.test);
+      break;
+    }
+    case CONFIG_OPTION_ERRORS: {
+      sd_set_visible(&sd_pace, true);
+      sd_set_value(&sd_pace, treadmill->hw.inverter.error[config_error_index].count);
       break;
     }
     case CONFIG_OPTION_MAX_TIME: {
@@ -336,15 +335,6 @@ void sd_render(treadmill_t *treadmill) {
       sd_render_all_visible(false);
       break;
     }
-    // case SCENE_LUB: {
-    //   sd_render_all_visible(false);
-    //   sd_set_visible(&sd_distance, true);
-    //   sd_set_value(&sd_distance, (uint32_t)treadmill_calculate_lub_distance_remaining(treadmill));  // in km
-    //   if (treadmill->key_pressed_tick > 0 && treadmill->key_pressed_tick != 0xffffffff) {
-    //     sd_blink(&sd_distance, treadmill->get_time_ms(), 1000);
-    //   }
-    //   break;
-    // }
     case SCENE_CONFIG: {
       sd_set_visible(&sd_program, false);
       render_config_data(treadmill);
@@ -379,16 +369,4 @@ void sd_render(treadmill_t *treadmill) {
     }
     default:;
   }
-
-  //   static uint32_t t = 0;
-  //   static uint32_t seconds = 0;
-  //   static uint32_t value = 0;
-  //   if (treadmill->get_time_ms() - t >= 1000) {
-  //     seconds = (seconds + 1) % 10;
-  //     value = seconds * 1000 + seconds * 100 + seconds * 10 + seconds;
-  //     t = treadmill->get_time_ms();
-  //   }
-  //   sd_set_value_to_all(value);
-  //   sd_render_all_visible(true);
-  //   sd_render_all_no_pad();
 }

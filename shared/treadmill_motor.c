@@ -2,6 +2,112 @@
 
 #include "treadmill_motor_modbus.h"
 #include "treadmill_motor_movement.h"
+#include "nvm/nvm.h"
+
+uint8_t previous_error_code = 0;
+extern uint32_t last_ack_time;
+
+void treadmill_motor_register_inverter_error(treadmill_t *treadmill, uint8_t error_code) {
+  if (treadmill == NULL) return;
+  if (treadmill->scene == SCENE_CONFIG) return;
+  if ((treadmill->get_time_ms() - last_ack_time < 10000) && (error_code == previous_error_code)) {
+      return;
+  }
+  else{
+    treadmill->hw.inverter.last_errors[2] = treadmill->hw.inverter.last_errors[1];
+    treadmill->hw.inverter.last_errors[1] = treadmill->hw.inverter.last_errors[0];
+    treadmill->hw.inverter.last_errors[0] = error_code;
+    previous_error_code = error_code;
+
+      // Incrementar contador do tipo de erro específico
+      switch ((inverter_error_code_t)error_code) {
+        case INVERTER_ERROR_OVERVOLTAGE:
+          treadmill->hw.inverter.error[0].code = INVERTER_ERROR_OVERVOLTAGE;
+          if (treadmill->hw.inverter.error[0].count < 255) {
+            treadmill->hw.inverter.error[0].count++;
+            treadmill->hw.inverter.error[0].error_time_ms = treadmill->get_time_ms();
+          }
+          else{
+            treadmill->hw.inverter.error[0].count = 255;
+          }
+          break;
+        case INVERTER_ERROR_UNDERVOLTAGE:
+          treadmill->hw.inverter.error[1].code = INVERTER_ERROR_UNDERVOLTAGE;
+          if (treadmill->hw.inverter.error[1].count < 255) {
+            treadmill->hw.inverter.error[1].count++;
+            treadmill->hw.inverter.error[1].error_time_ms = treadmill->get_time_ms();
+          }
+          else{
+            treadmill->hw.inverter.error[1].count = 255;
+          }
+          break;
+        case INVERTER_ERROR_DC_UNDERVOLTAGE:
+          treadmill->hw.inverter.error[2].code = INVERTER_ERROR_DC_UNDERVOLTAGE;
+          if (treadmill->hw.inverter.error[2].count < 255) {
+            treadmill->hw.inverter.error[2].count++;
+            treadmill->hw.inverter.error[2].error_time_ms = treadmill->get_time_ms();
+          }
+          else{
+            treadmill->hw.inverter.error[2].count = 255;
+          }
+          break;
+        case INVERTER_ERROR_OVERTEMPERATURE:
+          treadmill->hw.inverter.error[3].code = INVERTER_ERROR_OVERTEMPERATURE;
+          if (treadmill->hw.inverter.error[3].count < 255) {
+            treadmill->hw.inverter.error[3].count++;
+            treadmill->hw.inverter.error[3].error_time_ms = treadmill->get_time_ms();
+          }
+          else{
+            treadmill->hw.inverter.error[3].count = 255;
+          }
+          break;
+        case INVERTER_ERROR_OVERCURRENT:
+          treadmill->hw.inverter.error[4].code = INVERTER_ERROR_OVERCURRENT;
+          if (treadmill->hw.inverter.error[4].count < 255) {
+            treadmill->hw.inverter.error[4].count++;
+            treadmill->hw.inverter.error[4].error_time_ms = treadmill->get_time_ms();
+          }
+          else{
+            treadmill->hw.inverter.error[4].count = 255;
+          }
+          break;
+        case INVERTER_ERROR_COMMUNICATION:
+          treadmill->hw.inverter.error[5].code = INVERTER_ERROR_COMMUNICATION;
+          if (treadmill->hw.inverter.error[5].count < 255) {
+            treadmill->hw.inverter.error[5].count++;
+            treadmill->hw.inverter.error[5].error_time_ms = treadmill->get_time_ms();
+          }
+          else{
+            treadmill->hw.inverter.error[5].count = 255;
+          }
+          break;
+        case INVERTER_ERROR_INCLINE_MOTOR:
+          treadmill->hw.inverter.error[6].code = INVERTER_ERROR_INCLINE_MOTOR;
+          if (treadmill->hw.inverter.error[6].count < 255) {
+            treadmill->hw.inverter.error[6].count++;
+            treadmill->hw.inverter.error[6].error_time_ms = treadmill->get_time_ms();
+          }
+          else{
+            treadmill->hw.inverter.error[6].count = 255;
+          }
+          break;
+        case INVERTER_ERROR_MPHV:
+          treadmill->hw.inverter.error[7].code = INVERTER_ERROR_MPHV;
+          if (treadmill->hw.inverter.error[7].count < 255) {
+            treadmill->hw.inverter.error[7].count++;
+            treadmill->hw.inverter.error[7].error_time_ms = treadmill->get_time_ms();
+          }
+          else{
+            treadmill->hw.inverter.error[7].count = 255;
+          }
+          break;
+        default:
+          return;
+      }
+
+    rt_led_save_errors(treadmill);
+  }
+}
 
 static void treadmill_motor_frequency_process(treadmill_t *treadmill, const uint16_t speed) {
   static const uint16_t speed_freq[] = {

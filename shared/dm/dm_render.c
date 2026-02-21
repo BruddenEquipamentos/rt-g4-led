@@ -17,6 +17,17 @@
 unsigned long end_tick = 0;
 int render_finished = 0;
 int report_goal = 0; 
+char error_code[16];
+inverter_error_code_t error_codes[] = {
+    INVERTER_ERROR_OVERVOLTAGE,
+    INVERTER_ERROR_UNDERVOLTAGE,
+    INVERTER_ERROR_DC_UNDERVOLTAGE,
+    INVERTER_ERROR_OVERTEMPERATURE,
+    INVERTER_ERROR_OVERCURRENT,
+    INVERTER_ERROR_COMMUNICATION,
+    INVERTER_ERROR_INCLINE_MOTOR,
+    INVERTER_ERROR_MPHV
+};
 
 // extern variables
 extern uint16_t on_interval; 
@@ -25,6 +36,7 @@ extern int completed_goal;
 extern interval_t hiit_intervals[20];
 extern uint8_t aux_teste;
 extern int incline_limit_reached;
+extern uint8_t config_error_index;
 
 static void dm_render_all(void){
   for (int col = 0; col < 15; ++col) {
@@ -526,10 +538,6 @@ void dm_render(treadmill_t *treadmill) {
           dm_render_text("MA", 16);
           break;
         }  // MA
-        // case CONFIG_OPTION_LUB: {
-        //   dm_render_text("LUB", 16);
-        //   break;
-        // }  // LUB
         case CONFIG_OPTION_NAME: {
           dm_render_text("NAM", 16);
           break;
@@ -562,6 +570,11 @@ void dm_render(treadmill_t *treadmill) {
           dm_render_text("TEST", 16);
           break;
         }  // TEST
+        case CONFIG_OPTION_ERRORS: {
+          snprintf(error_code, 16, "E*%X", error_codes[config_error_index]);
+          dm_render_text(error_code, 16);
+          break;
+        }  // ERR
         case CONFIG_OPTION_MAX_TIME: {
           dm_render_text("TMP", 16);
           break;

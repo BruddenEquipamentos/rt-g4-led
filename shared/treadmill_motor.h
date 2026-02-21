@@ -9,5 +9,6 @@ typedef enum treadmill_motor_status {
 } treadmill_motor_status_t;
 
 void treadmill_motor_process(treadmill_t *treadmill);
+void treadmill_motor_register_inverter_error(treadmill_t *treadmill, uint8_t error_code);
 
 #endif
