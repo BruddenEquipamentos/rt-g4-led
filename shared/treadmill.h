@@ -258,6 +258,9 @@ typedef struct treadmill {
 			inverter_error_code_t error_code;
 			inverter_error_t error[8];
     	inverter_error_code_t last_errors[3];
+      uint8_t previous_error_code;
+      uint32_t last_error_save_time_ms;
+      uint8_t errors_dirty;
     } inverter;
 
     struct {
@@ -322,6 +325,8 @@ uint32_t treadmill_current_average_speed(treadmill_t* treadmill);
 const char *get_string(treadmill_t* treadmill, int id);
 
 void treadmill_save_errors(treadmill_t *treadmill);
+
+void treadmill_reset_errors(treadmill_t *treadmill);
 
 void treadmill_load_errors(treadmill_t *treadmill);
 

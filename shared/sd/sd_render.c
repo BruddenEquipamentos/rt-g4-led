@@ -280,7 +280,12 @@ static void render_config_data(treadmill_t *treadmill) {
     }
     case CONFIG_OPTION_ERRORS: {
       sd_set_visible(&sd_pace, true);
-      sd_set_value(&sd_pace, treadmill->hw.inverter.error[config_error_index].count);
+      if (config_error_index < 8) {
+        sd_set_value(&sd_pace, treadmill->hw.inverter.error[config_error_index].count);
+      }
+      else{
+        sd_set_value(&sd_pace, treadmill->hw.inverter.last_errors[config_error_index-8]);
+      }
       break;
     }
     case CONFIG_OPTION_MAX_TIME: {

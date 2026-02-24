@@ -3,109 +3,63 @@
 #include "treadmill_motor_modbus.h"
 #include "treadmill_motor_movement.h"
 #include "nvm/nvm.h"
-
-uint8_t previous_error_code = 0;
 extern uint32_t last_ack_time;
+
+// debounce window for saving errors to NVM (ms)
+#define INVERTER_SAVE_DEBOUNCE_MS 5000
+
+static inline void inverter_update_error(struct inverter *inv, int idx, inverter_error_code_t code, uint32_t now) {
+  inv->error[idx].code = code;
+  if (inv->error[idx].count < 255) {
+    inv->error[idx].count++;
+    inv->error[idx].error_time_ms = now;
+  } else {
+    inv->error[idx].count = 255;
+  }
+}
+
+static int inverter_error_code_to_index(inverter_error_code_t code) {
+  switch (code) {
+    case INVERTER_ERROR_OVERVOLTAGE: return 0;
+    case INVERTER_ERROR_UNDERVOLTAGE: return 1;
+    case INVERTER_ERROR_DC_UNDERVOLTAGE: return 2;
+    case INVERTER_ERROR_OVERTEMPERATURE: return 3;
+    case INVERTER_ERROR_OVERCURRENT: return 4;
+    case INVERTER_ERROR_COMMUNICATION: return 5;
+    case INVERTER_ERROR_INCLINE_MOTOR: return 6;
+    case INVERTER_ERROR_MPHV: return 7;
+    default: return -1;
+  }
+}
 
 void treadmill_motor_register_inverter_error(treadmill_t *treadmill, uint8_t error_code) {
   if (treadmill == NULL) return;
   if (treadmill->scene == SCENE_CONFIG) return;
-  if ((treadmill->get_time_ms() - last_ack_time < 10000) && (error_code == previous_error_code)) {
+
+  struct inverter *inv = &treadmill->hw.inverter;
+  uint32_t now = treadmill->get_time_ms();
+
+  if ((now - last_ack_time < 10000) && (error_code == inv->previous_error_code)) {
+    return;
+  } else {
+    inv->last_errors[2] = inv->last_errors[1];
+    inv->last_errors[1] = inv->last_errors[0];
+    inv->last_errors[0] = error_code;
+    inv->previous_error_code = error_code;
+
+    int idx = inverter_error_code_to_index((inverter_error_code_t)error_code);
+    if (idx < 0) {
       return;
-  }
-  else{
-    treadmill->hw.inverter.last_errors[2] = treadmill->hw.inverter.last_errors[1];
-    treadmill->hw.inverter.last_errors[1] = treadmill->hw.inverter.last_errors[0];
-    treadmill->hw.inverter.last_errors[0] = error_code;
-    previous_error_code = error_code;
+    }
+    inverter_update_error(inv, idx, (inverter_error_code_t)error_code, now);
 
-      // Incrementar contador do tipo de erro específico
-      switch ((inverter_error_code_t)error_code) {
-        case INVERTER_ERROR_OVERVOLTAGE:
-          treadmill->hw.inverter.error[0].code = INVERTER_ERROR_OVERVOLTAGE;
-          if (treadmill->hw.inverter.error[0].count < 255) {
-            treadmill->hw.inverter.error[0].count++;
-            treadmill->hw.inverter.error[0].error_time_ms = treadmill->get_time_ms();
-          }
-          else{
-            treadmill->hw.inverter.error[0].count = 255;
-          }
-          break;
-        case INVERTER_ERROR_UNDERVOLTAGE:
-          treadmill->hw.inverter.error[1].code = INVERTER_ERROR_UNDERVOLTAGE;
-          if (treadmill->hw.inverter.error[1].count < 255) {
-            treadmill->hw.inverter.error[1].count++;
-            treadmill->hw.inverter.error[1].error_time_ms = treadmill->get_time_ms();
-          }
-          else{
-            treadmill->hw.inverter.error[1].count = 255;
-          }
-          break;
-        case INVERTER_ERROR_DC_UNDERVOLTAGE:
-          treadmill->hw.inverter.error[2].code = INVERTER_ERROR_DC_UNDERVOLTAGE;
-          if (treadmill->hw.inverter.error[2].count < 255) {
-            treadmill->hw.inverter.error[2].count++;
-            treadmill->hw.inverter.error[2].error_time_ms = treadmill->get_time_ms();
-          }
-          else{
-            treadmill->hw.inverter.error[2].count = 255;
-          }
-          break;
-        case INVERTER_ERROR_OVERTEMPERATURE:
-          treadmill->hw.inverter.error[3].code = INVERTER_ERROR_OVERTEMPERATURE;
-          if (treadmill->hw.inverter.error[3].count < 255) {
-            treadmill->hw.inverter.error[3].count++;
-            treadmill->hw.inverter.error[3].error_time_ms = treadmill->get_time_ms();
-          }
-          else{
-            treadmill->hw.inverter.error[3].count = 255;
-          }
-          break;
-        case INVERTER_ERROR_OVERCURRENT:
-          treadmill->hw.inverter.error[4].code = INVERTER_ERROR_OVERCURRENT;
-          if (treadmill->hw.inverter.error[4].count < 255) {
-            treadmill->hw.inverter.error[4].count++;
-            treadmill->hw.inverter.error[4].error_time_ms = treadmill->get_time_ms();
-          }
-          else{
-            treadmill->hw.inverter.error[4].count = 255;
-          }
-          break;
-        case INVERTER_ERROR_COMMUNICATION:
-          treadmill->hw.inverter.error[5].code = INVERTER_ERROR_COMMUNICATION;
-          if (treadmill->hw.inverter.error[5].count < 255) {
-            treadmill->hw.inverter.error[5].count++;
-            treadmill->hw.inverter.error[5].error_time_ms = treadmill->get_time_ms();
-          }
-          else{
-            treadmill->hw.inverter.error[5].count = 255;
-          }
-          break;
-        case INVERTER_ERROR_INCLINE_MOTOR:
-          treadmill->hw.inverter.error[6].code = INVERTER_ERROR_INCLINE_MOTOR;
-          if (treadmill->hw.inverter.error[6].count < 255) {
-            treadmill->hw.inverter.error[6].count++;
-            treadmill->hw.inverter.error[6].error_time_ms = treadmill->get_time_ms();
-          }
-          else{
-            treadmill->hw.inverter.error[6].count = 255;
-          }
-          break;
-        case INVERTER_ERROR_MPHV:
-          treadmill->hw.inverter.error[7].code = INVERTER_ERROR_MPHV;
-          if (treadmill->hw.inverter.error[7].count < 255) {
-            treadmill->hw.inverter.error[7].count++;
-            treadmill->hw.inverter.error[7].error_time_ms = treadmill->get_time_ms();
-          }
-          else{
-            treadmill->hw.inverter.error[7].count = 255;
-          }
-          break;
-        default:
-          return;
-      }
-
-    rt_led_save_errors(treadmill);
+    if ((now - inv->last_error_save_time_ms) >= INVERTER_SAVE_DEBOUNCE_MS) {
+      treadmill_save_errors(treadmill);
+      inv->last_error_save_time_ms = now;
+      inv->errors_dirty = 0;
+    } else {
+      inv->errors_dirty = 1;
+    }
   }
 }
 

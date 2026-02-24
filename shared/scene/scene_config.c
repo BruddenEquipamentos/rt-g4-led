@@ -203,6 +203,10 @@ static void change_config_errors(treadmill_t *treadmill, const kbd_key_t key) {
       }
       break;
     }
+    case KEY_CONFIG:{ // TODO: improve
+      treadmill_reset_errors(treadmill);
+      break;
+    }
     default:;
   }
 }
