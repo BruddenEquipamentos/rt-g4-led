@@ -49,13 +49,13 @@ static void update(treadmill_t *treadmill) {
   if (nfc_tick_ms == 0) {
     nfc_tick_ms = treadmill->get_time_ms();
   } else if (nfc_tick_ms != 0xffffffff) {
-    rt_led_send_training_data(treadmill); ///////////////////////////
     if (treadmill->get_time_ms() - nfc_tick_ms >= 1500) {
       ble_post_message(
         "\x02"
         "NFC,0\n",
         "", 1000);
       nfc_tick_ms = 0xffffffff;
+      rt_led_send_training_data(treadmill); ///////////////////////////
     }
   }
   
