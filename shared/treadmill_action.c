@@ -266,21 +266,32 @@ static int valid_ns(const char *nsu, const int length) {
 
 int treadmill_save_nsu(treadmill_t *treadmill, const char *nsu, const int length) {
   if (!valid_ns(nsu, length)) return 0;
-  strcpy(treadmill->config.nsu, nsu);
+  strncpy(treadmill->config.nsu, nsu, NVM_NS_MAX_LENGTH);
   nvm.NVM_WriteString(NVM_NSU_START_ADDRESS, nsu, length, NVM_NS_MAX_LENGTH);
   return 1;
 }
 
+// testing nsu write
+// int treadmill_save_nsu(treadmill_t *treadmill, const char *nsu, const int length) {
+//   if (!valid_ns(nsu, length)) return 0;
+//   strncpy(treadmill->config.nsu, nsu, NVM_NS_MAX_LENGTH);
+//   for (int i = 0; i < 22; ++i) {
+//     nvm.NVM_WriteVariable8bits(NVM_NSU_START_ADDRESS + i, &treadmill->config.nsu[i]);
+//     nvm.NVM_WriteString(NVM_NSP_START_ADDRESS, nsp, length, NVM_NS_MAX_LENGTH);
+//   }
+//   return 1;
+// }
+
 int treadmill_save_nsp(treadmill_t *treadmill, const char *nsp, const int length) {
   if (!valid_ns(nsp, length)) return 0;
-  strcpy(treadmill->config.nsp, nsp);
+  strncpy(treadmill->config.nsp, nsp, NVM_NS_MAX_LENGTH);
   nvm.NVM_WriteString(NVM_NSP_START_ADDRESS, nsp, length, NVM_NS_MAX_LENGTH);
   return 1;
 }
 
 int treadmill_save_nsi(treadmill_t *treadmill, const char *nsi, const int length) {
   if (!valid_ns(nsi, length)) return 0;
-  strcpy(treadmill->config.nsi, nsi);
+  strncpy(treadmill->config.nsi, nsi, NVM_NS_MAX_LENGTH);
   nvm.NVM_WriteString(NVM_NSI_START_ADDRESS, nsi, length, NVM_NS_MAX_LENGTH);
   return 1;
 }

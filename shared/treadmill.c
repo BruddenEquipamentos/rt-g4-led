@@ -262,6 +262,18 @@ void treadmill_load_config(treadmill_t *treadmill) {
   if (nvm.NVM_ReadString(NVM_NSU_START_ADDRESS, (uint8_t *)ns, 22)) {
     strncpy(treadmill->config.nsu, ns, 22);
   }
+  // testing
+  // for (int i = 0; i < 22; ++i) {
+  //   uint8_t b;
+  //   if (nvm.NVM_ReadVariable8bits(NVM_NSU_START_ADDRESS + i, &b)
+  //           == NVM_STATUS_OK) {
+  //       treadmill->config.nsu[i] = b;
+  //   } else {
+  //       treadmill->config.nsu[i] = '\0';
+  //       break;
+  //   }
+  // }
+
 
   if (nvm.NVM_ReadString(NVM_NSP_START_ADDRESS, (uint8_t *)ns, 22)) {
     strncpy(treadmill->config.nsp, ns, 22);
@@ -410,75 +422,6 @@ void treadmill_reset_errors(treadmill_t *treadmill) {
   nvm.NVM_WriteVariable8bits(NVM_U8_INVERTER_LAST_ERROR_1, 0);
   nvm.NVM_WriteVariable8bits(NVM_U8_INVERTER_LAST_ERROR_2, 0);
 }
-
-// void treadmill_load_errors(treadmill_t *treadmill) {
-//   uint16_t error_0_count = 0;
-//   if (nvm.NVM_ReadVariable16bits(NVM_U16_INVERTER_ERROR_0_COUNT, &error_0_count)) {
-//     treadmill->hw.inverter.error[0].count = error_0_count;
-//   } else {
-//     treadmill->hw.inverter.error[0].count = 0;
-//   }
-//   uint16_t error_1_count = 0;
-//   if (nvm.NVM_ReadVariable16bits(NVM_U16_INVERTER_ERROR_1_COUNT, &error_1_count)) {
-//     treadmill->hw.inverter.error[1].count = error_1_count;
-//   } else {
-//     treadmill->hw.inverter.error[1].count = 0;
-//   }
-//   uint16_t error_2_count = 0;
-//   if (nvm.NVM_ReadVariable16bits(NVM_U16_INVERTER_ERROR_2_COUNT, &error_2_count)) {
-//     treadmill->hw.inverter.error[2].count = error_2_count;
-//   } else {
-//     treadmill->hw.inverter.error[2].count = 0;
-//   }
-//   uint16_t error_3_count = 0;
-//   if (nvm.NVM_ReadVariable16bits(NVM_U16_INVERTER_ERROR_3_COUNT, &error_3_count)) {
-//     treadmill->hw.inverter.error[3].count = error_3_count;
-//   } else {
-//     treadmill->hw.inverter.error[3].count = 0;
-//   }
-//   uint16_t error_4_count = 0;
-//   if (nvm.NVM_ReadVariable16bits(NVM_U16_INVERTER_ERROR_4_COUNT, &error_4_count)) {
-//     treadmill->hw.inverter.error[4].count = error_4_count;
-//   } else {
-//     treadmill->hw.inverter.error[4].count = 0;
-//   }
-//   uint16_t error_5_count = 0;
-//   if (nvm.NVM_ReadVariable16bits(NVM_U16_INVERTER_ERROR_5_COUNT, &error_5_count)) {
-//     treadmill->hw.inverter.error[5].count = error_5_count;
-//   } else {
-//     treadmill->hw.inverter.error[5].count = 0;
-//   }
-//   uint16_t error_6_count = 0;
-//   if (nvm.NVM_ReadVariable16bits(NVM_U16_INVERTER_ERROR_6_COUNT, &error_6_count)) {
-//     treadmill->hw.inverter.error[6].count = error_6_count;
-//   } else {
-//     treadmill->hw.inverter.error[6].count = 0;
-//   }
-//   uint16_t error_7_count = 0;
-//   if (nvm.NVM_ReadVariable16bits(NVM_U16_INVERTER_ERROR_7_COUNT, &error_7_count)) {
-//     treadmill->hw.inverter.error[7].count = error_7_count;
-//   } else {
-//     treadmill->hw.inverter.error[7].count = 0;
-//   }
-//   uint16_t last_error_0 = 0;
-//   if (nvm.NVM_ReadVariable8bits(NVM_U8_INVERTER_LAST_ERROR_0, (uint8_t *)&last_error_0)) {
-//     treadmill->hw.inverter.last_errors[0] = last_error_0;
-//   } else {
-//     treadmill->hw.inverter.last_errors[0] = 0;
-//   }
-//   uint16_t last_error_1 = 0;
-//   if (nvm.NVM_ReadVariable8bits(NVM_U8_INVERTER_LAST_ERROR_1, (uint8_t *)&last_error_1)) {
-//     treadmill->hw.inverter.last_errors[1] = last_error_1;
-//   } else {
-//     treadmill->hw.inverter.last_errors[1] = 0;
-//   }
-//   uint16_t last_error_2 = 0;
-//   if (nvm.NVM_ReadVariable8bits(NVM_U8_INVERTER_LAST_ERROR_2, (uint8_t *)&last_error_2)) {
-//     treadmill->hw.inverter.last_errors[2] = last_error_2;
-//   } else {
-//     treadmill->hw.inverter.last_errors[2] = 0;
-//   }
-// }
 
 void treadmill_load_errors(treadmill_t *treadmill) {
   uint16_t error_count = 0;
