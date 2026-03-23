@@ -1,6 +1,5 @@
 #include "sd.h"
 
-#include <stdio.h>
 #include <string.h>
 
 #include "treadmill.h" //Lucas 15/04
@@ -40,6 +39,38 @@ static struct digit_map digit_map[DIGIT_TOTALS] = {
     {.ch = ' ', .sd_digit = DIGIT_EMPTY},
 };
 
+static uint32_t kmh_x100_to_mph_x100(uint32_t kmh_x100) {
+  // Approximation of 0.621371 using only 32-bit integer arithmetic.
+  return (kmh_x100 * 62137u) / 100000u;
+}
+
+static size_t u32_to_dec(char *out, size_t cap, uint32_t value) {
+  if (cap == 0) return 0;
+
+  char tmp[10];
+  size_t len = 0;
+
+  do {
+    tmp[len++] = (char)('0' + (value % 10u));
+    value /= 10u;
+  } while (value != 0u && len < sizeof(tmp));
+
+  size_t out_len = len;
+  if (out_len > cap - 1u) {
+    out_len = cap - 1u;
+  }
+
+  for (size_t i = 0; i < out_len; ++i) {
+    out[i] = tmp[len - 1u - i];
+  }
+  out[out_len] = '\0';
+  return out_len;
+}
+
+static void sd_set_u32_text(sd_t *sd, uint32_t value) {
+  u32_to_dec(sd->text, sizeof(sd->text), value);
+}
+
 static char get_sd_digit(char ch) {
   for (int i = 0; i < DIGIT_TOTALS; ++i)
     if (digit_map[i].ch == ch) return digit_map[i].sd_digit;
@@ -59,14 +90,33 @@ void sd_set_text(sd_t *sd, const char *text) {
 
 void sd_set_program_text(sd_t *sd, const int program_number) {
   char text[5];
-  if (program_number > 1000)
-    sprintf(text, "P---");
-  else if (program_number > 100)
-    sprintf(text, "P%d", program_number);
-  else if (program_number > 10)
-    sprintf(text, " P%d", program_number);
-  else
-    sprintf(text, " P%d ", program_number);
+
+  if (program_number > 1000) {
+    text[0] = 'P';
+    text[1] = '-';
+    text[2] = '-';
+    text[3] = '-';
+    text[4] = '\0';
+  } else if (program_number > 100) {
+    text[0] = 'P';
+    text[1] = (char)('0' + ((program_number / 100) % 10));
+    text[2] = (char)('0' + ((program_number / 10) % 10));
+    text[3] = (char)('0' + (program_number % 10));
+    text[4] = '\0';
+  } else if (program_number > 10) {
+    text[0] = ' ';
+    text[1] = 'P';
+    text[2] = (char)('0' + ((program_number / 10) % 10));
+    text[3] = (char)('0' + (program_number % 10));
+    text[4] = '\0';
+  } else {
+    text[0] = ' ';
+    text[1] = 'P';
+    text[2] = (char)('0' + (program_number % 10));
+    text[3] = ' ';
+    text[4] = '\0';
+  }
+
   sd_set_text(sd, text);
 }
 
@@ -79,24 +129,37 @@ void sd_set_min_sec(sd_t *sd, const uint32_t seconds) {
   sd->digit[2] = ((min % 100) % 10);
   sd->digit[1] = sec / 10;
   sd->digit[0] = sec % 10;
-  snprintf(sd->text, 8, "%d:%02d", min, sec);
+  size_t len = u32_to_dec(sd->text, sizeof(sd->text), min);
+  if (len + 3u >= sizeof(sd->text)) {
+    len = sizeof(sd->text) - 4u;
+  }
+  sd->text[len++] = ':';
+  sd->text[len++] = (char)('0' + ((sec / 10) % 10));
+  sd->text[len++] = (char)('0' + (sec % 10));
+  sd->text[len] = '\0';
 }
 
 // uint32_t teste_milhas = 0;
 
 void sd_set_km_m(sd_t *sd, const uint32_t meters) {
   if (pTreadmill->config.unit == RT_LED_CONFIG_UNIT_MILES){
-    unsigned long long total_miles = (((unsigned long long)meters) * 621371) / ((unsigned long long)10000000);
-    // teste_milhas = total_miles;
-    unsigned long long miles = total_miles / 100;
-    unsigned long long decimal = total_miles % 100;
+    uint32_t total_miles = (meters * 62137u) / 1000000u;
+    uint32_t miles = total_miles / 100u;
+    uint32_t decimal = total_miles % 100u;
     sd->flag |= SD_FLAG_PAD_LEADING_ZERO;
     sd->digit[3] = (miles / 10);  
     sd->digit[2] = (miles % 10);         
     sd->dot = SD_DOT_AT_2;               
     sd->digit[1] = (decimal / 10);      
     sd->digit[0] = (decimal % 10);       
-    snprintf(sd->text, 8, "%d.%02d", miles, decimal); //Milhas
+    size_t len = u32_to_dec(sd->text, sizeof(sd->text), miles);
+    if (len + 3u >= sizeof(sd->text)) {
+      len = sizeof(sd->text) - 4u;
+    }
+    sd->text[len++] = '.';
+    sd->text[len++] = (char)('0' + ((decimal / 10) % 10));
+    sd->text[len++] = (char)('0' + (decimal % 10));
+    sd->text[len] = '\0';
   
   }
   else{
@@ -108,23 +171,35 @@ void sd_set_km_m(sd_t *sd, const uint32_t meters) {
     sd->dot = SD_DOT_AT_2;
     sd->digit[1] = m / 10;
     sd->digit[0] = m % 10;
-    snprintf(sd->text, 8, "%d.%02d", km, m); //Km
+    size_t len = u32_to_dec(sd->text, sizeof(sd->text), km);
+    if (len + 3u >= sizeof(sd->text)) {
+      len = sizeof(sd->text) - 4u;
+    }
+    sd->text[len++] = '.';
+    sd->text[len++] = (char)('0' + ((m / 10) % 10));
+    sd->text[len++] = (char)('0' + (m % 10));
+    sd->text[len] = '\0';
   }
 }
 
 void sd_set_kmh(sd_t *sd, const uint32_t speed) {
   if (pTreadmill->config.unit == RT_LED_CONFIG_UNIT_MILES){
-    unsigned long long spd_total_miles = (((unsigned long long)speed) * 621371) / ((unsigned long long)1000000);
-    unsigned long long spd_miles = spd_total_miles / 100;
-    unsigned long long spd_decimal = spd_total_miles % 100;
+    uint32_t spd_total_miles = kmh_x100_to_mph_x100(speed);
+    uint32_t spd_miles = spd_total_miles / 100u;
+    uint32_t spd_decimal = spd_total_miles % 100u;
     sd->flag |= SD_FLAG_PAD_LEADING_ZERO;
     sd->digit[3] = 0;
     sd->digit[2] = ((spd_miles % 100) / 10); 
     sd->digit[1] = ((spd_miles % 100) % 10);     
     sd->dot = SD_DOT_AT_1;               
     sd->digit[0] = (spd_decimal / 10);
-    // sd->digit[0] = (spd_decimal % 10);       
-    snprintf(sd->text, 8, "%d.%01d", spd_miles, spd_decimal); //Milhas
+    size_t len = u32_to_dec(sd->text, sizeof(sd->text), spd_miles);
+    if (len + 2u >= sizeof(sd->text)) {
+      len = sizeof(sd->text) - 3u;
+    }
+    sd->text[len++] = '.';
+    sd->text[len++] = (char)('0' + ((spd_decimal / 10) % 10));
+    sd->text[len] = '\0';
   }
   else{
     uint32_t spd_km = speed / 100;  // 1200 -> 12.0 km/h
@@ -135,22 +210,35 @@ void sd_set_kmh(sd_t *sd, const uint32_t speed) {
     sd->digit[1] = ((spd_km % 100) % 10);
     sd->dot = SD_DOT_AT_1;
     sd->digit[0] = spd_m / 10;
-    snprintf(sd->text, 8, "%d.%01d", spd_km, spd_m);
+    size_t len = u32_to_dec(sd->text, sizeof(sd->text), spd_km);
+    if (len + 2u >= sizeof(sd->text)) {
+      len = sizeof(sd->text) - 3u;
+    }
+    sd->text[len++] = '.';
+    sd->text[len++] = (char)('0' + ((spd_m / 10) % 10));
+    sd->text[len] = '\0';
   }
 }
 
 void sd_set_kmh_report(sd_t *sd, const uint32_t speed) {
   if (pTreadmill->config.unit == RT_LED_CONFIG_UNIT_MILES){
-    unsigned long long spd_total_miles = (((unsigned long long)speed) * 621371) / ((unsigned long long)1000000);
-    unsigned long long spd_miles = spd_total_miles / 100;
-    unsigned long long spd_decimal = spd_total_miles % 100;
+    uint32_t spd_total_miles = kmh_x100_to_mph_x100(speed);
+    uint32_t spd_miles = spd_total_miles / 100u;
+    uint32_t spd_decimal = spd_total_miles % 100u;
     sd->flag |= SD_FLAG_PAD_LEADING_ZERO;
     sd->digit[3] = ((spd_miles % 100) / 10);
     sd->digit[2] = ((spd_miles % 100) % 10);
     sd->dot = SD_DOT_AT_2;
     sd->digit[1] = spd_decimal / 10;
     sd->digit[0] = spd_decimal % 10;
-    snprintf(sd->text, 8, "%d.%02d", spd_miles, spd_decimal);
+    size_t len = u32_to_dec(sd->text, sizeof(sd->text), spd_miles);
+    if (len + 3u >= sizeof(sd->text)) {
+      len = sizeof(sd->text) - 4u;
+    }
+    sd->text[len++] = '.';
+    sd->text[len++] = (char)('0' + ((spd_decimal / 10) % 10));
+    sd->text[len++] = (char)('0' + (spd_decimal % 10));
+    sd->text[len] = '\0';
   }
   else{
     uint32_t spd_km = speed / 100;  // 1234 -> 12.34 km/h
@@ -161,7 +249,14 @@ void sd_set_kmh_report(sd_t *sd, const uint32_t speed) {
     sd->dot = SD_DOT_AT_2;
     sd->digit[1] = spd_m / 10;
     sd->digit[0] = spd_m % 10;
-    snprintf(sd->text, 8, "%d.%02d", spd_km, spd_m);
+    size_t len = u32_to_dec(sd->text, sizeof(sd->text), spd_km);
+    if (len + 3u >= sizeof(sd->text)) {
+      len = sizeof(sd->text) - 4u;
+    }
+    sd->text[len++] = '.';
+    sd->text[len++] = (char)('0' + ((spd_m / 10) % 10));
+    sd->text[len++] = (char)('0' + (spd_m % 10));
+    sd->text[len] = '\0';
   }
 }
 
@@ -179,7 +274,12 @@ void sd_set_version(sd_t *sd, const uint8_t major, const uint8_t minor,
   sd->digit[2] = major;
   sd->digit[1] = minor;
   sd->digit[0] = revision;
-  snprintf(sd->text, 8, "%1d.%1d.%1d", major, minor, revision);
+  sd->text[0] = (char)('0' + (major % 10));
+  sd->text[1] = '.';
+  sd->text[2] = (char)('0' + (minor % 10));
+  sd->text[3] = '.';
+  sd->text[4] = (char)('0' + (revision % 10));
+  sd->text[5] = '\0';
 }
 
 void sd_set_kcal(sd_t *sd, const uint32_t kcal) {
@@ -193,7 +293,7 @@ void sd_set_value(sd_t *sd, const uint32_t value) {
   sd->digit[2] = (value % 1000) / 100;
   sd->digit[1] = (value % 100) / 10;
   sd->digit[0] = (value % 10);
-  snprintf(sd->text, 8, "%d", value);
+  sd_set_u32_text(sd, value);
 }
 
 void sd_set_bpm(sd_t *sd, const uint8_t bpm) {
@@ -207,7 +307,10 @@ void sd_set_bpm_detected(sd_t *sd) {
   sd->digit[2] = DIGIT_MIDDLE;
   sd->digit[1] = DIGIT_MIDDLE;
   sd->digit[0] = DIGIT_MIDDLE;
-  snprintf(sd->text, 8, "---");
+  sd->text[0] = '-';
+  sd->text[1] = '-';
+  sd->text[2] = '-';
+  sd->text[3] = '\0';
 }
 
 inline void sd_set_visible(sd_t *sd, const bool visible) {

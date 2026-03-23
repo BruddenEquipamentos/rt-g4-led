@@ -6,6 +6,14 @@
 
 #define BLINK_INTERVAL (1000)
 
+static void format_series_4digits(char *text, uint16_t value) {
+  text[0] = (char)('0' + ((value / 1000u) % 10u));
+  text[1] = (char)('0' + ((value / 100u) % 10u));
+  text[2] = (char)('0' + ((value / 10u) % 10u));
+  text[3] = (char)('0' + (value % 10u));
+  text[4] = '\0';
+}
+
 static void render_program_time(treadmill_t *treadmill) {
   // sd_set_visible(&sd_program, true);
   sd_set_program_text(&sd_program, treadmill->program.id);
@@ -78,7 +86,7 @@ static void render_program_hiit(treadmill_t *treadmill) {
     }
     case 4: {  // SERIES
       char text[5];
-      snprintf(text, 5, "%04d", treadmill->program.p_hiit.series);
+      format_series_4digits(text, treadmill->program.p_hiit.series);
       sd_set_text(&sd_program, text);
       sd_set_visible(&sd_program, true);
       sd_blink(&sd_program, treadmill->get_time_ms(), BLINK_INTERVAL);

@@ -2,11 +2,23 @@
 #include "../treadmill_programs_update.h"
 #include "scene.h"
 #include "sd/sd_render.h" /////////
+#include "../panel/rt_led.h"
 
 // New includes for BLE commands and helpers
 #include "../shared/ble/ble_protocol/ble_protocol_command.h"
 #include "../shared/ble/ble.h"
 #include <string.h>
+
+int _test_process = 0;
+int _test_progress = 0;
+uint32_t _test_time = 0;
+int _test_pass = 1;
+
+#define TEST_CYCLE_TIME (60)
+#define TEST_CYCLES (5)
+int _test_cycles = TEST_CYCLES;
+int _test_total_time = (TEST_CYCLE_TIME * TEST_CYCLES);
+
 
 uint8_t speed_changed = 0;
 uint8_t incline_changed = 0;
@@ -18,6 +30,9 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
     case KEY_EXT_KBD_STOP:
     case KEY_STOP:
       treadmill_pause_training(treadmill);
+      if (treadmill->config.test == RT_LED_CONFIG_TEST_ENABLE){
+        treadmill->config.test = RT_LED_CONFIG_TEST_DISABLE;
+      }
       break;
     case KEY_SPEED_INCREMENT:
       speed_changed = 1;
@@ -168,6 +183,103 @@ static uint32_t treadmill_calculate_speed(uint32_t dm, uint32_t seconds) {
 // calculate minimum time to change maximum variables speed pace bpm
 uint32_t max_var_tick = 0;
 
+static void update_test_program(treadmill_t *treadmill) {
+  if (_test_pass <= _test_cycles) {
+      _test_time++;
+      if (_test_process > 0)
+          _test_progress = treadmill->training.seconds * 100 / _test_total_time | 1;
+      switch (_test_process) {
+      case 0: {
+          _test_process = 1;
+          _test_time = 0;
+          _test_progress = 1;
+          break;
+      }
+      case 1: {
+          treadmill->training.speed = 1800;
+          if (treadmill->config.incline.step > 0)
+              treadmill->training.incline = 70;
+
+          if (_test_time >= 60) {
+              _test_time = 0;
+              _test_process = 2;
+          }
+          break;
+      }
+      case 2: {
+          treadmill->training.speed = 1500;
+          if (treadmill->config.incline.step > 0)
+              treadmill->training.incline = 150;
+
+          if (_test_time >= 60) {
+              _test_time = 0;
+              _test_process = 3;
+          }
+          break;
+      }
+      case 3: {
+          treadmill->training.speed = 1000;
+          if (treadmill->config.incline.step > 0)
+              treadmill->training.incline = 140;
+
+          if (_test_time >= 60) {
+              _test_time = 0;
+              _test_process = 4;
+          }
+          break;
+      }
+      case 4: {
+          treadmill->training.speed = 800;
+          if (treadmill->config.incline.step > 0)
+              treadmill->training.incline = 130;
+
+          if (_test_time >= 60) {
+              _test_time = 0;
+              _test_process = 5;
+          }
+          break;
+      }
+      case 5: {
+          treadmill->training.speed = 500;
+          if (treadmill->config.incline.step > 0)
+              treadmill->training.incline = 120;
+
+          if (_test_time >= 60) {
+              _test_time = 0;
+              _test_process = 6;
+          }
+          break;
+      }
+      case 6: {
+          treadmill->training.speed = 300;
+          if (treadmill->config.incline.step > 0)
+              treadmill->training.incline = 110;
+
+          if (_test_time >= 60) {
+              _test_time = 0;
+              _test_process = 1;
+              if (_test_pass + 1 > _test_cycles) {
+                  _test_process = 0;
+                  _test_progress = 0;
+                  _test_pass = 1;
+                  if (treadmill->config.modbus) {
+                      treadmill_stop_procedure(treadmill);
+                      treadmill->config.test = RT_LED_CONFIG_TEST_DISABLE;
+                  } else {
+                      treadmill_pause_procedure(treadmill);
+                      treadmill->config.test = RT_LED_CONFIG_TEST_DISABLE;
+                  }
+              } else {
+                  _test_pass++;
+              }
+          }
+          break;
+      }
+      default:;
+      }
+  }
+}
+
 static void update(treadmill_t *treadmill) {
 
   if (treadmill->ms - treadmill->training.ms >= 1000) {
@@ -273,6 +385,10 @@ static void update(treadmill_t *treadmill) {
     // if ((treadmill->hw.handgrip.state == HEARTRATE_HG_DISABLED) && (treadmill->hw.ble.gk.connected == 0) && (treadmill->hw.ble.hrm.status == HRM_STATUS_DISCONNECTED) && (treadmill->hw.ble.sh.connected == 0)) {
     //   treadmill->training.bpm = 0;
     // }    //Lucas check here
+
+    if (treadmill->config.test == RT_LED_CONFIG_TEST_ENABLE) {
+      update_test_program(treadmill);
+    }
 
     if (treadmill->training.bpm >= 40 && treadmill->training.bpm <= 240) {
       treadmill->training.bpm_total += treadmill->training.bpm;

@@ -35,9 +35,10 @@
 #define NVM_U16_INVERTER_ERROR_2_COUNT 0x0012  // Subtensão DC
 #define NVM_U16_INVERTER_ERROR_3_COUNT 0x0013  // Sobretemperatura
 #define NVM_U16_INVERTER_ERROR_4_COUNT 0x0014  // Sobrecorrente
-#define NVM_U16_INVERTER_ERROR_5_COUNT 0x0015  // Falha de comunicação
-#define NVM_U16_INVERTER_ERROR_6_COUNT 0x0016  // Falha motor de inclinação
-#define NVM_U16_INVERTER_ERROR_7_COUNT 0x0017  // MPHV
+#define NVM_U16_INVERTER_ERROR_5_COUNT 0x0015  // Sobrecarga
+#define NVM_U16_INVERTER_ERROR_6_COUNT 0x0016  // Falha de comunicação
+#define NVM_U16_INVERTER_ERROR_7_COUNT 0x0017  // Falha motor de inclinação
+#define NVM_U16_INVERTER_ERROR_8_COUNT 0x0018  // MPHV
 
 // Exemplo de NSU "8196085000000597694"
 #define NVM_NS_MAX_LENGTH (22)
@@ -62,6 +63,7 @@ typedef enum inverter_error_code {
 	INVERTER_ERROR_DC_UNDERVOLTAGE = 0x43,    // Subtensão no barramento DC
 	INVERTER_ERROR_OVERTEMPERATURE = 0x3A,    // Sobretemperatura
 	INVERTER_ERROR_OVERCURRENT = 0x3D,        // Sobrecorrente
+  INVERTER_ERROR_OVERLOAD = 0x40,            // Sobrecarga
 	INVERTER_ERROR_COMMUNICATION = 0x55,      // Falha na comunicação
 	INVERTER_ERROR_INCLINE_MOTOR = 0x52,      // Falha no motor de inclinação
 	INVERTER_ERROR_MPHV = 0x49                // MPHV
@@ -99,6 +101,7 @@ typedef enum treadmill_scene {
   SCENE_PAUSED,
   SCENE_REPORT,
   SCENE_BLE_ALLOW_YES_NO, //added
+  SCENE_TEST, //added
   SCENE_TOTALS,
 } treadmill_scene_t;
 

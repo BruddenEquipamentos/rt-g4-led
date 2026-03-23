@@ -2,6 +2,7 @@
 // file should hold the registers to be processed
 
 #include "master_operations.h"
+#include <string.h>
 
 // note(fminoru): import only in one file for binding
 // note(fminoru): Register description
@@ -62,6 +63,86 @@ static u8 bytes_4[] = {0};
 
 static void mb_res_fmt(mb_operation_t *op, mb_buffer_t *tx, mb_buffer_t *rx);
 
+static size_t u32_to_dec(char *out, size_t cap, uint32_t value) {
+    if (cap == 0) return 0;
+
+    char tmp[10];
+    size_t len = 0;
+
+    do {
+        tmp[len++] = (char)('0' + (value % 10u));
+        value /= 10u;
+    } while (value != 0u && len < sizeof(tmp));
+
+    size_t out_len = len;
+    if (out_len > cap - 1u) {
+        out_len = cap - 1u;
+    }
+    for (size_t i = 0; i < out_len; ++i) {
+        out[i] = tmp[len - 1u - i];
+    }
+    out[out_len] = '\0';
+    return out_len;
+}
+
+static void set_text(char *dst, size_t cap, const char *src) {
+    if (cap == 0) return;
+    strncpy(dst, src, cap - 1u);
+    dst[cap - 1u] = '\0';
+}
+
+static void format_vxx(char *dst, size_t cap, uint32_t val) {
+    if (cap < 2) return;
+    dst[0] = (char)('0' + ((val / 100u) % 10u));
+    dst[1] = '.';
+    if (cap > 2) dst[2] = (char)('0' + ((val / 10u) % 10u));
+    if (cap > 3) dst[3] = (char)('0' + (val % 10u));
+    if (cap > 4) dst[4] = '\0';
+}
+
+static void format_int_suffix_1(char *dst, size_t cap, uint32_t val, char suffix) {
+    if (cap == 0) return;
+    size_t len = u32_to_dec(dst, cap, val / 10u);
+    if (len + 1u < cap) {
+        dst[len++] = '.';
+        dst[len++] = (char)('0' + (val % 10u));
+        if (suffix != '\0' && len + 1u < cap) {
+            dst[len++] = suffix;
+        }
+        dst[len] = '\0';
+    }
+}
+
+static void format_uint_suffix(char *dst, size_t cap, uint32_t val, char suffix) {
+    if (cap == 0) return;
+    size_t len = u32_to_dec(dst, cap, val);
+    if (suffix != '\0' && len + 1u < cap) {
+        dst[len++] = suffix;
+        dst[len] = '\0';
+    }
+}
+
+static void format_width4(char *dst, size_t cap, uint32_t val) {
+    char num[10];
+    size_t len = u32_to_dec(num, sizeof(num), val);
+    if (cap == 0) return;
+    if (len >= 4u) {
+        // Keep the right-most digits to fit the display width.
+        set_text(dst, cap, &num[len - 4u]);
+        return;
+    }
+    size_t pad = 4u - len;
+    size_t i = 0;
+    while (i < pad && i + 1u < cap) {
+        dst[i++] = ' ';
+    }
+    size_t j = 0;
+    while (j < len && i + 1u < cap) {
+        dst[i++] = num[j++];
+    }
+    dst[i] = '\0';
+}
+
 mb_operation_t mb_weg_ops[MB_WEG_NUM_OPS] = {
     {.addr = 0x01, .iaddr =  23, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p023_rfmtd, .run_once = 1},
     {.addr = 0x01, .iaddr =  24, .nreg = 1, .enable = 1, .desc = 0, .res = mb_res_fmt, .rfmtd = p024_rfmtd, .run_once = 1},
@@ -109,32 +190,32 @@ static void mb_res_fmt(mb_operation_t *op, mb_buffer_t *tx, mb_buffer_t *rx) {
     }
 
     if (op->rval == 0) {
-        snprintf(res_fmtd, RES_FMTD_LENGTH, "----");
+        set_text(res_fmtd, RES_FMTD_LENGTH, "----");
         return;
     }
 
     switch(addr) {
-    case 23: snprintf(res_fmtd, RES_FMTD_LENGTH, "%1d.%02d", op->rval/100, op->rval%100); break;
-    case 24: snprintf(res_fmtd, RES_FMTD_LENGTH, "%1d.%02d", op->rval/100, op->rval%100); break;
-    case 25: snprintf(res_fmtd, RES_FMTD_LENGTH, "%1d.%02d", op->rval/100, op->rval%100); break;
-    case 613:snprintf(res_fmtd, RES_FMTD_LENGTH, "%4d", op->rval); break;
+    case 23: format_vxx(res_fmtd, RES_FMTD_LENGTH, op->rval); break;
+    case 24: format_vxx(res_fmtd, RES_FMTD_LENGTH, op->rval); break;
+    case 25: format_vxx(res_fmtd, RES_FMTD_LENGTH, op->rval); break;
+    case 613: format_width4(res_fmtd, RES_FMTD_LENGTH, op->rval); break;
 
-    case 3: snprintf(res_fmtd, RES_FMTD_TEMP, "%2d.%1dA", op->rval/10, op->rval%10); break;
-    case 4: snprintf(res_fmtd, RES_FMTD_LENGTH, "%3dV", op->rval); break;
-    case 7: snprintf(res_fmtd, RES_FMTD_LENGTH, "%3dV", op->rval); break;
-    case 30:snprintf(res_fmtd, RES_FMTD_TEMP, "%2d.%1dC", op->rval/10, op->rval%10); break;
+    case 3: format_int_suffix_1(res_fmtd, RES_FMTD_TEMP, op->rval, 'A'); break;
+    case 4: format_uint_suffix(res_fmtd, RES_FMTD_LENGTH, op->rval, 'V'); break;
+    case 7: format_uint_suffix(res_fmtd, RES_FMTD_LENGTH, op->rval, 'V'); break;
+    case 30: format_int_suffix_1(res_fmtd, RES_FMTD_TEMP, op->rval, 'C'); break;
 
-    case 48:snprintf(res_fmtd, RES_FMTD_LENGTH, "%d", op->rval); break;
-    case 49:snprintf(res_fmtd, RES_FMTD_LENGTH, "%d", op->rval); break;
-    case 50:snprintf(res_fmtd, RES_FMTD_LENGTH, "%d", op->rval); break;
-    case 51:snprintf(res_fmtd                                   , RES_FMTD_LENGTH, "%d.%1dA", op->rval/10, op->rval%10); break;
-    case 52:snprintf(res_fmtd, RES_FMTD_LENGTH, "%dV", op->rval); break;
-    case 53:snprintf(res_fmtd, RES_FMTD_LENGTH, "%d.%1d", op->rval/10, op->rval%10); break; // todo(fminoru): how to show freq?
-    case 54:snprintf(res_fmtd, RES_FMTD_TEMP, "%d.%1dC", op->rval/10, op->rval%10); break;
-    case 60:snprintf(res_fmtd, RES_FMTD_LENGTH, "%d", op->rval); break;
-    case 61:snprintf(res_fmtd, RES_FMTD_LENGTH, "%d", op->rval); break;
-    case 70:snprintf(res_fmtd, RES_FMTD_LENGTH, "%d", op->rval); break;
-    case 1010: snprintf(res_fmtd, RES_FMTD_LENGTH, "%d", op->rval); break;
+    case 48: format_uint_suffix(res_fmtd, RES_FMTD_LENGTH, op->rval, '\0'); break;
+    case 49: format_uint_suffix(res_fmtd, RES_FMTD_LENGTH, op->rval, '\0'); break;
+    case 50: format_uint_suffix(res_fmtd, RES_FMTD_LENGTH, op->rval, '\0'); break;
+    case 51: format_int_suffix_1(res_fmtd, RES_FMTD_LENGTH, op->rval, 'A'); break;
+    case 52: format_uint_suffix(res_fmtd, RES_FMTD_LENGTH, op->rval, 'V'); break;
+    case 53: format_int_suffix_1(res_fmtd, RES_FMTD_LENGTH, op->rval, '\0'); break; // todo(fminoru): how to show freq?
+    case 54: format_int_suffix_1(res_fmtd, RES_FMTD_TEMP, op->rval, 'C'); break;
+    case 60: format_uint_suffix(res_fmtd, RES_FMTD_LENGTH, op->rval, '\0'); break;
+    case 61: format_uint_suffix(res_fmtd, RES_FMTD_LENGTH, op->rval, '\0'); break;
+    case 70: format_uint_suffix(res_fmtd, RES_FMTD_LENGTH, op->rval, '\0'); break;
+    case 1010: format_uint_suffix(res_fmtd, RES_FMTD_LENGTH, op->rval, '\0'); break;
     default: ;
     }
 }

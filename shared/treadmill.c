@@ -14,7 +14,7 @@
 
 char *scene_name[SCENE_TOTALS] = {
     "SCENE_INIT",    "SCENE_IDLE",      "SCENE_EMERGENCY", "SCENE_LUB",    "SCENE_CONFIG",
-    "SCENE_PROGRAM", "SCENE_COUNTDOWN", "SCENE_TRAINING",  "SCENE_PAUSED", "SCENE_REPORT", "SCENE_BLE_ALLOW_Y_N",
+    "SCENE_PROGRAM", "SCENE_COUNTDOWN", "SCENE_TRAINING",  "SCENE_PAUSED", "SCENE_REPORT", "SCENE_BLE_ALLOW_Y_N", "SCENE_TEST"
 };
 
 __attribute__((weak)) void beep(beep_t beep) { (void)beep; }
@@ -100,12 +100,16 @@ void treadmill_set_scene(treadmill_t *treadmill, treadmill_scene_t scene) {
 }
 uint32_t treadmill_calculate_pace(const uint16_t speed) {
   extern treadmill_t *pTreadmill;
+  if (speed == 0) return 0;
+
   if (pTreadmill->config.unit == RT_LED_CONFIG_UNIT_MILES){ //imperial
-    unsigned long long speed_mph = (((unsigned long long)speed) * 621371) / ((unsigned long long)1000000); // add 0
-    return ((600000000.0 / speed_mph) * 6) / 10000;
+    // speed is in km/h x100. Convert to mph x100 with 32-bit integer arithmetic.
+    uint32_t speed_mph = ((uint32_t)speed * 62137u) / 100000u;
+    if (speed_mph == 0) return 0;
+    return 360000u / speed_mph;
   }
   else{ //metric
-    return ((60000000.0 / speed) * 6) / 1000;
+    return 360000u / speed;
   }
 }
 
@@ -404,6 +408,7 @@ void treadmill_save_errors(treadmill_t *treadmill) {
   nvm.NVM_WriteVariable16bits(NVM_U16_INVERTER_ERROR_5_COUNT, treadmill->hw.inverter.error[5].count);
   nvm.NVM_WriteVariable16bits(NVM_U16_INVERTER_ERROR_6_COUNT, treadmill->hw.inverter.error[6].count);
   nvm.NVM_WriteVariable16bits(NVM_U16_INVERTER_ERROR_7_COUNT, treadmill->hw.inverter.error[7].count);
+  nvm.NVM_WriteVariable16bits(NVM_U16_INVERTER_ERROR_8_COUNT, treadmill->hw.inverter.error[8].count);
   nvm.NVM_WriteVariable8bits(NVM_U8_INVERTER_LAST_ERROR_0, treadmill->hw.inverter.last_errors[0]);
   nvm.NVM_WriteVariable8bits(NVM_U8_INVERTER_LAST_ERROR_1, treadmill->hw.inverter.last_errors[1]);
   nvm.NVM_WriteVariable8bits(NVM_U8_INVERTER_LAST_ERROR_2, treadmill->hw.inverter.last_errors[2]);
@@ -418,6 +423,7 @@ void treadmill_reset_errors(treadmill_t *treadmill) {
   nvm.NVM_WriteVariable16bits(NVM_U16_INVERTER_ERROR_5_COUNT, 0);
   nvm.NVM_WriteVariable16bits(NVM_U16_INVERTER_ERROR_6_COUNT, 0);
   nvm.NVM_WriteVariable16bits(NVM_U16_INVERTER_ERROR_7_COUNT, 0);
+  nvm.NVM_WriteVariable16bits(NVM_U16_INVERTER_ERROR_8_COUNT, 0);
   nvm.NVM_WriteVariable8bits(NVM_U8_INVERTER_LAST_ERROR_0, 0);
   nvm.NVM_WriteVariable8bits(NVM_U8_INVERTER_LAST_ERROR_1, 0);
   nvm.NVM_WriteVariable8bits(NVM_U8_INVERTER_LAST_ERROR_2, 0);

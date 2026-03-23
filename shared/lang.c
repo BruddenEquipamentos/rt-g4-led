@@ -31,7 +31,10 @@ const char *strings[RT_LED_CONFIG_LNG_TOTALS][STR_TOTALS] = {
         "META CONCLUIDA",
         "MONITOR CARDIACO",
         "ERRO NA REDE CA",
-        "ERRO RODA"
+        "ERRO RODA",
+        "SOBRECARGA",
+        "DESLIGUE PARA APLICAR",
+
     },
     [RT_LED_CONFIG_LNG_EN_US] = {
         "PRESS START OR CHOOSE A PROGRAM",
@@ -60,7 +63,9 @@ const char *strings[RT_LED_CONFIG_LNG_TOTALS][STR_TOTALS] = {
         "GOAL COMPLETED",
         "HEART MONITOR",
         "AC MAINS ERROR",
-        "SENSOR ERROR"
+        "SENSOR ERROR",
+        "OVERLOAD",
+        "POWER OFF TO APPLY",
     },
     [RT_LED_CONFIG_LNG_ES_ES] = {
         "PRESIONE START O ELIJA UN PROGRAMA",
@@ -89,6 +94,8 @@ const char *strings[RT_LED_CONFIG_LNG_TOTALS][STR_TOTALS] = {
         "META COMPLETADA",
         "MONITOR CARDIACO",
         "ERROR DE RED CA",
-        "ERROR RUEDA"
+        "ERROR RUEDA",
+        "SOBRECARGA",
+        "APAGA PARA APLICAR",
     }
 };

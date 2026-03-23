@@ -1,6 +1,5 @@
 #include "treadmill_ble.h"
 
-#include <stdio.h>
 #include <string.h>
 
 #include "./ble/ble.h"
@@ -10,11 +9,23 @@
 #include "./ble/ble_protocol/ble_protocol_command.h"
 #include "./ble/ble_protocol/ble_protocol_helper.h"
 
-// TODO: refactor
-#include <string.h>
-
 #include "treadmill_action.h"
-#include <stdio.h>
+
+static size_t u32_to_dec(char *out, uint32_t value) {
+    char tmp[10];
+    size_t len = 0;
+
+    do {
+        tmp[len++] = (char)('0' + (value % 10u));
+        value /= 10u;
+    } while (value != 0u && len < sizeof(tmp));
+
+    for (size_t i = 0; i < len; ++i) {
+        out[i] = tmp[len - 1u - i];
+    }
+    out[len] = '\0';
+    return len;
+}
 
 void treadmill_ble_reset(treadmill_t *treadmill) { //Lucas - was static
     treadmill->hw.ble.connected = 0;
@@ -71,16 +82,17 @@ void treadmill_ble_process_init(treadmill_t *treadmill) {
                          "AOK", 1000);
 
         // TODO: name according to model
-        snprintf(data, 32,
-                 "\x02"
-                 "SDN,%s\n",
-                 treadmill->config.device_name);
+        strncpy(data, "\x02SDN,", sizeof(data));
+        data[sizeof(data) - 1] = '\0';
+        strncat(data, treadmill->config.device_name, sizeof(data) - strlen(data) - 2u);
+        strncat(data, "\n", sizeof(data) - strlen(data) - 1u);
         ble_post_message(data, "AOK", 1000);
         extern uint16_t fw_version;
-        snprintf(data, 32,
-                 "\x02"
-                 "SB1,%d\n",
-                 fw_version);
+        strcpy(data, "\x02SB1,");
+        size_t pos = strlen(data);
+        pos += u32_to_dec(&data[pos], fw_version);
+        data[pos++] = '\n';
+        data[pos] = '\0';
         ble_post_message(data, "AOK", 1000);
 
         // ble->init_state = BLE_INIT_STATE_ENABLE_NFC;

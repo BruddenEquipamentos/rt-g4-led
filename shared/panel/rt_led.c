@@ -14,12 +14,13 @@ extern scene_t scene_countdown;
 extern scene_t scene_report;
 extern scene_t scene_programs;
 extern scene_t scene_ble_allow_yes_no;
+extern scene_t scene_test;
 
 uint16_t fw_version = MAJOR*100 + MINOR*10 + REVISION;
 
 static const scene_t *rt_led_scenes[] = {
     &scene_init,     &scene_idle,   &scene_config, &scene_lub,      &scene_countdown,
-    &scene_training, &scene_paused, &scene_report, &scene_programs, &scene_emergency, &scene_ble_allow_yes_no,
+    &scene_training, &scene_paused, &scene_report, &scene_programs, &scene_emergency, &scene_ble_allow_yes_no, &scene_test,
 };
 
 static const scene_t *rt_led_current_scene(treadmill_scene_t treadmill_scene) {
