@@ -1501,15 +1501,28 @@ static void handle_emergency(void) {
   }
 }
 
-static inline int handle_combined_or_single_key_press(enum key singles, enum key combined, enum key pressed,
+static int handle_combined_or_single_key_press(enum key singles, enum key combined, enum key pressed,
                                                enum key *previous, uint32_t *key_tick) {
   if (pressed & (singles | combined)) {
     if (*key_tick == 0) {
       *key_tick = HAL_GetTick();
     } else if (HAL_GetTick() - *key_tick >= 50) {
-      if (pressed != combined && *previous == KEY_NONE) {
+      if (pressed != KEY_PROGRAM && pressed != combined && *previous == KEY_NONE) {
         treadmill_key_press(&treadmill, pressed);
         *previous = pressed;
+        return 1;
+      } else if (pressed == KEY_PROGRAM && treadmill.scene == SCENE_IDLE){
+          if (HAL_GetTick() - *key_tick >= 2000) {
+            // treadmill_key_press(&treadmill, pressed);
+            memset(treadmill.hw.ble.hrm.device_name, 0, sizeof(treadmill.hw.ble.hrm.device_name));
+            uint8_t buffer[64];
+            uint8_t length;
+            build_hrm_scan_packet(buffer, &length, 64);
+            ble_post_message(buffer, "", 0);
+            treadmill_set_scene(&treadmill, SCENE_BLE_ALLOW_YES_NO);
+            *previous = pressed;
+          }
+        /* short-press is handled on key release (handled in handle_key_press) */
         return 1;
       } else {
         if (pressed == combined) {
@@ -1527,14 +1540,14 @@ static inline int handle_combined_or_single_key_press(enum key singles, enum key
   return 0;
 }
 
-static inline void handle_key_press(void) {
+static void handle_key_press(void) {
   static enum key pressed = KEY_NONE;
   static enum key previous = KEY_NONE;
   static uint32_t key_tick = 0;
   static uint8_t slow_repeat_count = 0;
   pressed = get_key_pressed();
 
-  if (handle_combined_or_single_key_press((KEY_START | KEY_STOP), KEY_CONFIG, pressed, &previous, &key_tick)) {
+  if (handle_combined_or_single_key_press((KEY_START | KEY_STOP | KEY_PROGRAM), KEY_CONFIG, pressed, &previous, &key_tick)) {
     return;
   }
 
@@ -1544,11 +1557,21 @@ static inline void handle_key_press(void) {
   }
 
   if (pressed != KEY_NONE && pressed != previous) {
-    treadmill_key_press(&treadmill, pressed);
-    key_tick = 0;
-    slow_repeat_count = 0;
-    previous = pressed;
+    if (treadmill.scene == SCENE_IDLE && pressed == KEY_PROGRAM) {
+      previous = pressed;
+      // treadmill_key_press(&treadmill, pressed);
+    } else{
+      treadmill_key_press(&treadmill, pressed);
+      key_tick = 0;
+      slow_repeat_count = 0;
+      previous = pressed;
+    }
   } else if (pressed != KEY_NONE) {
+    /* Only allow auto-repeat during training for incline +/- keys */
+    if (treadmill.scene == SCENE_TRAINING && !(pressed & (KEY_INCLINE_INCREMENT | KEY_INCLINE_DECREMENT))) {
+      /* Don't perform continuous activation for other keys while held during training. */
+      return;
+    }
     if (slow_repeat_count <= 10) {
       osDelay(25);
     } else if (slow_repeat_count < 21) {
@@ -1560,6 +1583,12 @@ static inline void handle_key_press(void) {
     if (slow_repeat_count <= 10) return;
     treadmill_key_press(&treadmill, pressed);
   } else {
+    if (previous == KEY_PROGRAM && treadmill.scene == SCENE_IDLE && key_tick != 0) {
+      uint32_t duration = HAL_GetTick() - key_tick;
+      if (duration < 2000) {
+        treadmill_key_press(&treadmill, KEY_PROGRAM);
+      }
+    }
     key_tick = 0;
     previous = pressed;
     slow_repeat_count = 0;
