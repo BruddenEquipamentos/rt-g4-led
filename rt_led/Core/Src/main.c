@@ -1506,6 +1506,7 @@ static int handle_combined_or_single_key_press(enum key singles, enum key combin
   if (pressed & (singles | combined)) {
     if (*key_tick == 0) {
       *key_tick = HAL_GetTick();
+      return 1;
     } else if (HAL_GetTick() - *key_tick >= 50) {
       if (pressed != KEY_PROGRAM && pressed != combined && *previous == KEY_NONE) {
         treadmill_key_press(&treadmill, pressed);
@@ -1524,6 +1525,12 @@ static int handle_combined_or_single_key_press(enum key singles, enum key combin
           }
         /* short-press is handled on key release (handled in handle_key_press) */
         return 1;
+      // } else if (pressed == KEY_CONFIG && treadmill.scene == SCENE_CONFIG){
+      //   if (HAL_GetTick() - *key_tick >= 2000) {
+      //     treadmill_key_press(&treadmill, pressed);
+      //     *previous = pressed;
+      //   }
+      //   return 1;
       } else {
         if (pressed == combined) {
           if (HAL_GetTick() - *key_tick >= 2000) {
@@ -1536,6 +1543,7 @@ static int handle_combined_or_single_key_press(enum key singles, enum key combin
         }
       }
     }
+    return 1;
   }
   return 0;
 }

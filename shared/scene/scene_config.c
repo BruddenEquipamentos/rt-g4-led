@@ -209,6 +209,12 @@ static void change_config_errors(treadmill_t *treadmill, const kbd_key_t key) {
       }
       break;
     }
+    // case KEY_CONFIG:
+    //   treadmill_reset_errors(treadmill);
+    //   dm_reset_frame_messages();
+    //   treadmill_set_dm_message(treadmill, get_string(treadmill, STR_TM_RESET), 5000, 0);
+    //   treadmill_set_scene(treadmill, SCENE_IDLE);
+    //   break;
     default:;
   }
 }
