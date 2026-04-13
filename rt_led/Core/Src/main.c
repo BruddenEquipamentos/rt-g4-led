@@ -1039,101 +1039,113 @@ static void MX_DMA_Init(void)
   * @param None
   * @retval None
   */
-static void MX_GPIO_Init(void)
-{
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-/* USER CODE BEGIN MX_GPIO_Init_1 */
-/* USER CODE END MX_GPIO_Init_1 */
-
-  /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOF_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_GPIOD_CLK_ENABLE();
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, LED_Pin|TS10_Pin|TS11_Pin, GPIO_PIN_SET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(RESET_N_GPIO_Port, RESET_N_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, CMD_Pin|W_HW_Pin|TS08_Pin, GPIO_PIN_SET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(TS09_GPIO_Port, TS09_Pin, GPIO_PIN_SET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, TS06_Pin|TS07_Pin, GPIO_PIN_SET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(CONTR_GPIO_Port, CONTR_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pins : LED_Pin TS10_Pin TS11_Pin */
-  GPIO_InitStruct.Pin = LED_Pin|TS10_Pin|TS11_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : INC_MINUS_Pin SP_MINUS_Pin SP_PLUS_Pin INC_PLUS_Pin
-                           TS05_Pin TS00_Pin */
-  GPIO_InitStruct.Pin = INC_MINUS_Pin|SP_MINUS_Pin|SP_PLUS_Pin|INC_PLUS_Pin
-                          |TS05_Pin|TS00_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  static void MX_GPIO_Init(void)
+  {
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+  /* USER CODE BEGIN MX_GPIO_Init_1 */
+  /* USER CODE END MX_GPIO_Init_1 */
   
-  /*Configure GPIO pins : RESET_N_Pin TS09_Pin */
-  GPIO_InitStruct.Pin = RESET_N_Pin|TS09_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : CMD_Pin W_HW_Pin TS08_Pin CONTR_Pin */
-  GPIO_InitStruct.Pin = CMD_Pin|W_HW_Pin|TS08_Pin|CONTR_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : LO_PLUS_Pin LO_MINUS_Pin TS03_Pin TS04_Pin
-                           EMG_Pin */
-  GPIO_InitStruct.Pin = LO_PLUS_Pin|LO_MINUS_Pin|TS03_Pin|TS04_Pin
-                          |EMG_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : INT_SC_Pin */
-  GPIO_InitStruct.Pin = INT_SC_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(INT_SC_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : TS01_Pin TS02_Pin */
-  GPIO_InitStruct.Pin = TS01_Pin|TS02_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : TS06_Pin TS07_Pin */
-  GPIO_InitStruct.Pin = TS06_Pin|TS07_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
-
-  /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI4_15_IRQn, 3, 0);
-  HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
-
-/* USER CODE BEGIN MX_GPIO_Init_2 */
-/* USER CODE END MX_GPIO_Init_2 */
-}
-
+    /* GPIO Ports Clock Enable */
+    __HAL_RCC_GPIOC_CLK_ENABLE();
+    __HAL_RCC_GPIOF_CLK_ENABLE();
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    __HAL_RCC_GPIOD_CLK_ENABLE();
+  
+    /*Configure GPIO pin Output Level */
+    HAL_GPIO_WritePin(GPIOC, LED_Pin|TS10_Pin|TS11_Pin, GPIO_PIN_SET);
+  
+    /*Configure GPIO pin Output Level */
+    HAL_GPIO_WritePin(RESET_N_GPIO_Port, RESET_N_Pin, GPIO_PIN_RESET);
+  
+    /*Configure GPIO pin Output Level */
+    HAL_GPIO_WritePin(GPIOB, CMD_Pin|W_HW_Pin|TS08_Pin, GPIO_PIN_SET);
+  
+    /*Configure GPIO pin Output Level */
+    HAL_GPIO_WritePin(TS09_GPIO_Port, TS09_Pin, GPIO_PIN_SET);
+  
+    /*Configure GPIO pin Output Level */
+    HAL_GPIO_WritePin(GPIOD, TS06_Pin|TS07_Pin, GPIO_PIN_SET);
+  
+    /*Configure GPIO pin Output Level */
+    HAL_GPIO_WritePin(CONTR_GPIO_Port, CONTR_Pin, GPIO_PIN_RESET);
+  
+    /*Configure GPIO pins : LED_Pin TS10_Pin TS11_Pin */
+    // GPIO_InitStruct.Pin = LED_Pin|TS10_Pin|TS11_Pin;
+    // GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    // GPIO_InitStruct.Pull = GPIO_NOPULL;
+    // GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    // HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+  
+    GPIO_InitStruct.Pin = LED_Pin|TS11_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+  
+    // NEW KBD
+    GPIO_InitStruct.Pin = TS10_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+  
+    /*Configure GPIO pins : INC_MINUS_Pin SP_MINUS_Pin SP_PLUS_Pin INC_PLUS_Pin
+                             TS05_Pin TS00_Pin */
+    GPIO_InitStruct.Pin = INC_MINUS_Pin|SP_MINUS_Pin|SP_PLUS_Pin|INC_PLUS_Pin
+                            |TS05_Pin|TS00_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  
+    /*Configure GPIO pins : RESET_N_Pin TS09_Pin */
+    GPIO_InitStruct.Pin = RESET_N_Pin|TS09_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  
+    /*Configure GPIO pins : CMD_Pin W_HW_Pin TS08_Pin CONTR_Pin */
+    GPIO_InitStruct.Pin = CMD_Pin|W_HW_Pin|TS08_Pin|CONTR_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  
+    /*Configure GPIO pins : LO_PLUS_Pin LO_MINUS_Pin TS03_Pin TS04_Pin
+                             EMG_Pin */
+    GPIO_InitStruct.Pin = LO_PLUS_Pin|LO_MINUS_Pin|TS03_Pin|TS04_Pin
+                            |EMG_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  
+    /*Configure GPIO pin : INT_SC_Pin */
+    GPIO_InitStruct.Pin = INT_SC_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    HAL_GPIO_Init(INT_SC_GPIO_Port, &GPIO_InitStruct);
+  
+    /*Configure GPIO pins : TS01_Pin TS02_Pin */
+    GPIO_InitStruct.Pin = TS01_Pin|TS02_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+  
+    /*Configure GPIO pins : TS06_Pin TS07_Pin */
+    GPIO_InitStruct.Pin = TS06_Pin|TS07_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+  
+    /* EXTI interrupt init*/
+    HAL_NVIC_SetPriority(EXTI4_15_IRQn, 3, 0);
+    HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
+  
+  /* USER CODE BEGIN MX_GPIO_Init_2 */
+  /* USER CODE END MX_GPIO_Init_2 */
+  }
+  
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
@@ -1400,91 +1412,6 @@ void update_handle_shortcut_keys(GPIO_TypeDef *port, uint16_t pin, enum key_shor
 
 int enable_shortcut_keys_reading = 0;
 void handle_shortcut_keys(void) {}
-
-// static void handle_shortcut_keys(void) {
-//   static uint32_t debounce = 0;
-// #define SHORTCUT_ACKED (0xffffffff)
-//   if (treadmill.scene != SCENE_TRAINING){
-//     if (HAL_GPIO_ReadPin(INC_MINUS_GPIO_Port, INC_MINUS_Pin) == GPIO_PIN_RESET) {
-//       if (debounce == 0) debounce = HAL_GetTick();
-//       if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
-//         debounce = SHORTCUT_ACKED;
-
-//         // changed behavior - start
-//         treadmill_key_press(&treadmill, KEY_START);
-//         treadmill.hw.beep(BEEP_KEYPRESS_ACK);
-//       }
-
-//     } else if (HAL_GPIO_ReadPin(INC_PLUS_GPIO_Port, INC_PLUS_Pin) == GPIO_PIN_RESET) {
-//       if (debounce == 0) debounce = HAL_GetTick();
-//       if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
-//         debounce = SHORTCUT_ACKED;
-//         // changed behavior - stop 
-//         treadmill_key_press(&treadmill, KEY_STOP);
-//         treadmill.hw.beep(BEEP_KEYPRESS_ACK);
-//       }
-//     }
-//     else if (HAL_GPIO_ReadPin(SP_MINUS_GPIO_Port, SP_MINUS_Pin) == GPIO_PIN_RESET) {
-//       if (debounce == 0) debounce = HAL_GetTick();
-//       if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
-//         debounce = SHORTCUT_ACKED;
-//         treadmill.hw.beep(BEEP_KEYPRESS_ACK);
-//         treadmill_key_press(&treadmill, KEY_EXT_KBD_SPEED_DEC);
-//       }
-
-//     } else if (HAL_GPIO_ReadPin(SP_PLUS_GPIO_Port, SP_PLUS_Pin) == GPIO_PIN_RESET) {
-//       if (debounce == 0) debounce = HAL_GetTick();
-//       if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
-//         debounce = SHORTCUT_ACKED;
-//         treadmill.hw.beep(BEEP_KEYPRESS_ACK);
-//         treadmill_key_press(&treadmill, KEY_EXT_KBD_SPEED_INC);
-//       }
-//     }
-//     else{
-//       debounce = 0;
-//     }
-//   }
-//   else {
-//     if (HAL_GPIO_ReadPin(SP_MINUS_GPIO_Port, SP_MINUS_Pin) == GPIO_PIN_RESET) {
-//       if (debounce == 0) debounce = HAL_GetTick();
-//       if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
-//         debounce = SHORTCUT_ACKED;
-//         treadmill.hw.beep(BEEP_KEYPRESS_ACK);
-//         treadmill_key_press(&treadmill, KEY_EXT_KBD_SPEED_DEC);
-//       }
-
-//     } else if (HAL_GPIO_ReadPin(SP_PLUS_GPIO_Port, SP_PLUS_Pin) == GPIO_PIN_RESET) {
-//       if (debounce == 0) debounce = HAL_GetTick();
-//       if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
-//         debounce = SHORTCUT_ACKED;
-//         treadmill.hw.beep(BEEP_KEYPRESS_ACK);
-//         treadmill_key_press(&treadmill, KEY_EXT_KBD_SPEED_INC);
-//       }
-
-//     } else if (HAL_GPIO_ReadPin(INC_MINUS_GPIO_Port, INC_MINUS_Pin) == GPIO_PIN_RESET) {
-//       if (debounce == 0) debounce = HAL_GetTick();
-//       if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
-//         debounce = SHORTCUT_ACKED;
-
-//         treadmill.hw.beep(BEEP_KEYPRESS_ACK);
-//         // changed behavior - start
-//         treadmill_key_press(&treadmill, KEY_START);
-//       }
-
-//     } else if (HAL_GPIO_ReadPin(INC_PLUS_GPIO_Port, INC_PLUS_Pin) == GPIO_PIN_RESET) {
-//       if (debounce == 0) debounce = HAL_GetTick();
-//       if (debounce != SHORTCUT_ACKED && HAL_GetTick() - debounce > 50) {
-//         debounce = SHORTCUT_ACKED;
-//         // changed behavior - stop 
-//         treadmill.hw.beep(BEEP_KEYPRESS_ACK);
-//         treadmill_key_press(&treadmill, KEY_STOP);
-//       }
-
-//     } else {
-//       debounce = 0;
-//     }
-//   }
-// }
 
 static void handle_emergency(void) {
   static uint32_t debounce = 0;

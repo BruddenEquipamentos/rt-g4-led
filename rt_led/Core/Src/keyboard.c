@@ -93,7 +93,7 @@ enum key  get_key_pressed(void) {
   }
 
   if (key & KEY_PROGRAM && pTreadmill->scene == SCENE_IDLE) {
-      return KEY_NONE;
+      return;
   }
 
   if (key & KEY_START && key & KEY_STOP) { //Lucas rework that 15/05 - wait for seconds see tft firmware 
