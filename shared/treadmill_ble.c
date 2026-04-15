@@ -70,18 +70,28 @@ void treadmill_ble_process_init(treadmill_t *treadmill) {
                          "SID,10\n",
                          "AOK", 1000);
 
-        snprintf(data, 32,
-                 "\x02"
-                 "SET_NSU,%s\n",
-                 treadmill->config.nsu);
-        ble_post_message(data, "AOK", 1000);
-
         // TODO: name according to model
         snprintf(data, 32,
                  "\x02"
                  "SDN,%s\n",
                  treadmill->config.device_name);
         ble_post_message(data, "AOK", 1000);
+
+        snprintf(data, 32,
+                 "\x02"
+                 "SET_NSU,%s\n",
+                 treadmill->config.nsu);
+        ble_post_message(data, "AOK", 1000);
+
+        if (treadmill->config.device_name_id == 1) {
+            strncpy(treadmill->config.nsu, "5000000597694", 22);
+        }
+        if (treadmill->config.device_name_id == 2) {
+            strncpy(treadmill->config.nsu, "5000000597692", 22);
+        }
+        if (treadmill->config.device_name_id == 3) {
+            strncpy(treadmill->config.nsu, "5000000597693", 22);
+        }
         
         extern uint16_t fw_version;
         snprintf(data, 32,

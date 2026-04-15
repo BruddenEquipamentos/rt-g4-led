@@ -323,7 +323,7 @@ static void build_ftms_data_packet(treadmill_t *treadmill, uint8_t *buffer, uint
     uint16_t elapsed_time = treadmill->training.seconds;
     uint16_t inclination = treadmill->training.incline;
     uint16_t calories = treadmill->training.kcal / 1000;
-    uint8_t heart_rate = treadmill->training.speed/10; // to test without handgrip
+    uint8_t heart_rate = treadmill->training.bpm;
 
     buffer[(*size)++] = BLE_PROTOCOL_MESSAGE_START;
     flat_bin_to_ascii_8(buffer, size, max_size, BP_NOTIFY);
@@ -377,57 +377,42 @@ static void build_ftms_data_packet(treadmill_t *treadmill, uint8_t *buffer, uint
 // TODO: Refactor place
 #include "ble/ble_protocol/ble_ftms_treadmill.h"
 #include "ble/ble_protocol/ble_protocol_helper.h"
+
 int treadmill_send_ftms_data(treadmill_t *treadmill) {
 #define BUFSIZE 128
-  uint8_t buffer[BUFSIZE] = {0};
-  uint8_t bindex = 0;
+    uint8_t buffer[BUFSIZE] = {0};
+    uint8_t bindex = 0;
+    uint16_t flags = 0x0000;
+    const uint8_t packet_size_full = 25;
+    const uint16_t mtu = treadmill->hw.ble.connection.mtu > 0 ? treadmill->hw.ble.connection.mtu - 3 : 0;
 
-  uint16_t instantaneous_speed = treadmill->training.speed;
-  uint16_t average_speed = treadmill->training.average_speed; //Lucas
-  uint32_t total_distance = treadmill->training.meters;
-  uint16_t elapsed_time = treadmill->training.seconds;
-  uint16_t inclination = treadmill->training.incline;
-  uint16_t calories = treadmill->training.kcal / 1000;    
+    /*
+     * Low-MTU fallback:
+     * prefer a single compact packet with main fields instead of TD_MORE_DATA split,
+     * because some apps only consume the first notification after subscribe/connect.
+     */
+    if (mtu && mtu < packet_size_full) {
+        flags |= TD_AVERAGE_SPEED_PRESENT;
+        flags |= TD_TOTAL_DISTANCE_PRESENT;
+        flags |= TD_INCLINATION_RAMP_ANGLE_SETTING_PRESENT;
+        flags |= TD_ELEVATION_GAIN_PRESENT;
+        flags |= TD_HEART_RATE_PRESENT;
+        flags |= TD_ELAPSED_TIME_PRESENT;
+    } else {
+        flags |= TD_AVERAGE_SPEED_PRESENT;
+        flags |= TD_TOTAL_DISTANCE_PRESENT;
+        flags |= TD_INCLINATION_RAMP_ANGLE_SETTING_PRESENT;
+        flags |= TD_ELEVATION_GAIN_PRESENT;
+        flags |= TD_EXPENDED_ENERGY_PRESENT;
+        flags |= TD_HEART_RATE_PRESENT;
+        flags |= TD_ELAPSED_TIME_PRESENT;
+    }
 
-  // packet size = 2 + 2 + 3 + 4 + 4 + 4 + 1 + 1 + 2 = 23 bytes    
-  const packet_size = 25;    
-  const mtu = treadmill->hw.ble.connection.mtu > 0 ? treadmill->hw.ble.connection.mtu - 3 : 0;
-  
-  if (mtu && mtu < packet_size) {
-      // split in two
-      uint16_t flags = 0x0000;
-      bindex = 0;
-      flags |= TD_MORE_DATA;             // -ok
-      flags |= TD_ELAPSED_TIME_PRESENT;  // -ok      
-      flags |= TD_AVERAGE_SPEED_PRESENT; // -ok
-      build_ftms_data_packet(treadmill, buffer, BUFSIZE, &bindex, flags);
-      // send packet
-      treadmill->hw.ble.send_data(buffer, bindex);
+    build_ftms_data_packet(treadmill, buffer, BUFSIZE, &bindex, flags);
 
-      flags = 0x0000;
-      bindex = 0;
-      flags |= TD_TOTAL_DISTANCE_PRESENT; // -ok
-      flags |= TD_INCLINATION_RAMP_ANGLE_SETTING_PRESENT; // -ok
-      flags |= TD_ELEVATION_GAIN_PRESENT; // -ok
-      flags |= TD_EXPENDED_ENERGY_PRESENT; // -ok
-      flags |= TD_HEART_RATE_PRESENT; // -ok
-      build_ftms_data_packet(treadmill, buffer, BUFSIZE, &bindex, flags);
-  } else {
-      // single packet
-      uint16_t flags = 0x0000;
-      bindex = 0;
-      flags |= TD_AVERAGE_SPEED_PRESENT; // -ok
-      flags |= TD_TOTAL_DISTANCE_PRESENT; // -ok
-      flags |= TD_INCLINATION_RAMP_ANGLE_SETTING_PRESENT; // -ok
-      flags |= TD_ELEVATION_GAIN_PRESENT; // -ok
-      flags |= TD_EXPENDED_ENERGY_PRESENT; // -ok
-      flags |= TD_HEART_RATE_PRESENT; // -ok
-      flags |= TD_ELAPSED_TIME_PRESENT; // -ok
-      build_ftms_data_packet(treadmill, buffer, BUFSIZE, &bindex, flags);        
-  }
-
-  return treadmill->hw.ble.send_data(buffer, bindex);
+    return treadmill->hw.ble.send_data(buffer, bindex);
 }
+
 void treadmill_clear_bpm_hg_loss(treadmill_t *treadmill) {
   treadmill->hg_lost_tick = 0; ///////
   treadmill->hg_lost_count = 0; ////////
