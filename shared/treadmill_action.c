@@ -1,4 +1,4 @@
-#include "treadmill_action.h"
+﻿#include "treadmill_action.h"
 
 #include <string.h>
 
@@ -39,7 +39,7 @@ void treadmill_start_training(treadmill_t *treadmill) {
   treadmill->training.pace_max = 5000;
 
   //////////////////// max pace max speed max bpm
-  treadmill_set_speed(treadmill, treadmill->config.speed.min);  //Lucas --- no tft10 não tem
+  treadmill_set_speed(treadmill, treadmill->config.speed.min);  //Lucas --- no tft10 nÃ£o tem
 
   // disable gymkit pairing for training session after start
   ble_post_message(
@@ -81,7 +81,7 @@ void treadmill_reset_training(treadmill_t *treadmill) {
   if (treadmill->on_update_fms_callback){
 	  treadmill->on_update_fms_callback(treadmill, Reset, NULL);
   }
-  // Zerar as novas variáveis de velocidade média
+  // Zerar as novas variÃ¡veis de velocidade mÃ©dia
   treadmill->training.speed_sum = 0;
   treadmill->training.speed_samples = 0;
 }
@@ -94,7 +94,7 @@ void treadmill_resume_training(treadmill_t *treadmill) {
     treadmill->program.p_walk_08min.target_speed = (int)treadmill->config.speed.min;
   }
   ////////////////// return to 1.2 km/h
-  treadmill_set_speed(treadmill, treadmill->config.speed.min); //Lucas --- no tft10 não tem
+  treadmill_set_speed(treadmill, treadmill->config.speed.min); //Lucas --- no tft10 nÃ£o tem
 
   if (treadmill->on_update_fms_callback) {
     treadmill->on_update_fms_callback(treadmill, StartedOrResumedByTheUser, NULL);
@@ -186,7 +186,7 @@ int treadmill_set_speed(treadmill_t *treadmill, const uint16_t speed) {
     }
   }
 
-  // if (treadmill->on_update_fms_callback) { //Lucas --- no tft10 não tem
+  // if (treadmill->on_update_fms_callback) { //Lucas --- no tft10 nÃ£o tem
   //   treadmill->on_update_fms_callback(treadmill, TargetSpeedChanged, &speed);
   // }
   return 1;
@@ -199,7 +199,7 @@ int treadmill_set_incline(treadmill_t *treadmill, const int16_t incline) {
     treadmill->aux.incline_changed_time_ms = treadmill->get_time_ms();
     treadmill->training.incline = incline;
 
-    // if (treadmill->on_update_fms_callback) { //Lucas --- no tft10 não tem
+    // if (treadmill->on_update_fms_callback) { //Lucas --- no tft10 nÃ£o tem
     //   treadmill->on_update_fms_callback(treadmill, TargetInclineChanged, &incline);
     // }
   }
@@ -322,7 +322,8 @@ static void build_ftms_data_packet(treadmill_t *treadmill, uint8_t *buffer, uint
     uint32_t total_distance = treadmill->training.meters;
     uint16_t elapsed_time = treadmill->training.seconds;
     uint16_t inclination = treadmill->training.incline;
-    uint16_t calories = treadmill->training.kcal / 1000;
+    uint32_t calories_u32 = treadmill->training.kcal / 1000;
+    uint16_t calories = calories_u32 > 0xFFFF ? 0xFFFF : (uint16_t)calories_u32;
     uint8_t heart_rate = treadmill->training.bpm;
 
     buffer[(*size)++] = BLE_PROTOCOL_MESSAGE_START;
@@ -380,37 +381,66 @@ static void build_ftms_data_packet(treadmill_t *treadmill, uint8_t *buffer, uint
 
 int treadmill_send_ftms_data(treadmill_t *treadmill) {
 #define BUFSIZE 128
-    uint8_t buffer[BUFSIZE] = {0};
-    uint8_t bindex = 0;
-    uint16_t flags = 0x0000;
-    const uint8_t packet_size_full = 25;
-    const uint16_t mtu = treadmill->hw.ble.connection.mtu > 0 ? treadmill->hw.ble.connection.mtu - 3 : 0;
+  uint8_t buffer[BUFSIZE] = {0};
+  uint8_t bindex = 0;
 
-    /*
-     * Low-MTU fallback:
-     * prefer a single compact packet with main fields instead of TD_MORE_DATA split,
-     * because some apps only consume the first notification after subscribe/connect.
-     */
-    if (mtu && mtu < packet_size_full) {
-        flags |= TD_AVERAGE_SPEED_PRESENT;
-        flags |= TD_TOTAL_DISTANCE_PRESENT;
-        flags |= TD_INCLINATION_RAMP_ANGLE_SETTING_PRESENT;
-        flags |= TD_ELEVATION_GAIN_PRESENT;
-        flags |= TD_HEART_RATE_PRESENT;
-        flags |= TD_ELAPSED_TIME_PRESENT;
-    } else {
-        flags |= TD_AVERAGE_SPEED_PRESENT;
-        flags |= TD_TOTAL_DISTANCE_PRESENT;
-        flags |= TD_INCLINATION_RAMP_ANGLE_SETTING_PRESENT;
-        flags |= TD_ELEVATION_GAIN_PRESENT;
-        flags |= TD_EXPENDED_ENERGY_PRESENT;
-        flags |= TD_HEART_RATE_PRESENT;
-        flags |= TD_ELAPSED_TIME_PRESENT;
-    }
+  uint16_t instantaneous_speed = treadmill->training.speed;
+  uint16_t average_speed = treadmill->training.average_speed; //Lucas
+  uint32_t total_distance = treadmill->training.meters;
+  uint16_t elapsed_time = treadmill->training.seconds;
+  uint16_t inclination = treadmill->training.incline;
+  uint16_t calories = treadmill->training.kcal / 1000;  
+  uint8_t heart_rate = treadmill->training.bpm;  
 
-    build_ftms_data_packet(treadmill, buffer, BUFSIZE, &bindex, flags);
+  // packet size = flags(2) + instant(2) + avg(2) + dist(3) + incline(4) + elev(4) + energy(5) + hr(1) + elapsed(2) = 25 bytes
+  const uint16_t packet_size = 25;
+  const uint16_t mtu = treadmill->hw.ble.connection.mtu > 3 ? (uint16_t)(treadmill->hw.ble.connection.mtu - 3) : 0;
+  
+  if (mtu && mtu < packet_size) {
+      // split in two
+      int first_sent = 0;
+      int second_sent = 0;
+      uint16_t flags = 0x0000;
+      bindex = 0;
+      memset(buffer, 0, sizeof(buffer));
+      flags |= TD_MORE_DATA;             // -ok
+      flags |= TD_ELAPSED_TIME_PRESENT;  // -ok      
+      flags |= TD_AVERAGE_SPEED_PRESENT; // -ok
+      flags |= TD_EXPENDED_ENERGY_PRESENT; // -ok
+      build_ftms_data_packet(treadmill, buffer, BUFSIZE, &bindex, flags);
+      first_sent = treadmill->hw.ble.send_data(buffer, bindex);
 
-    return treadmill->hw.ble.send_data(buffer, bindex);
+      // Short gap avoids dropping back-to-back notifications on low MTU links.
+      if (treadmill->hw.wait_ms) {
+          treadmill->hw.wait_ms(10);
+      }
+
+      flags = 0x0000;
+      bindex = 0;
+      memset(buffer, 0, sizeof(buffer));
+      flags |= TD_TOTAL_DISTANCE_PRESENT; // -ok
+      flags |= TD_INCLINATION_RAMP_ANGLE_SETTING_PRESENT; // -ok
+      flags |= TD_ELEVATION_GAIN_PRESENT; // -ok
+      flags |= TD_HEART_RATE_PRESENT; // -ok
+      build_ftms_data_packet(treadmill, buffer, BUFSIZE, &bindex, flags);
+      second_sent = treadmill->hw.ble.send_data(buffer, bindex);
+
+      return (first_sent > 0 && second_sent > 0) ? 1 : 0;
+  } else {
+      // single packet
+      uint16_t flags = 0x0000;
+      bindex = 0;
+      memset(buffer, 0, sizeof(buffer));
+      flags |= TD_AVERAGE_SPEED_PRESENT; // -ok
+      flags |= TD_TOTAL_DISTANCE_PRESENT; // -ok
+      flags |= TD_INCLINATION_RAMP_ANGLE_SETTING_PRESENT; // -ok
+      flags |= TD_ELEVATION_GAIN_PRESENT; // -ok
+      flags |= TD_EXPENDED_ENERGY_PRESENT; // -ok
+      flags |= TD_HEART_RATE_PRESENT;
+      flags |= TD_ELAPSED_TIME_PRESENT; // -ok
+      build_ftms_data_packet(treadmill, buffer, BUFSIZE, &bindex, flags);        
+      return treadmill->hw.ble.send_data(buffer, bindex);
+  }
 }
 
 void treadmill_clear_bpm_hg_loss(treadmill_t *treadmill) {
@@ -480,3 +510,5 @@ void treadmill_set_bpm_stop(treadmill_t *treadmill, uint8_t in_program) {
   // }
 
 }
+
+

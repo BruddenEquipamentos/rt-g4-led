@@ -81,7 +81,7 @@ void treadmill_ble_process_init(treadmill_t *treadmill) {
                  "\x02"
                  "SET_NSU,%s\n",
                  treadmill->config.nsu);
-        ble_post_message(data, "AOK", 1000);
+        ble_post_message(data, "AOK", 1000);        
 
         if (treadmill->config.device_name_id == 1) {
             strncpy(treadmill->config.nsu, "5000000597694", 22);
