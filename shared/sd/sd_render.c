@@ -108,14 +108,32 @@ static void render_training_data(treadmill_t *treadmill) {
 
 
   if (treadmill->scene == SCENE_TRAINING) {
-    if ((speed_changed == 1) && treadmill->get_time_ms() - treadmill->key_pressed_last_tick <= 2000){
+    uint32_t now = treadmill->get_time_ms();
+    uint8_t c2v_shortcut_sd_feedback_active = 0;
+    uint16_t c2v_shortcut_sd_feedback_speed = treadmill->aux.c2v_shortcut_sd_feedback_speed;
+
+    if (treadmill->aux.c2v_shortcut_sd_feedback_active) {
+      if ((now - treadmill->aux.c2v_shortcut_sd_feedback_start_ms) <= C2V_CONFIRM_WINDOW_MS) {
+        c2v_shortcut_sd_feedback_active = 1;
+      } else {
+        treadmill->aux.c2v_shortcut_sd_feedback_active = 0;
+        treadmill->aux.c2v_shortcut_sd_feedback_start_ms = 0;
+        treadmill->aux.c2v_shortcut_sd_feedback_speed = 0;
+      }
+    }
+
+    if (((speed_changed == 1) && (now - treadmill->key_pressed_last_tick <= 2000)) || c2v_shortcut_sd_feedback_active){
       sd_render_all_visible(false);
       sd_set_visible(&sd_speed, true);
+      if (c2v_shortcut_sd_feedback_active && c2v_shortcut_sd_feedback_speed > 0) {
+        sd_set_kmh(&sd_speed, c2v_shortcut_sd_feedback_speed);
+        sd_blink(&sd_speed, now, 500);
+      }
     }
     else{
       speed_changed = 0;
     }
-    if ((incline_changed == 1) && treadmill->get_time_ms() - treadmill->key_pressed_last_tick <= 2000){
+    if ((incline_changed == 1) && (now - treadmill->key_pressed_last_tick <= 2000)){
       sd_render_all_visible(false);
       if ((treadmill->training.incline == treadmill->config.incline.min) || (treadmill->training.incline == treadmill->config.incline.max)) {
 //        aux_teste = 1; //todo: check if incline is min or max if user press incline increment key

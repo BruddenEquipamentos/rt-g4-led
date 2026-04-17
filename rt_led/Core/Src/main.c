@@ -1265,7 +1265,6 @@ void StartDefaultTask(void const * argument)
 #define HG_BURST_WINDOW_MS 1000u
 #define HG_BURST_MAX 8u
 #define HG_START_STOP_CONFIG_HOLD_MS 2000u
-#define C2V_CONFIRM_WINDOW_MS 3000u
 #define KEYBOARD_FAULT_CLEAR_HOLD_MS 10000u
 
 typedef enum keyboard_source_group {
@@ -1290,6 +1289,7 @@ struct c2v_pending_shortcut {
 
 static struct key_source_health g_key_source_health[KEYBOARD_INPUT_SOURCE_TOTAL] = {0};
 static struct c2v_pending_shortcut g_c2v_pending_shortcut = {0};
+static uint8_t g_c2v_start_prompt_active = 0;
 static volatile uint8_t g_main_plus_minus_combo_pressed = 0;
 static volatile uint8_t g_hg_plus_minus_combo_pressed = 0;
 
@@ -1500,7 +1500,26 @@ static uint8_t keyboard_is_c2v_shortcut_key(kbd_key_t key) {
           key == KEY_EXT_KBD_SPEED_15);
 }
 
+static void keyboard_show_c2v_start_prompt(void) {
+  treadmill_set_dm_message(&treadmill, "START", C2V_CONFIRM_WINDOW_MS, 0);
+  g_c2v_start_prompt_active = 1;
+}
+
+static void keyboard_clear_c2v_start_prompt(void) {
+  if (!g_c2v_start_prompt_active) return;
+
+  if (treadmill.message.tick && strcmp(treadmill.message.data, "START") == 0) {
+    treadmill_clear_dm_message(&treadmill);
+  }
+
+  g_c2v_start_prompt_active = 0;
+}
+
 static void keyboard_clear_c2v_pending_shortcut(void) {
+  keyboard_clear_c2v_start_prompt();
+  treadmill.aux.c2v_shortcut_sd_feedback_active = 0;
+  treadmill.aux.c2v_shortcut_sd_feedback_start_ms = 0;
+  treadmill.aux.c2v_shortcut_sd_feedback_speed = 0;
   g_c2v_pending_shortcut.active = 0;
   g_c2v_pending_shortcut.key = KEY_NONE;
   g_c2v_pending_shortcut.selected_time_ms = 0;
@@ -1520,9 +1539,14 @@ static void keyboard_c2v_update(uint32_t now) {
 }
 
 static void keyboard_store_c2v_pending_shortcut(kbd_key_t key, uint32_t now) {
+  uint16_t shortcut_target_speed = keyboard_speed_shortcut_target_speed(key);
   g_c2v_pending_shortcut.active = 1;
   g_c2v_pending_shortcut.key = key;
   g_c2v_pending_shortcut.selected_time_ms = now;
+  treadmill.aux.c2v_shortcut_sd_feedback_active = 1;
+  treadmill.aux.c2v_shortcut_sd_feedback_start_ms = now;
+  treadmill.aux.c2v_shortcut_sd_feedback_speed = shortcut_target_speed;
+  keyboard_show_c2v_start_prompt();
 }
 
 static uint8_t keyboard_try_confirm_c2v_shortcut(uint32_t now) {

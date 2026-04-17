@@ -68,6 +68,7 @@
 #define KEYBOARD_ERROR_COUNT (6u)
 #define LAST_ERROR_HISTORY_COUNT (3u)
 #define CONFIG_ERRORS_TOTAL_ENTRIES (INVERTER_ERROR_COUNT + LAST_ERROR_HISTORY_COUNT + KEYBOARD_ERROR_COUNT)
+#define C2V_CONFIRM_WINDOW_MS (3000u)
 #define KEYBOARD_SOURCE_MASK_MAIN (0x01u)
 #define KEYBOARD_SOURCE_MASK_HG_SPEED (0x02u)
 #define KEYBOARD_SOURCE_MASK_HG_START_STOP (0x04u)
@@ -212,6 +213,9 @@ typedef struct treadmill {
 
     uint32_t incline_changed_time_ms;
     uint32_t last_incline_show;
+    uint8_t c2v_shortcut_sd_feedback_active;
+    uint32_t c2v_shortcut_sd_feedback_start_ms;
+    uint16_t c2v_shortcut_sd_feedback_speed;
 
     // TEMP
     struct average_history {
