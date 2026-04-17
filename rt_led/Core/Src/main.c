@@ -1526,7 +1526,15 @@ static void keyboard_clear_c2v_pending_shortcut(void) {
 }
 
 static uint8_t keyboard_should_use_c2v_for_shortcut(kbd_key_t key) {
-  return (keyboard_c2v_enabled() && treadmill.scene == SCENE_TRAINING && keyboard_is_c2v_shortcut_key(key));
+  if (!keyboard_c2v_enabled() || treadmill.scene != SCENE_TRAINING || !keyboard_is_c2v_shortcut_key(key)) {
+    return 0;
+  }
+
+  uint16_t shortcut_target_speed = keyboard_speed_shortcut_target_speed(key);
+  if (shortcut_target_speed == 0u) return 0;
+
+  // C2V=1: START is used only to confirm shortcut speed increments.
+  return (shortcut_target_speed > treadmill.training.speed);
 }
 
 static void keyboard_c2v_update(uint32_t now) {
@@ -1721,6 +1729,11 @@ void keyboard_route_key_release(keyboard_input_source_t source) {
                  treadmill.scene == SCENE_TRAINING && keyboard_try_confirm_c2v_shortcut(now)) {
         // START acts as confirmation for pending speed shortcut in C2V mode.
       } else {
+        if (keyboard_c2v_enabled() && treadmill.scene == SCENE_TRAINING && keyboard_is_c2v_shortcut_key(last_key) &&
+            g_c2v_pending_shortcut.active) {
+          // Selecting a direct shortcut while another one is pending cancels the old confirmation window.
+          keyboard_clear_c2v_pending_shortcut();
+        }
         treadmill_key_press(&treadmill, last_key);
       }
     }
