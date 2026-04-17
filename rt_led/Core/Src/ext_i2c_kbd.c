@@ -281,9 +281,15 @@ void handle_key(uint8_t key) {
 		if (key_config_debounce == 0) {
 			key_config_debounce = pTreadmill->get_time_ms();
 		} else {
-			if (pTreadmill->get_time_ms() - key_config_debounce >= 1200 && pTreadmill->scene != SCENE_CONFIG) {
-				treadmill_key_press(pTreadmill, KEY_CONFIG);
-				key_config_debounce = 0;
+			if (pTreadmill->get_time_ms() - key_config_debounce >= 1200) {
+                if (pTreadmill->scene != SCENE_CONFIG){
+                    treadmill_key_press(pTreadmill, KEY_CONFIG);
+                    key_config_debounce = 0;
+                }
+                if (pTreadmill->scene == SCENE_CONFIG && (pTreadmill->get_time_ms() - pTreadmill->scene_tick > 1000)){
+                    treadmill_key_press(pTreadmill, KEY_CONFIG);
+                    key_config_debounce = 0;
+                }
 			}
 		}
         break;

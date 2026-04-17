@@ -3,6 +3,7 @@
 #include "treadmill_motor_modbus.h"
 #include "treadmill_motor_movement.h"
 #include "nvm/nvm.h"
+
 extern uint32_t last_ack_time;
 
 // debounce window for saving errors to NVM (ms)
@@ -20,15 +21,26 @@ static inline void inverter_update_error(struct inverter *inv, int idx, inverter
 
 static int inverter_error_code_to_index(inverter_error_code_t code) {
   switch (code) {
-    case INVERTER_ERROR_OVERVOLTAGE: return 0;
-    case INVERTER_ERROR_UNDERVOLTAGE: return 1;
-    case INVERTER_ERROR_DC_UNDERVOLTAGE: return 2;
-    case INVERTER_ERROR_OVERTEMPERATURE: return 3;
-    case INVERTER_ERROR_OVERCURRENT: return 4;
-    case INVERTER_ERROR_COMMUNICATION: return 5;
-    case INVERTER_ERROR_INCLINE_MOTOR: return 6;
-    case INVERTER_ERROR_MPHV: return 7;
-    default: return -1;
+    case INVERTER_ERROR_OVERVOLTAGE:
+      return 0;
+    case INVERTER_ERROR_UNDERVOLTAGE:
+      return 1;
+    case INVERTER_ERROR_DC_UNDERVOLTAGE:
+      return 2;
+    case INVERTER_ERROR_OVERTEMPERATURE:
+      return 3;
+    case INVERTER_ERROR_OVERCURRENT:
+      return 4;
+    case INVERTER_ERROR_OVERLOAD:
+      return 5;
+    case INVERTER_ERROR_COMMUNICATION:
+      return 6;
+    case INVERTER_ERROR_INCLINE_MOTOR:
+      return 7;
+    case INVERTER_ERROR_MPHV:
+      return 8;
+    default:
+      return -1;
   }
 }
 

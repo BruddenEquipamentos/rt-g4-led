@@ -1,4 +1,6 @@
 #include "../panel/rt_led.h"
+#include "../dm/dm.h"
+#include "../lang.h"
 #include "scene.h"
 
 static void on_exit_config_option(treadmill_t *treadmill) {
@@ -184,7 +186,11 @@ static void change_config_test(treadmill_t *treadmill, const kbd_key_t key) {
     case KEY_EXT_KBD_SPEED_DEC:{
       treadmill->config.test =
           treadmill->config.test == RT_LED_CONFIG_TEST_DISABLE ? RT_LED_CONFIG_TEST_ENABLE : RT_LED_CONFIG_TEST_DISABLE;
+      if (treadmill->config.test == RT_LED_CONFIG_TEST_ENABLE){
+        treadmill_set_scene(treadmill, SCENE_TEST);
+      }
       break;
+
     }
     default:;
   }
@@ -203,10 +209,12 @@ static void change_config_errors(treadmill_t *treadmill, const kbd_key_t key) {
       }
       break;
     }
-    case KEY_CONFIG:{ // TODO: improve
-      treadmill_reset_errors(treadmill);
-      break;
-    }
+    // case KEY_CONFIG:
+    //   treadmill_reset_errors(treadmill);
+    //   dm_reset_frame_messages();
+    //   treadmill_set_dm_message(treadmill, get_string(treadmill, STR_TM_RESET), 5000, 0);
+    //   treadmill_set_scene(treadmill, SCENE_IDLE);
+    //   break;
     default:;
   }
 }
@@ -320,6 +328,15 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
           change_config_max_time(treadmill, key);
           break;
         }
+      }
+      break;
+    }
+    case KEY_CONFIG:{
+      if (treadmill->config.option == CONFIG_OPTION_ERRORS){
+        treadmill_reset_errors(treadmill);
+        dm_reset_frame_messages();
+        treadmill_set_dm_message(treadmill, get_string(treadmill, STR_TM_RESET), 5000, 0);
+        treadmill_set_scene(treadmill, SCENE_IDLE);
       }
       break;
     }

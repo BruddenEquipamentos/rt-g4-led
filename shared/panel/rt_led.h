@@ -8,7 +8,7 @@
 #include "../sd/sd_render.h"
 
 #define MAJOR 1
-#define MINOR 1
+#define MINOR 2
 #define REVISION 4 ////
 
 extern uint16_t fw_version;

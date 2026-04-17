@@ -3,6 +3,7 @@
 #include "../panel/render_program_scene.h"
 #include "../panel/rt_led.h"
 #include "../treadmill_motor_modbus.h"
+#include <stdbool.h>
 /*
 // display (iLed)
 distance time speed
@@ -58,12 +59,44 @@ static void sd_set_value_to_all(const uint32_t value) {
   sd_set_value(&sd_bpm, value);
 }
 
-#include <stdio.h>  // TODO: refactor
-
 extern uint8_t speed_changed;
 extern uint8_t incline_changed;
 
 uint8_t aux_teste = 0;
+
+static char sd_hex_nibble_to_char(uint8_t nibble) {
+  nibble &= 0x0Fu;
+  if (nibble < 10u) {
+    return (char)('0' + nibble);
+  }
+
+  switch (nibble) {
+    case 10u: return 'A';
+    case 11u: return 'b';
+    case 12u: return 'C';
+    case 13u: return 'd';
+    case 14u: return 'E';
+    case 15u: return 'f';
+    default: return '0';
+  }
+}
+
+static void sd_render_idle_inverter_error(treadmill_t *treadmill) {
+  uint8_t error_code = (uint8_t)treadmill->hw.inverter.last_errors[0];
+  char error_text[5] = {' ', 'E', '0', '0', '\0'};
+
+  if (error_code == (uint8_t)INVERTER_ERROR_NONE) {
+    sd_set_visible(&sd_program, false);
+    return;
+  }
+
+  error_text[2] = sd_hex_nibble_to_char(error_code >> 4);
+  error_text[3] = sd_hex_nibble_to_char(error_code);
+  sd_set_visible(&sd_program, true);
+  sd_set_pad_leading_zero(&sd_program, false);
+  sd_program.dot = SD_DOT_NO_DOT;
+  sd_set_text(&sd_program, error_text);
+}
 
 static void render_training_data(treadmill_t *treadmill) {
   sd_set_km_m(&sd_distance, treadmill->training.meters);
@@ -133,7 +166,12 @@ static void render_training_data(treadmill_t *treadmill) {
   if (treadmill->config.modbus) {
     sd_set_visible(&sd_program, true);
     char text[5];
-    snprintf(text, 5, "P%03d", modbus_current_selected_param_value());
+    uint16_t value = modbus_current_selected_param_value() % 1000u;
+    text[0] = 'P';
+    text[1] = (char)('0' + ((value / 100u) % 10u));
+    text[2] = (char)('0' + ((value / 10u) % 10u));
+    text[3] = (char)('0' + (value % 10u));
+    text[4] = '\0';
     sd_set_text(&sd_program, text);
   }
 
@@ -284,7 +322,15 @@ static void render_config_data(treadmill_t *treadmill) {
         sd_set_value(&sd_pace, treadmill->hw.inverter.error[config_error_index].count);
       }
       else{
-        sd_set_value(&sd_pace, treadmill->hw.inverter.last_errors[config_error_index-8]);
+        uint8_t last_error_index = config_error_index - 8;
+        if (last_error_index < 3) {
+          static const char *last_error_logic[3] = {"L01", "L02", "L03"};
+          sd_set_pad_leading_zero(&sd_pace, false);
+          sd_pace.dot = SD_DOT_NO_DOT;
+          sd_set_text(&sd_pace, last_error_logic[last_error_index]);
+        } else {
+          sd_set_value(&sd_pace, 0);
+        }
       }
       break;
     }
@@ -314,8 +360,7 @@ void sd_render(treadmill_t *treadmill) {
       // render_training_data(treadmill);
       break;
     }
-    case SCENE_IDLE: 
-    case SCENE_BLE_ALLOW_YES_NO: {
+    case SCENE_IDLE: {
       // extern int run_test;
       // extern int test_count;
       // if (run_test == 1) {
@@ -333,7 +378,13 @@ void sd_render(treadmill_t *treadmill) {
       sd_render_all_visible(false); 
       // sd_set_value_to_all(8888); ///led test
       render_training_data(treadmill);
+      sd_render_idle_inverter_error(treadmill);
       
+      break;
+    }
+    case SCENE_BLE_ALLOW_YES_NO: {
+      sd_render_all_visible(false);
+      render_training_data(treadmill);
       break;
     }
     case SCENE_EMERGENCY: {
@@ -370,6 +421,10 @@ void sd_render(treadmill_t *treadmill) {
     case SCENE_REPORT: {
       sd_set_visible(&sd_program, false);
       render_training_data(treadmill);
+      break;
+    }
+    case SCENE_TEST: {
+      sd_set_value_to_all(8888); ///led test
       break;
     }
     default:;

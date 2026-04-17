@@ -1,4 +1,4 @@
-#include "treadmill_action.h"
+﻿#include "treadmill_action.h"
 
 #include <string.h>
 
@@ -250,6 +250,7 @@ void treadmill_start_program(treadmill_t *treadmill) {
 
 void treadmill_config(treadmill_t *treadmill) {
   treadmill->config.option = 0;
+  treadmill->config.test = RT_LED_CONFIG_TEST_DISABLE;
   memcpy(&treadmill->previous_config, &treadmill->config, sizeof(struct config));
   treadmill_set_scene(treadmill, SCENE_CONFIG);
 }

@@ -57,9 +57,9 @@ typedef enum program_id {
 #define PROGRAM_HIIT_DEFAULT_SECONDS (1 * 60)  // 1 min
 #define PROGRAM_HIIT_DEFAULT_SPEED_T1 (300)     // 3.0 km/h
 #define PROGRAM_HIIT_DEFAULT_SPEED_T2 (700)     // 7.0 km/h
-#define PROGRAM_HIIT_MIN_TIME (0.5 * 60)  ///////////// 30s
+#define PROGRAM_HIIT_MIN_TIME (30)  ///////////// 30s
 #define PROGRAM_HIIT_MAX_TIME (10 * 60) 
-#define PROGRAM_HIIT_TIME_STEP (0.5 * 60)  //// 30s step
+#define PROGRAM_HIIT_TIME_STEP (30)  //// 30s step
 #define PROGRAM_HIIT_DEFAULT_SERIES 5 /// 10 intervals
 #define PROGRAM_HIIT_MIN_SERIES 1 /// 2 intervals
 #define PROGRAM_HIIT_MAX_SERIES 10 /// 20 intervals

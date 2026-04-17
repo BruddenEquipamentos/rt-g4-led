@@ -33,6 +33,8 @@ enum {
     STR_HRM,
     STR_ERR,
     STR_WHEEL,
+    STR_ERR_OVERLOAD,
+    STR_TM_RESET,
     STR_TOTALS
 };
 

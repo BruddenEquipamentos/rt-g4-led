@@ -12,6 +12,29 @@
 #include "treadmill_programs_update.h"
 
 #include "lang.h" //Language options
+#include "treadmill.h"
+
+static size_t u32_to_dec(char *out, size_t cap, uint32_t value) {
+  if (cap == 0) return 0;
+
+  char tmp[10];
+  size_t len = 0;
+
+  do {
+    tmp[len++] = (char)('0' + (value % 10u));
+    value /= 10u;
+  } while (value != 0u && len < sizeof(tmp));
+
+  size_t out_len = len;
+  if (out_len > cap - 1u) {
+    out_len = cap - 1u;
+  }
+  for (size_t i = 0; i < out_len; ++i) {
+    out[i] = tmp[len - 1u - i];
+  }
+  out[out_len] = '\0';
+  return out_len;
+}
 
 // aux variables
 unsigned long end_tick = 0;
@@ -19,14 +42,15 @@ int render_finished = 0;
 int report_goal = 0; 
 char error_code[16];
 inverter_error_code_t error_codes[] = {
-    INVERTER_ERROR_OVERVOLTAGE,
-    INVERTER_ERROR_UNDERVOLTAGE,
-    INVERTER_ERROR_DC_UNDERVOLTAGE,
-    INVERTER_ERROR_OVERTEMPERATURE,
-    INVERTER_ERROR_OVERCURRENT,
-    INVERTER_ERROR_COMMUNICATION,
-    INVERTER_ERROR_INCLINE_MOTOR,
-    INVERTER_ERROR_MPHV
+  INVERTER_ERROR_OVERVOLTAGE,
+  INVERTER_ERROR_UNDERVOLTAGE,
+  INVERTER_ERROR_DC_UNDERVOLTAGE,
+  INVERTER_ERROR_OVERTEMPERATURE,
+  INVERTER_ERROR_OVERCURRENT,
+  INVERTER_ERROR_OVERLOAD,
+  INVERTER_ERROR_COMMUNICATION,
+  INVERTER_ERROR_INCLINE_MOTOR,
+  INVERTER_ERROR_MPHV
 };
 
 // extern variables
@@ -281,8 +305,15 @@ static void dm_render_prog_time(treadmill_t *treadmill) {
 
 void dm_render_incline(treadmill_t *treadmill){
     char text[16];
-    //  sprintf(text, "%1d.%1d%%", treadmill->training.incline / 10, treadmill->training.incline % 10);
-    sprintf(text, "%1d%%", treadmill->training.incline / 10);
+    int32_t incline = treadmill->training.incline / 10;
+    size_t pos = 0;
+    if (incline < 0) {
+      text[pos++] = '-';
+      incline = -incline;
+    }
+    pos += u32_to_dec(&text[pos], sizeof(text) - pos, (uint32_t)incline);
+    text[pos++] = '%';
+    text[pos] = '\0';
     int length = dm_compute_length(text);
     if (length < 16) {
       dm_render_text(text, 8 + length / 2);
@@ -551,7 +582,7 @@ void dm_render(treadmill_t *treadmill) {
             snprintf(error_code, 16, "E*%X", error_codes[config_error_index]);
           }
           else {
-            snprintf(error_code, 16, "L*%X", treadmill->hw.inverter.last_errors[config_error_index-8]);
+            snprintf(error_code, 16, "E*%X", treadmill->hw.inverter.last_errors[config_error_index-8]);
           }
           dm_render_text(error_code, 16);
           break;
@@ -685,6 +716,10 @@ void dm_render(treadmill_t *treadmill) {
           }
         }
       }
+      break;
+    }
+    case SCENE_TEST:{
+      dm_render_text_animated("START", 100, treadmill->get_time_ms());
       break;
     }
     default: {
