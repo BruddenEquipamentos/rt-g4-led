@@ -9,6 +9,7 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
   treadmill->idle_tick = treadmill->get_time_ms();
   switch (key) {
     case KEY_START:
+    case KEY_EXT_KBD_START:
       treadmill_start_training_countdown(treadmill);
       break;
     case KEY_PROGRAM: { // + key

@@ -44,6 +44,14 @@ enum key_shortcut {
 	KEY_SHORTCUT_INC_INC = 3,
 	KEY_SHORTCUT_COUNT = 4,
 };
+
+typedef enum keyboard_input_source {
+  KEYBOARD_INPUT_SOURCE_MAIN_MATRIX = 0,
+  KEYBOARD_INPUT_SOURCE_MAIN_I2C,
+  KEYBOARD_INPUT_SOURCE_HG_SPEED,
+  KEYBOARD_INPUT_SOURCE_HG_START_STOP,
+  KEYBOARD_INPUT_SOURCE_TOTAL
+} keyboard_input_source_t;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -62,6 +70,8 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 void Error_Handler(void);
 void MX_I2C2_Init(void);
 void update_handle_shortcut_keys(GPIO_TypeDef *port, uint16_t pin, enum key_shortcut shortcut_index, kbd_key_t action_key);
+void keyboard_route_key_event(keyboard_input_source_t source, kbd_key_t key);
+void keyboard_route_key_release(keyboard_input_source_t source);
 
 /* USER CODE BEGIN EFP */
 

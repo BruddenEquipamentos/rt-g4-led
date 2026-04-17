@@ -81,11 +81,11 @@ static char sd_hex_nibble_to_char(uint8_t nibble) {
   }
 }
 
-static void sd_render_idle_inverter_error(treadmill_t *treadmill) {
-  uint8_t error_code = (uint8_t)treadmill->hw.inverter.last_errors[0];
+static void sd_render_idle_error(treadmill_t *treadmill) {
+  uint8_t error_code = treadmill_get_latest_error_code(treadmill);
   char error_text[5] = {' ', 'E', '0', '0', '\0'};
 
-  if (error_code == (uint8_t)INVERTER_ERROR_NONE) {
+  if (error_code == 0u) {
     sd_set_visible(&sd_program, false);
     return;
   }
@@ -316,21 +316,32 @@ static void render_config_data(treadmill_t *treadmill) {
       sd_set_value(&sd_pace, treadmill->config.test);
       break;
     }
-    case CONFIG_OPTION_ERRORS: {
+    case CONFIG_OPTION_C2V: {
       sd_set_visible(&sd_pace, true);
-      if (config_error_index < 8) {
+      sd_set_value(&sd_pace, treadmill->config.c2v);
+      break;
+    }
+    case CONFIG_OPTION_ERRORS: {
+      const uint8_t inverter_last_start = INVERTER_ERROR_COUNT;
+      const uint8_t keyboard_count_start = INVERTER_ERROR_COUNT + LAST_ERROR_HISTORY_COUNT;
+
+      sd_set_visible(&sd_pace, true);
+      if (config_error_index < INVERTER_ERROR_COUNT) {
         sd_set_value(&sd_pace, treadmill->hw.inverter.error[config_error_index].count);
       }
-      else{
-        uint8_t last_error_index = config_error_index - 8;
-        if (last_error_index < 3) {
-          static const char *last_error_logic[3] = {"L01", "L02", "L03"};
+      else if (config_error_index < keyboard_count_start) {
+        uint8_t last_error_index = config_error_index - inverter_last_start;
+        if (last_error_index < LAST_ERROR_HISTORY_COUNT) {
+          static const char *last_error_logic[LAST_ERROR_HISTORY_COUNT] = {"L01", "L02", "L03"};
           sd_set_pad_leading_zero(&sd_pace, false);
           sd_pace.dot = SD_DOT_NO_DOT;
           sd_set_text(&sd_pace, last_error_logic[last_error_index]);
-        } else {
-          sd_set_value(&sd_pace, 0);
         }
+      } else if (config_error_index < CONFIG_ERRORS_TOTAL_ENTRIES) {
+        uint8_t keyboard_error_index = config_error_index - keyboard_count_start;
+        sd_set_value(&sd_pace, treadmill->hw.keyboard.error[keyboard_error_index].count);
+      } else {
+        sd_set_value(&sd_pace, 0);
       }
       break;
     }
@@ -378,7 +389,7 @@ void sd_render(treadmill_t *treadmill) {
       sd_render_all_visible(false); 
       // sd_set_value_to_all(8888); ///led test
       render_training_data(treadmill);
-      sd_render_idle_inverter_error(treadmill);
+      sd_render_idle_error(treadmill);
       
       break;
     }

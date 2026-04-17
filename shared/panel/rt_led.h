@@ -27,6 +27,7 @@ typedef enum scene_config_option {
   CONFIG_OPTION_BLE_STATE,       // S/BL
   CONFIG_OPTION_MODBUS,          // MBUS
   CONFIG_OPTION_TEST,            // TEST
+  CONFIG_OPTION_C2V,             // C2V
   CONFIG_OPTION_ERRORS,          // ERR
   CONFIG_OPTION_MAX_TIME,        // TEMP
   CONFIG_OPTION_TOTAL
@@ -62,6 +63,12 @@ typedef enum rt_led_config_test_params {
   RT_LED_CONFIG_TEST_ENABLE = 1,
   RT_LED_CONFIG_TEST_TOTALS,
 } rt_led_config_test_params;
+
+typedef enum rt_led_config_c2v_params {
+  RT_LED_CONFIG_C2V_DISABLE = 0,
+  RT_LED_CONFIG_C2V_ENABLE = 1,
+  RT_LED_CONFIG_C2V_TOTALS,
+} rt_led_config_c2v_params_t;
 
 // Language added to Aria treadmill
 typedef enum rt_led_config_language_params {

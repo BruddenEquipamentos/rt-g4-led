@@ -37,7 +37,7 @@ void rt_led_key_press(treadmill_t *treadmill, const kbd_key_t key) {
   if (scene == NULL) return;
 
   // prevent beeping on keypress if it is going to start the countdown
-  if (!(treadmill->scene == SCENE_IDLE && key == KEY_START) &&
+  if (!(treadmill->scene == SCENE_IDLE && (key == KEY_START || key == KEY_EXT_KBD_START)) &&
       !(treadmill->scene == SCENE_LUB && treadmill->key_pressed_tick > 0)) {
     treadmill->hw.beep(BEEP_KEYPRESS_ACK);
   }

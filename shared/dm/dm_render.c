@@ -41,7 +41,7 @@ unsigned long end_tick = 0;
 int render_finished = 0;
 int report_goal = 0; 
 char error_code[16];
-inverter_error_code_t error_codes[] = {
+static const inverter_error_code_t inverter_error_codes[INVERTER_ERROR_COUNT] = {
   INVERTER_ERROR_OVERVOLTAGE,
   INVERTER_ERROR_UNDERVOLTAGE,
   INVERTER_ERROR_DC_UNDERVOLTAGE,
@@ -52,6 +52,14 @@ inverter_error_code_t error_codes[] = {
   INVERTER_ERROR_INCLINE_MOTOR,
   INVERTER_ERROR_MPHV
 };
+static const keyboard_error_code_t keyboard_error_codes[KEYBOARD_ERROR_COUNT] = {
+  KEYBOARD_ERROR_MAIN_STUCK,
+  KEYBOARD_ERROR_MAIN_BURST,
+  KEYBOARD_ERROR_HG_SPEED_STUCK,
+  KEYBOARD_ERROR_HG_SPEED_BURST,
+  KEYBOARD_ERROR_HG_START_STOP_STUCK,
+  KEYBOARD_ERROR_HG_START_STOP_BURST,
+};
 
 // extern variables
 extern uint16_t on_interval; 
@@ -61,6 +69,25 @@ extern interval_t hiit_intervals[20];
 extern uint8_t aux_teste;
 extern int incline_limit_reached;
 extern uint8_t config_error_index;
+
+static uint8_t dm_get_config_error_code(const treadmill_t *treadmill, uint8_t index) {
+  const uint8_t inverter_last_start = INVERTER_ERROR_COUNT;
+  const uint8_t keyboard_count_start = INVERTER_ERROR_COUNT + LAST_ERROR_HISTORY_COUNT;
+
+  if (index < INVERTER_ERROR_COUNT) {
+    return (uint8_t)inverter_error_codes[index];
+  }
+
+  if (index < keyboard_count_start) {
+    return (uint8_t)treadmill->hw.inverter.last_errors[index - inverter_last_start];
+  }
+
+  if (index < CONFIG_ERRORS_TOTAL_ENTRIES) {
+    return (uint8_t)keyboard_error_codes[index - keyboard_count_start];
+  }
+
+  return 0u;
+}
 
 static void dm_render_all(void){
   for (int col = 0; col < 15; ++col) {
@@ -577,13 +604,13 @@ void dm_render(treadmill_t *treadmill) {
           dm_render_text("TEST", 16);
           break;
         }  // TEST
+        case CONFIG_OPTION_C2V: {
+          dm_render_text("C2F", 16);
+          break;
+        }  // C2F - confirmação 2 fatores para os atalhos de velocidade
         case CONFIG_OPTION_ERRORS: {
-          if (config_error_index < 8) {
-            snprintf(error_code, 16, "E*%X", error_codes[config_error_index]);
-          }
-          else {
-            snprintf(error_code, 16, "E*%X", treadmill->hw.inverter.last_errors[config_error_index-8]);
-          }
+          uint8_t rendered_error = dm_get_config_error_code(treadmill, config_error_index);
+          snprintf(error_code, sizeof(error_code), "E*%02X", rendered_error);
           dm_render_text(error_code, 16);
           break;
         }  // ERR

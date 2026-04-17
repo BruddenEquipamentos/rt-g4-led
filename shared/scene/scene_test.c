@@ -6,7 +6,8 @@
 static void keypress(treadmill_t* treadmill, const kbd_key_t key) {
 
 	switch (key) {
-	case KEY_START:		
+	case KEY_START:
+	case KEY_EXT_KBD_START:
 		treadmill_start_training_countdown(treadmill);
 		break;
 	case KEY_STOP:		

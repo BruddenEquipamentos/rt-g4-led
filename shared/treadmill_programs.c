@@ -22,6 +22,7 @@ char *programs_name[] = {
 static void program_time_key_press(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_START:
+    case KEY_EXT_KBD_START:
       treadmill_start_program(treadmill);
       break;
     case KEY_STOP:
@@ -70,6 +71,7 @@ static void program_time_key_press(treadmill_t *treadmill, const kbd_key_t key) 
 static void program_distance_key_press(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_START:
+    case KEY_EXT_KBD_START:
       treadmill_start_program(treadmill);
       break;
     case KEY_STOP:
@@ -118,6 +120,7 @@ static void program_distance_key_press(treadmill_t *treadmill, const kbd_key_t k
 static void program_calories_key_press(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_START:
+    case KEY_EXT_KBD_START:
       treadmill_start_program(treadmill);
       break;
     case KEY_STOP:
@@ -169,6 +172,7 @@ static void program_calories_key_press(treadmill_t *treadmill, const kbd_key_t k
 static void program_200k_calories_key_press(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_START:
+    case KEY_EXT_KBD_START:
       treadmill_start_program(treadmill);
       break;
     case KEY_STOP:
@@ -235,6 +239,7 @@ static uint32_t get_speed_from_shortcut_speed_key(const kbd_key_t key) {
 static void program_hiit_key_press(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_START:
+    case KEY_EXT_KBD_START:
       switch (treadmill->program.param_index) {
         case 0:
           treadmill->program.param_index++;
@@ -363,6 +368,7 @@ static void program_hiit_key_press(treadmill_t *treadmill, const kbd_key_t key) 
 void program_walk_30min_key_press(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_START:
+    case KEY_EXT_KBD_START:
       treadmill_start_program(treadmill);
       break;
     case KEY_STOP:
@@ -413,6 +419,7 @@ void program_walk_30min_key_press(treadmill_t *treadmill, const kbd_key_t key) {
 void program_walk_08min_key_press(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_START:
+    case KEY_EXT_KBD_START:
       treadmill_start_program(treadmill);
       break;
     case KEY_STOP:
@@ -462,6 +469,7 @@ void program_walk_08min_key_press(treadmill_t *treadmill, const kbd_key_t key) {
 static void program_fat_burn_key_press(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_START:
+    case KEY_EXT_KBD_START:
       switch (treadmill->program.param_index) {
         case 0:
           gk_was_connected = 0;
@@ -544,6 +552,7 @@ static void program_fat_burn_key_press(treadmill_t *treadmill, const kbd_key_t k
 static void program_super_cardio_key_press(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
     case KEY_START:
+    case KEY_EXT_KBD_START:
       switch (treadmill->program.param_index) {
         case 0:
           gk_was_connected = 0;

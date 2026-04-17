@@ -10,7 +10,8 @@ uint8_t ble_allowed = 0; //Lucas
  
 static void keypress(treadmill_t* treadmill, const kbd_key_t key) {
    switch (key) {
-       case KEY_START:{
+       case KEY_START:
+       case KEY_EXT_KBD_START:{
            if (strlen(treadmill->hw.ble.hrm.device_name) >= 0){ ///////WIP - polar
                uint8_t buffer[128];
                uint8_t length;

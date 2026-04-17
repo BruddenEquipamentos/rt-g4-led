@@ -31,6 +31,43 @@ __attribute__((weak)) int motor_recv(uint8_t *data, int max_length) {
   return 0;
 }
 
+#define ERROR_SAVE_DEBOUNCE_MS 5000u
+
+static int keyboard_error_code_to_index(keyboard_error_code_t code) {
+  switch (code) {
+    case KEYBOARD_ERROR_MAIN_STUCK:
+      return 0;
+    case KEYBOARD_ERROR_MAIN_BURST:
+      return 1;
+    case KEYBOARD_ERROR_HG_SPEED_STUCK:
+      return 2;
+    case KEYBOARD_ERROR_HG_SPEED_BURST:
+      return 3;
+    case KEYBOARD_ERROR_HG_START_STOP_STUCK:
+      return 4;
+    case KEYBOARD_ERROR_HG_START_STOP_BURST:
+      return 5;
+    default:
+      return -1;
+  }
+}
+
+static uint8_t keyboard_error_code_to_source_mask(keyboard_error_code_t code) {
+  switch (code) {
+    case KEYBOARD_ERROR_MAIN_STUCK:
+    case KEYBOARD_ERROR_MAIN_BURST:
+      return KEYBOARD_SOURCE_MASK_MAIN;
+    case KEYBOARD_ERROR_HG_SPEED_STUCK:
+    case KEYBOARD_ERROR_HG_SPEED_BURST:
+      return KEYBOARD_SOURCE_MASK_HG_SPEED;
+    case KEYBOARD_ERROR_HG_START_STOP_STUCK:
+    case KEYBOARD_ERROR_HG_START_STOP_BURST:
+      return KEYBOARD_SOURCE_MASK_HG_START_STOP;
+    default:
+      return 0;
+  }
+}
+
 void treadmill_setup(treadmill_t *treadmill) {
   memset(treadmill, 0x00, sizeof(treadmill_t));
   strncpy(treadmill->config.device_name, "MovCT", 15);
@@ -139,10 +176,10 @@ uint32_t treadmill_current_average_speed(treadmill_t *treadmill) {
 }
 
 uint32_t treadmill_calculate_calories(treadmill_t *treadmill) {
-  // No painel de LED atual, não se leva em consideração o BPM
-  // no calculo de gasto calórico.
-  // No painel de LED atual, não há diferença no cálculo de
-  // gasto calórico entre homem e mulher
+  // No painel de LED atual, nÃ£o se leva em consideraÃ§Ã£o o BPM
+  // no calculo de gasto calÃ³rico.
+  // No painel de LED atual, nÃ£o hÃ¡ diferenÃ§a no cÃ¡lculo de
+  // gasto calÃ³rico entre homem e mulher
   // float fAge = treadmill->config.age;
 
   uint32_t factor = 1;
@@ -239,6 +276,14 @@ void treadmill_load_config(treadmill_t *treadmill) {
     treadmill->config.max_time = 0;
   } /////// max time config
 
+  uint8_t c2v = 0;
+  if (nvm.NVM_ReadVariable8bits(NVM_U8_C2V, &c2v)) {
+    treadmill->config.c2v = (c2v != 0) ? RT_LED_CONFIG_C2V_ENABLE : RT_LED_CONFIG_C2V_DISABLE;
+  } else {
+    treadmill->config.c2v = RT_LED_CONFIG_C2V_DISABLE;
+    nvm.NVM_WriteVariable8bits(NVM_U8_C2V, (uint8_t)treadmill->config.c2v);
+  }
+
   uint8_t language = 0;
   if (nvm.NVM_ReadVariable8bits(NVM_U8_LANG, &language)) {
     treadmill->config.language = language;
@@ -321,6 +366,9 @@ void treadmill_save_config(treadmill_t *treadmill) {
   if (treadmill->previous_config.max_time != treadmill->config.max_time) {  ////// config max time
     nvm.NVM_WriteVariable32bits(NVM_U32_MAX_TIME_PARAM, treadmill->config.max_time);
   }
+  if (treadmill->previous_config.c2v != treadmill->config.c2v) {
+    nvm.NVM_WriteVariable8bits(NVM_U8_C2V, (uint8_t)treadmill->config.c2v);
+  }
   treadmill_ble_restart(treadmill);
 }
 
@@ -328,6 +376,24 @@ void treadmill_update(treadmill_t *treadmill) {
   if (treadmill->message.tick && treadmill->get_time_ms() - treadmill->message.tick >= treadmill->message.duration) {
     treadmill->message.tick = 0;
     treadmill->message.duration = 0;
+  }
+
+  uint32_t now = treadmill->get_time_ms();
+  int should_save_errors =
+      (treadmill->hw.inverter.errors_dirty &&
+       (now - treadmill->hw.inverter.last_error_save_time_ms) >= ERROR_SAVE_DEBOUNCE_MS) ||
+      (treadmill->hw.keyboard.errors_dirty &&
+       (now - treadmill->hw.keyboard.last_error_save_time_ms) >= ERROR_SAVE_DEBOUNCE_MS);
+  if (should_save_errors) {
+    treadmill_save_errors(treadmill);
+    if (treadmill->hw.inverter.errors_dirty) {
+      treadmill->hw.inverter.last_error_save_time_ms = now;
+      treadmill->hw.inverter.errors_dirty = 0;
+    }
+    if (treadmill->hw.keyboard.errors_dirty) {
+      treadmill->hw.keyboard.last_error_save_time_ms = now;
+      treadmill->hw.keyboard.errors_dirty = 0;
+    }
   }
 
   rt_led_update(treadmill);
@@ -399,6 +465,64 @@ void treadmill_ble_restart(treadmill_t *treadmill) {
   treadmill->hw.ble.init_state = BLE_INIT_STATE_INIT;
 }
 
+void treadmill_register_keyboard_error(treadmill_t *treadmill, keyboard_error_code_t code) {
+  if (treadmill == NULL || code == KEYBOARD_ERROR_NONE) return;
+  if (treadmill->scene == SCENE_CONFIG) return;
+
+  int idx = keyboard_error_code_to_index(code);
+  if (idx < 0) return;
+
+  struct keyboard *kbd = &treadmill->hw.keyboard;
+  uint32_t now = treadmill->get_time_ms();
+
+  kbd->last_errors[2] = kbd->last_errors[1];
+  kbd->last_errors[1] = kbd->last_errors[0];
+  kbd->last_errors[0] = code;
+  kbd->previous_error_code = (uint8_t)code;
+
+  kbd->error[idx].code = code;
+  if (kbd->error[idx].count < 0xffffu) {
+    kbd->error[idx].count++;
+  }
+  kbd->error[idx].error_time_ms = now;
+
+  if ((now - kbd->last_error_save_time_ms) >= ERROR_SAVE_DEBOUNCE_MS) {
+    treadmill_save_errors(treadmill);
+    kbd->last_error_save_time_ms = now;
+    kbd->errors_dirty = 0;
+  } else {
+    kbd->errors_dirty = 1;
+  }
+}
+
+uint8_t treadmill_get_latest_error_code(treadmill_t *treadmill) {
+  uint8_t latest_code = 0;
+  uint32_t latest_time = 0;
+
+  for (uint8_t i = 0; i < INVERTER_ERROR_COUNT; i++) {
+    if (treadmill->hw.inverter.error[i].error_time_ms > latest_time) {
+      latest_time = treadmill->hw.inverter.error[i].error_time_ms;
+      latest_code = (uint8_t)treadmill->hw.inverter.error[i].code;
+    }
+  }
+
+  for (uint8_t i = 0; i < KEYBOARD_ERROR_COUNT; i++) {
+    if (treadmill->hw.keyboard.error[i].error_time_ms > latest_time) {
+      latest_time = treadmill->hw.keyboard.error[i].error_time_ms;
+      latest_code = (uint8_t)treadmill->hw.keyboard.error[i].code;
+    }
+  }
+
+  if (latest_time == 0) {
+    if (treadmill->hw.keyboard.last_errors[0] != KEYBOARD_ERROR_NONE) {
+      return (uint8_t)treadmill->hw.keyboard.last_errors[0];
+    }
+    return (uint8_t)treadmill->hw.inverter.last_errors[0];
+  }
+
+  return latest_code;
+}
+
 void treadmill_save_errors(treadmill_t *treadmill) {
   nvm.NVM_WriteVariable16bits(NVM_U16_INVERTER_ERROR_0_COUNT, treadmill->hw.inverter.error[0].count);
   nvm.NVM_WriteVariable16bits(NVM_U16_INVERTER_ERROR_1_COUNT, treadmill->hw.inverter.error[1].count);
@@ -412,6 +536,15 @@ void treadmill_save_errors(treadmill_t *treadmill) {
   nvm.NVM_WriteVariable8bits(NVM_U8_INVERTER_LAST_ERROR_0, treadmill->hw.inverter.last_errors[0]);
   nvm.NVM_WriteVariable8bits(NVM_U8_INVERTER_LAST_ERROR_1, treadmill->hw.inverter.last_errors[1]);
   nvm.NVM_WriteVariable8bits(NVM_U8_INVERTER_LAST_ERROR_2, treadmill->hw.inverter.last_errors[2]);
+  nvm.NVM_WriteVariable16bits(NVM_U16_KEYBOARD_ERROR_0_COUNT, treadmill->hw.keyboard.error[0].count);
+  nvm.NVM_WriteVariable16bits(NVM_U16_KEYBOARD_ERROR_1_COUNT, treadmill->hw.keyboard.error[1].count);
+  nvm.NVM_WriteVariable16bits(NVM_U16_KEYBOARD_ERROR_2_COUNT, treadmill->hw.keyboard.error[2].count);
+  nvm.NVM_WriteVariable16bits(NVM_U16_KEYBOARD_ERROR_3_COUNT, treadmill->hw.keyboard.error[3].count);
+  nvm.NVM_WriteVariable16bits(NVM_U16_KEYBOARD_ERROR_4_COUNT, treadmill->hw.keyboard.error[4].count);
+  nvm.NVM_WriteVariable16bits(NVM_U16_KEYBOARD_ERROR_5_COUNT, treadmill->hw.keyboard.error[5].count);
+  nvm.NVM_WriteVariable8bits(NVM_U8_KEYBOARD_LAST_ERROR_0, treadmill->hw.keyboard.last_errors[0]);
+  nvm.NVM_WriteVariable8bits(NVM_U8_KEYBOARD_LAST_ERROR_1, treadmill->hw.keyboard.last_errors[1]);
+  nvm.NVM_WriteVariable8bits(NVM_U8_KEYBOARD_LAST_ERROR_2, treadmill->hw.keyboard.last_errors[2]);
 }
 
 void treadmill_reset_errors(treadmill_t *treadmill) {
@@ -427,28 +560,108 @@ void treadmill_reset_errors(treadmill_t *treadmill) {
   nvm.NVM_WriteVariable8bits(NVM_U8_INVERTER_LAST_ERROR_0, 0);
   nvm.NVM_WriteVariable8bits(NVM_U8_INVERTER_LAST_ERROR_1, 0);
   nvm.NVM_WriteVariable8bits(NVM_U8_INVERTER_LAST_ERROR_2, 0);
+  nvm.NVM_WriteVariable16bits(NVM_U16_KEYBOARD_ERROR_0_COUNT, 0);
+  nvm.NVM_WriteVariable16bits(NVM_U16_KEYBOARD_ERROR_1_COUNT, 0);
+  nvm.NVM_WriteVariable16bits(NVM_U16_KEYBOARD_ERROR_2_COUNT, 0);
+  nvm.NVM_WriteVariable16bits(NVM_U16_KEYBOARD_ERROR_3_COUNT, 0);
+  nvm.NVM_WriteVariable16bits(NVM_U16_KEYBOARD_ERROR_4_COUNT, 0);
+  nvm.NVM_WriteVariable16bits(NVM_U16_KEYBOARD_ERROR_5_COUNT, 0);
+  nvm.NVM_WriteVariable8bits(NVM_U8_KEYBOARD_LAST_ERROR_0, 0);
+  nvm.NVM_WriteVariable8bits(NVM_U8_KEYBOARD_LAST_ERROR_1, 0);
+  nvm.NVM_WriteVariable8bits(NVM_U8_KEYBOARD_LAST_ERROR_2, 0);
+
+  for (uint8_t i = 0; i < INVERTER_ERROR_COUNT; i++) {
+    treadmill->hw.inverter.error[i].count = 0;
+    treadmill->hw.inverter.error[i].error_time_ms = 0;
+  }
+  for (uint8_t i = 0; i < LAST_ERROR_HISTORY_COUNT; i++) {
+    treadmill->hw.inverter.last_errors[i] = INVERTER_ERROR_NONE;
+  }
+  for (uint8_t i = 0; i < KEYBOARD_ERROR_COUNT; i++) {
+    treadmill->hw.keyboard.error[i].count = 0;
+    treadmill->hw.keyboard.error[i].error_time_ms = 0;
+  }
+  for (uint8_t i = 0; i < LAST_ERROR_HISTORY_COUNT; i++) {
+    treadmill->hw.keyboard.last_errors[i] = KEYBOARD_ERROR_NONE;
+  }
+  treadmill->hw.inverter.errors_dirty = 0;
+  treadmill->hw.keyboard.errors_dirty = 0;
+  treadmill->hw.inverter.last_error_save_time_ms = 0;
+  treadmill->hw.keyboard.last_error_save_time_ms = 0;
+  treadmill->hw.keyboard.disabled_sources_mask = 0;
+}
+
+void treadmill_clear_keyboard_error_code_and_unlock(treadmill_t *treadmill) {
+  if (treadmill == NULL) return;
+
+  for (uint8_t i = 0; i < LAST_ERROR_HISTORY_COUNT; i++) {
+    treadmill->hw.keyboard.last_errors[i] = KEYBOARD_ERROR_NONE;
+  }
+
+  for (uint8_t i = 0; i < KEYBOARD_ERROR_COUNT; i++) {
+    treadmill->hw.keyboard.error[i].error_time_ms = 0;
+  }
+
+  treadmill->hw.keyboard.previous_error_code = (uint8_t)KEYBOARD_ERROR_NONE;
+  treadmill->hw.keyboard.disabled_sources_mask = 0;
+  treadmill->hw.keyboard.errors_dirty = 0;
+  treadmill->hw.keyboard.last_error_save_time_ms = 0;
+
+  nvm.NVM_WriteVariable8bits(NVM_U8_KEYBOARD_LAST_ERROR_0, 0);
+  nvm.NVM_WriteVariable8bits(NVM_U8_KEYBOARD_LAST_ERROR_1, 0);
+  nvm.NVM_WriteVariable8bits(NVM_U8_KEYBOARD_LAST_ERROR_2, 0);
 }
 
 void treadmill_load_errors(treadmill_t *treadmill) {
   uint16_t error_count = 0;
-  
+
   // Carregar contadores de erro
-  for (uint8_t i = 0; i < 8; i++) {
+  for (uint8_t i = 0; i < INVERTER_ERROR_COUNT; i++) {
     if (nvm.NVM_ReadVariable16bits(NVM_U16_INVERTER_ERROR_0_COUNT + i, &error_count)) {
       treadmill->hw.inverter.error[i].count = error_count;
     } else {
       treadmill->hw.inverter.error[i].count = 0;
     }
+    treadmill->hw.inverter.error[i].error_time_ms = 0;
   }
-  
+
   uint8_t last_error = 0;
-  
-  // Carregar últimos 3 erros
-  for (uint8_t i = 0; i < 3; i++) {
+
+  // Carregar ultimos 3 erros
+  for (uint8_t i = 0; i < LAST_ERROR_HISTORY_COUNT; i++) {
     if (nvm.NVM_ReadVariable8bits(NVM_U8_INVERTER_LAST_ERROR_0 + i, &last_error)) {
       treadmill->hw.inverter.last_errors[i] = last_error;
     } else {
-      treadmill->hw.inverter.last_errors[i] = 0;
+      treadmill->hw.inverter.last_errors[i] = INVERTER_ERROR_NONE;
     }
   }
+
+  for (uint8_t i = 0; i < KEYBOARD_ERROR_COUNT; i++) {
+    if (nvm.NVM_ReadVariable16bits(NVM_U16_KEYBOARD_ERROR_0_COUNT + i, &error_count)) {
+      treadmill->hw.keyboard.error[i].count = error_count;
+    } else {
+      treadmill->hw.keyboard.error[i].count = 0;
+    }
+    treadmill->hw.keyboard.error[i].error_time_ms = 0;
+  }
+
+  for (uint8_t i = 0; i < LAST_ERROR_HISTORY_COUNT; i++) {
+    if (nvm.NVM_ReadVariable8bits(NVM_U8_KEYBOARD_LAST_ERROR_0 + i, &last_error)) {
+      treadmill->hw.keyboard.last_errors[i] = last_error;
+    } else {
+      treadmill->hw.keyboard.last_errors[i] = KEYBOARD_ERROR_NONE;
+    }
+  }
+
+  treadmill->hw.inverter.previous_error_code = (uint8_t)treadmill->hw.inverter.last_errors[0];
+  treadmill->hw.keyboard.previous_error_code = (uint8_t)treadmill->hw.keyboard.last_errors[0];
+  treadmill->hw.inverter.errors_dirty = 0;
+  treadmill->hw.keyboard.errors_dirty = 0;
+  treadmill->hw.inverter.last_error_save_time_ms = 0;
+  treadmill->hw.keyboard.last_error_save_time_ms = 0;
+  uint8_t disabled_sources_mask = 0;
+  for (uint8_t i = 0; i < LAST_ERROR_HISTORY_COUNT; i++) {
+    disabled_sources_mask |= keyboard_error_code_to_source_mask(treadmill->hw.keyboard.last_errors[i]);
+  }
+  treadmill->hw.keyboard.disabled_sources_mask = disabled_sources_mask;
 }

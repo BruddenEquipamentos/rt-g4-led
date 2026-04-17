@@ -196,12 +196,27 @@ static void change_config_test(treadmill_t *treadmill, const kbd_key_t key) {
   }
 }
 
+static void change_config_c2v(treadmill_t *treadmill, const kbd_key_t key) {
+  switch (key) {
+    case KEY_SPEED_INCREMENT:
+    case KEY_SPEED_DECREMENT:
+    case KEY_EXT_KBD_SPEED_INC:
+    case KEY_EXT_KBD_SPEED_DEC: {
+      treadmill->config.c2v =
+          treadmill->config.c2v == RT_LED_CONFIG_C2V_DISABLE ? RT_LED_CONFIG_C2V_ENABLE : RT_LED_CONFIG_C2V_DISABLE;
+      break;
+    }
+    default:;
+  }
+}
+
 uint8_t config_error_index = 0;
 
 static void change_config_errors(treadmill_t *treadmill, const kbd_key_t key) {
+  (void)treadmill;
   switch (key) {
     case KEY_SPEED_INCREMENT:{
-      if (config_error_index + 1 < 11) {
+      if (config_error_index + 1 < CONFIG_ERRORS_TOTAL_ENTRIES) {
         config_error_index++;
       }
       else{
@@ -276,7 +291,8 @@ static void change_config_unit(treadmill_t *treadmill, const kbd_key_t key) {
 
 static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
-    case KEY_START: {
+    case KEY_START:
+    case KEY_EXT_KBD_START: {
       next_config_option(treadmill);
       break;
     }
@@ -318,6 +334,10 @@ static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
         }
         case CONFIG_OPTION_TEST: {
           change_config_test(treadmill, key);
+          break;
+        }
+        case CONFIG_OPTION_C2V: {
+          change_config_c2v(treadmill, key);
           break;
         }
         case CONFIG_OPTION_ERRORS: {

@@ -39,6 +39,16 @@
 #define NVM_U16_INVERTER_ERROR_6_COUNT 0x0016  // Falha de comunicação
 #define NVM_U16_INVERTER_ERROR_7_COUNT 0x0017  // Falha motor de inclinação
 #define NVM_U16_INVERTER_ERROR_8_COUNT 0x0018  // MPHV
+#define NVM_U16_KEYBOARD_ERROR_0_COUNT 0x0019
+#define NVM_U16_KEYBOARD_ERROR_1_COUNT 0x001A
+#define NVM_U16_KEYBOARD_ERROR_2_COUNT 0x001B
+#define NVM_U16_KEYBOARD_ERROR_3_COUNT 0x001C
+#define NVM_U16_KEYBOARD_ERROR_4_COUNT 0x001D
+#define NVM_U16_KEYBOARD_ERROR_5_COUNT 0x001E
+#define NVM_U8_KEYBOARD_LAST_ERROR_0 0x001F
+#define NVM_U8_KEYBOARD_LAST_ERROR_1 0x0020
+#define NVM_U8_KEYBOARD_LAST_ERROR_2 0x0021
+#define NVM_U8_C2V 0x0022
 
 // Exemplo de NSU "8196085000000597694"
 #define NVM_NS_MAX_LENGTH (22)
@@ -54,6 +64,13 @@
 #define DEFAULT_LUB_DISTANCE_PARAM (0)
 #define DEFAULT_AGE (30)
 #define LUB_NOTIFICATION_DISTANCE_REMAINING_KM (100)
+#define INVERTER_ERROR_COUNT (9u)
+#define KEYBOARD_ERROR_COUNT (6u)
+#define LAST_ERROR_HISTORY_COUNT (3u)
+#define CONFIG_ERRORS_TOTAL_ENTRIES (INVERTER_ERROR_COUNT + LAST_ERROR_HISTORY_COUNT + KEYBOARD_ERROR_COUNT)
+#define KEYBOARD_SOURCE_MASK_MAIN (0x01u)
+#define KEYBOARD_SOURCE_MASK_HG_SPEED (0x02u)
+#define KEYBOARD_SOURCE_MASK_HG_START_STOP (0x04u)
 
 // Códigos de erro do inversor
 typedef enum inverter_error_code {
@@ -74,6 +91,22 @@ typedef struct {
     uint16_t count;
 	  uint32_t error_time_ms;
 } inverter_error_t;
+
+typedef enum keyboard_error_code {
+  KEYBOARD_ERROR_NONE = 0x00,
+  KEYBOARD_ERROR_MAIN_STUCK = 0xA1,
+  KEYBOARD_ERROR_MAIN_BURST = 0xA2,
+  KEYBOARD_ERROR_HG_SPEED_STUCK = 0xA3,
+  KEYBOARD_ERROR_HG_SPEED_BURST = 0xA4,
+  KEYBOARD_ERROR_HG_START_STOP_STUCK = 0xA5,
+  KEYBOARD_ERROR_HG_START_STOP_BURST = 0xA6,
+} keyboard_error_code_t;
+
+typedef struct {
+  keyboard_error_code_t code;
+  uint16_t count;
+  uint32_t error_time_ms;
+} keyboard_error_t;
 
 typedef enum inverter_comm_type {
   MOTOR_COMMUNICATION_TYPE_FREQ = 0,
@@ -211,6 +244,7 @@ typedef struct treadmill {
     uint32_t lub_distance_m;
     int modbus;
     int test;
+    int c2v;
     int max_time; /////// maximum time on quick mode
 
     char nsu[22];
@@ -259,12 +293,21 @@ typedef struct treadmill {
       inverter_comm_type_t comm_type;
       uart_protocol_state_t protocol;
 			inverter_error_code_t error_code;
-			inverter_error_t error[8];
-    	inverter_error_code_t last_errors[3];
+			inverter_error_t error[INVERTER_ERROR_COUNT];
+    	inverter_error_code_t last_errors[LAST_ERROR_HISTORY_COUNT];
       uint8_t previous_error_code;
       uint32_t last_error_save_time_ms;
       uint8_t errors_dirty;
     } inverter;
+
+    struct keyboard {
+      keyboard_error_t error[KEYBOARD_ERROR_COUNT];
+      keyboard_error_code_t last_errors[LAST_ERROR_HISTORY_COUNT];
+      uint8_t previous_error_code;
+      uint32_t last_error_save_time_ms;
+      uint8_t errors_dirty;
+      uint8_t disabled_sources_mask;
+    } keyboard;
 
     struct {
       enum handgrip_state state;
@@ -332,5 +375,11 @@ void treadmill_save_errors(treadmill_t *treadmill);
 void treadmill_reset_errors(treadmill_t *treadmill);
 
 void treadmill_load_errors(treadmill_t *treadmill);
+
+void treadmill_register_keyboard_error(treadmill_t *treadmill, keyboard_error_code_t code);
+
+uint8_t treadmill_get_latest_error_code(treadmill_t *treadmill);
+
+void treadmill_clear_keyboard_error_code_and_unlock(treadmill_t *treadmill);
 
 #endif

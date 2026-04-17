@@ -1258,6 +1258,455 @@ void StartDefaultTask(void const * argument)
  * @retval None
  */
 
+#define MAIN_STUCK_MS 2000u
+#define MAIN_BURST_WINDOW_MS 1000u
+#define MAIN_BURST_MAX 8u
+#define HG_STUCK_MS 2000u
+#define HG_BURST_WINDOW_MS 1000u
+#define HG_BURST_MAX 8u
+#define HG_START_STOP_CONFIG_HOLD_MS 2000u
+#define C2V_CONFIRM_WINDOW_MS 3000u
+#define KEYBOARD_FAULT_CLEAR_HOLD_MS 10000u
+
+typedef enum keyboard_source_group {
+  KEYBOARD_SOURCE_GROUP_MAIN = 0,
+  KEYBOARD_SOURCE_GROUP_HG_SPEED,
+  KEYBOARD_SOURCE_GROUP_HG_START_STOP,
+} keyboard_source_group_t;
+
+struct key_source_health {
+  uint8_t pressed;
+  kbd_key_t last_key;
+  uint32_t press_start_ms;
+  uint32_t burst_window_start_ms;
+  uint8_t burst_count;
+};
+
+struct c2v_pending_shortcut {
+  uint8_t active;
+  kbd_key_t key;
+  uint32_t selected_time_ms;
+};
+
+static struct key_source_health g_key_source_health[KEYBOARD_INPUT_SOURCE_TOTAL] = {0};
+static struct c2v_pending_shortcut g_c2v_pending_shortcut = {0};
+static volatile uint8_t g_main_plus_minus_combo_pressed = 0;
+static volatile uint8_t g_hg_plus_minus_combo_pressed = 0;
+
+static keyboard_source_group_t keyboard_source_group_from_input(keyboard_input_source_t source) {
+  switch (source) {
+    case KEYBOARD_INPUT_SOURCE_MAIN_MATRIX:
+    case KEYBOARD_INPUT_SOURCE_MAIN_I2C:
+      return KEYBOARD_SOURCE_GROUP_MAIN;
+    case KEYBOARD_INPUT_SOURCE_HG_SPEED:
+      return KEYBOARD_SOURCE_GROUP_HG_SPEED;
+    case KEYBOARD_INPUT_SOURCE_HG_START_STOP:
+      return KEYBOARD_SOURCE_GROUP_HG_START_STOP;
+    default:
+      return KEYBOARD_SOURCE_GROUP_MAIN;
+  }
+}
+
+static uint8_t keyboard_source_disable_mask_from_group(keyboard_source_group_t group) {
+  switch (group) {
+    case KEYBOARD_SOURCE_GROUP_MAIN:
+      return KEYBOARD_SOURCE_MASK_MAIN;
+    case KEYBOARD_SOURCE_GROUP_HG_SPEED:
+      return KEYBOARD_SOURCE_MASK_HG_SPEED;
+    case KEYBOARD_SOURCE_GROUP_HG_START_STOP:
+      return KEYBOARD_SOURCE_MASK_HG_START_STOP;
+    default:
+      return 0;
+  }
+}
+
+static uint32_t keyboard_stuck_threshold_ms(keyboard_source_group_t group) {
+  if (group == KEYBOARD_SOURCE_GROUP_MAIN) {
+    return MAIN_STUCK_MS;
+  }
+  return HG_STUCK_MS;
+}
+
+static uint32_t keyboard_burst_window_ms(keyboard_source_group_t group) {
+  if (group == KEYBOARD_SOURCE_GROUP_MAIN) {
+    return MAIN_BURST_WINDOW_MS;
+  }
+  return HG_BURST_WINDOW_MS;
+}
+
+static uint8_t keyboard_burst_max(keyboard_source_group_t group) {
+  if (group == KEYBOARD_SOURCE_GROUP_MAIN) {
+    return MAIN_BURST_MAX;
+  }
+  return HG_BURST_MAX;
+}
+
+static keyboard_error_code_t keyboard_stuck_fault_code(keyboard_source_group_t group) {
+  switch (group) {
+    case KEYBOARD_SOURCE_GROUP_MAIN:
+      return KEYBOARD_ERROR_MAIN_STUCK;
+    case KEYBOARD_SOURCE_GROUP_HG_SPEED:
+      return KEYBOARD_ERROR_HG_SPEED_STUCK;
+    case KEYBOARD_SOURCE_GROUP_HG_START_STOP:
+      return KEYBOARD_ERROR_HG_START_STOP_STUCK;
+    default:
+      return KEYBOARD_ERROR_NONE;
+  }
+}
+
+static keyboard_error_code_t keyboard_burst_fault_code(keyboard_source_group_t group) {
+  switch (group) {
+    case KEYBOARD_SOURCE_GROUP_MAIN:
+      return KEYBOARD_ERROR_MAIN_BURST;
+    case KEYBOARD_SOURCE_GROUP_HG_SPEED:
+      return KEYBOARD_ERROR_HG_SPEED_BURST;
+    case KEYBOARD_SOURCE_GROUP_HG_START_STOP:
+      return KEYBOARD_ERROR_HG_START_STOP_BURST;
+    default:
+      return KEYBOARD_ERROR_NONE;
+  }
+}
+
+static uint8_t keyboard_is_main_matrix_speed_shortcut_release_action(kbd_key_t key) {
+  return (key == KEY_SPEED_6 || key == KEY_SPEED_9 || key == KEY_SPEED_12 || key == KEY_SPEED_15);
+}
+
+static uint8_t keyboard_is_main_i2c_speed_shortcut_release_action(kbd_key_t key) {
+  return (key == KEY_EXT_KBD_SPEED_6 || key == KEY_EXT_KBD_SPEED_9 || key == KEY_EXT_KBD_SPEED_12 ||
+          key == KEY_EXT_KBD_SPEED_15);
+}
+
+static uint8_t keyboard_is_speed_shortcut_release_action(keyboard_input_source_t source, kbd_key_t key) {
+  if (source == KEYBOARD_INPUT_SOURCE_MAIN_MATRIX) {
+    return keyboard_is_main_matrix_speed_shortcut_release_action(key);
+  }
+  if (source == KEYBOARD_INPUT_SOURCE_MAIN_I2C) {
+    return keyboard_is_main_i2c_speed_shortcut_release_action(key);
+  }
+  return 0;
+}
+
+static uint16_t keyboard_speed_shortcut_target_speed(kbd_key_t key) {
+  switch (key) {
+    case KEY_SPEED_6:
+    case KEY_EXT_KBD_SPEED_6:
+      return 600u;
+    case KEY_SPEED_9:
+    case KEY_EXT_KBD_SPEED_9:
+      return 900u;
+    case KEY_SPEED_12:
+    case KEY_EXT_KBD_SPEED_12:
+      return 1200u;
+    case KEY_SPEED_15:
+    case KEY_EXT_KBD_SPEED_15:
+      return 1500u;
+    default:
+      return 0u;
+  }
+}
+
+static uint8_t keyboard_should_dispatch_shortcut_on_press(kbd_key_t key) {
+  if (treadmill.config.c2v != RT_LED_CONFIG_C2V_DISABLE) return 0;
+  if (treadmill.scene != SCENE_TRAINING) return 0;
+
+  uint16_t shortcut_target_speed = keyboard_speed_shortcut_target_speed(key);
+  if (shortcut_target_speed == 0u) return 0;
+
+  return (shortcut_target_speed < treadmill.training.speed);
+}
+
+static uint8_t keyboard_is_speed_shortcut_release_behavior(keyboard_input_source_t source, kbd_key_t key) {
+  if (!keyboard_is_speed_shortcut_release_action(source, key)) {
+    return 0;
+  }
+
+  if (keyboard_should_dispatch_shortcut_on_press(key)) {
+    return 0;
+  }
+
+  return 1;
+}
+
+static uint8_t keyboard_is_start_release_action(keyboard_input_source_t source, kbd_key_t key) {
+  if ((source == KEYBOARD_INPUT_SOURCE_MAIN_MATRIX || source == KEYBOARD_INPUT_SOURCE_MAIN_I2C) &&
+      key == KEY_START) {
+    return 1;
+  }
+
+  if (source == KEYBOARD_INPUT_SOURCE_HG_START_STOP && key == KEY_EXT_KBD_START) {
+    return 1;
+  }
+
+  return 0;
+}
+
+static uint8_t keyboard_is_release_action(keyboard_input_source_t source, kbd_key_t key) {
+  return (keyboard_is_speed_shortcut_release_behavior(source, key) || keyboard_is_start_release_action(source, key));
+}
+
+static uint8_t keyboard_is_speed_shortcut_key(keyboard_input_source_t source, kbd_key_t key) {
+  if (keyboard_is_speed_shortcut_release_action(source, key)) {
+    return 1;
+  }
+
+  if (source == KEYBOARD_INPUT_SOURCE_HG_SPEED &&
+      (key == KEY_EXT_KBD_SPEED_INC || key == KEY_EXT_KBD_SPEED_DEC)) {
+    return 1;
+  }
+
+  return 0;
+}
+
+static uint8_t keyboard_should_check_stuck(keyboard_input_source_t source, kbd_key_t key) {
+  return (treadmill.scene == SCENE_IDLE && keyboard_is_speed_shortcut_key(source, key));
+}
+
+static uint8_t keyboard_is_stop_key(kbd_key_t key) {
+  return (key == KEY_STOP || key == KEY_EXT_KBD_STOP);
+}
+
+static uint8_t keyboard_is_config_key(kbd_key_t key) {
+  return (key == KEY_CONFIG);
+}
+
+static uint8_t keyboard_is_config_navigation_start_key(kbd_key_t key) {
+  return (key == KEY_START || key == KEY_EXT_KBD_START);
+}
+
+static uint8_t keyboard_is_source_key_stuck_now(keyboard_input_source_t source, kbd_key_t key) {
+  if (source >= KEYBOARD_INPUT_SOURCE_TOTAL) return 0;
+
+  struct key_source_health *source_health = &g_key_source_health[source];
+  if (!source_health->pressed || source_health->last_key != key || source_health->press_start_ms == 0) {
+    return 0;
+  }
+
+  keyboard_source_group_t group = keyboard_source_group_from_input(source);
+  uint32_t held_ms = HAL_GetTick() - source_health->press_start_ms;
+  return (held_ms >= keyboard_stuck_threshold_ms(group));
+}
+
+static uint8_t keyboard_is_config_errors_browse_key(kbd_key_t key) {
+  return (key == KEY_SPEED_INCREMENT);
+}
+
+static uint8_t keyboard_c2v_enabled(void) {
+  return (treadmill.config.c2v == RT_LED_CONFIG_C2V_ENABLE);
+}
+
+static uint8_t keyboard_is_c2v_shortcut_key(kbd_key_t key) {
+  return (key == KEY_SPEED_6 || key == KEY_SPEED_9 || key == KEY_SPEED_12 || key == KEY_SPEED_15 ||
+          key == KEY_EXT_KBD_SPEED_6 || key == KEY_EXT_KBD_SPEED_9 || key == KEY_EXT_KBD_SPEED_12 ||
+          key == KEY_EXT_KBD_SPEED_15);
+}
+
+static void keyboard_clear_c2v_pending_shortcut(void) {
+  g_c2v_pending_shortcut.active = 0;
+  g_c2v_pending_shortcut.key = KEY_NONE;
+  g_c2v_pending_shortcut.selected_time_ms = 0;
+}
+
+static uint8_t keyboard_should_use_c2v_for_shortcut(kbd_key_t key) {
+  return (keyboard_c2v_enabled() && treadmill.scene == SCENE_TRAINING && keyboard_is_c2v_shortcut_key(key));
+}
+
+static void keyboard_c2v_update(uint32_t now) {
+  if (!g_c2v_pending_shortcut.active) return;
+
+  if (!keyboard_c2v_enabled() || treadmill.scene != SCENE_TRAINING ||
+      (now - g_c2v_pending_shortcut.selected_time_ms) > C2V_CONFIRM_WINDOW_MS) {
+    keyboard_clear_c2v_pending_shortcut();
+  }
+}
+
+static void keyboard_store_c2v_pending_shortcut(kbd_key_t key, uint32_t now) {
+  g_c2v_pending_shortcut.active = 1;
+  g_c2v_pending_shortcut.key = key;
+  g_c2v_pending_shortcut.selected_time_ms = now;
+}
+
+static uint8_t keyboard_try_confirm_c2v_shortcut(uint32_t now) {
+  if (!g_c2v_pending_shortcut.active) return 0;
+  if ((now - g_c2v_pending_shortcut.selected_time_ms) > C2V_CONFIRM_WINDOW_MS) {
+    keyboard_clear_c2v_pending_shortcut();
+    return 0;
+  }
+
+  kbd_key_t confirmed_key = g_c2v_pending_shortcut.key;
+  keyboard_clear_c2v_pending_shortcut();
+  treadmill_key_press(&treadmill, confirmed_key);
+  return 1;
+}
+
+static void keyboard_service_idle_keyboard_fault_clear_combo(void) {
+  static uint32_t combo_pressed_tick = 0;
+  static uint8_t combo_action_done = 0;
+
+  if (treadmill.scene != SCENE_IDLE) {
+    combo_pressed_tick = 0;
+    combo_action_done = 0;
+    return;
+  }
+
+  uint8_t combo_pressed_now = (uint8_t)(g_main_plus_minus_combo_pressed || g_hg_plus_minus_combo_pressed);
+  if (!combo_pressed_now) {
+    combo_pressed_tick = 0;
+    combo_action_done = 0;
+    return;
+  }
+
+  uint32_t now = HAL_GetTick();
+  if (combo_pressed_tick == 0) {
+    combo_pressed_tick = now;
+  }
+
+  if (!combo_action_done && (now - combo_pressed_tick) >= KEYBOARD_FAULT_CLEAR_HOLD_MS) {
+    treadmill_clear_keyboard_error_code_and_unlock(&treadmill);
+    treadmill.hw.beep(BEEP_KEYPRESS_ACK);
+    combo_action_done = 1;
+  }
+}
+
+void keyboard_route_key_event(keyboard_input_source_t source, kbd_key_t key) {
+  if (source >= KEYBOARD_INPUT_SOURCE_TOTAL || key == KEY_NONE) return;
+  keyboard_c2v_update(HAL_GetTick());
+
+  keyboard_source_group_t group = keyboard_source_group_from_input(source);
+  uint8_t disable_mask = keyboard_source_disable_mask_from_group(group);
+  if (disable_mask == 0) return;
+
+  if (treadmill.hw.keyboard.disabled_sources_mask & disable_mask) {
+    // Safety rule: STOP and CONFIG must never be disabled by keyboard fault latches.
+    // In CONFIG scene, START is available to navigate to ERR reset only when that START is not stuck.
+    // In CONFIG/ERR, allow principal '+' to browse stored errors during maintenance.
+    if (keyboard_is_stop_key(key) || keyboard_is_config_key(key) ||
+        (treadmill.scene == SCENE_CONFIG && keyboard_is_config_navigation_start_key(key) &&
+         !keyboard_is_source_key_stuck_now(source, key)) ||
+        (treadmill.scene == SCENE_CONFIG && treadmill.config.option == CONFIG_OPTION_ERRORS &&
+         keyboard_is_config_errors_browse_key(key))) {
+      if (keyboard_is_release_action(source, key)) {
+        struct key_source_health *source_health = &g_key_source_health[source];
+        if (!source_health->pressed || source_health->last_key != key) {
+          source_health->pressed = 1;
+          source_health->last_key = key;
+          source_health->press_start_ms = HAL_GetTick();
+        }
+      } else {
+        treadmill_key_press(&treadmill, key);
+      }
+    }
+    return;
+  }
+
+  uint32_t now = HAL_GetTick();
+  struct key_source_health *source_health = &g_key_source_health[source];
+  uint8_t should_check_stuck = keyboard_should_check_stuck(source, key);
+  uint8_t is_new_press = (!source_health->pressed || source_health->last_key != key);
+
+  if (is_new_press) {
+    source_health->pressed = 1;
+    source_health->last_key = key;
+    source_health->press_start_ms = now;
+
+    if (source_health->burst_window_start_ms == 0 ||
+        (now - source_health->burst_window_start_ms) > keyboard_burst_window_ms(group)) {
+      source_health->burst_window_start_ms = now;
+      source_health->burst_count = 1;
+    } else if (source_health->burst_count < 255u) {
+      source_health->burst_count++;
+    }
+
+    if (source_health->burst_count > keyboard_burst_max(group)) {
+      treadmill.hw.keyboard.disabled_sources_mask |= disable_mask;
+      treadmill_register_keyboard_error(&treadmill, keyboard_burst_fault_code(group));
+      return;
+    }
+  } else if (should_check_stuck && source_health->press_start_ms > 0 &&
+             (now - source_health->press_start_ms) >= keyboard_stuck_threshold_ms(group)) {
+    treadmill.hw.keyboard.disabled_sources_mask |= disable_mask;
+    treadmill_register_keyboard_error(&treadmill, keyboard_stuck_fault_code(group));
+    return;
+  }
+
+  // Safety behavior: selected keys (speed shortcuts/start) are applied only on key release.
+  if (keyboard_is_release_action(source, key)) {
+    return;
+  }
+
+  if (keyboard_should_dispatch_shortcut_on_press(key) && !is_new_press) {
+    return;
+  }
+
+  treadmill_key_press(&treadmill, key);
+}
+
+static void keyboard_route_key_hold(keyboard_input_source_t source, kbd_key_t key) {
+  if (source >= KEYBOARD_INPUT_SOURCE_TOTAL || key == KEY_NONE) return;
+  if (!keyboard_should_check_stuck(source, key)) return;
+
+  keyboard_source_group_t group = keyboard_source_group_from_input(source);
+  uint8_t disable_mask = keyboard_source_disable_mask_from_group(group);
+  if (disable_mask == 0) return;
+  if (treadmill.hw.keyboard.disabled_sources_mask & disable_mask) return;
+
+  struct key_source_health *source_health = &g_key_source_health[source];
+  if (!source_health->pressed || source_health->last_key != key || source_health->press_start_ms == 0) return;
+
+  uint32_t now = HAL_GetTick();
+  if ((now - source_health->press_start_ms) >= keyboard_stuck_threshold_ms(group)) {
+    treadmill.hw.keyboard.disabled_sources_mask |= disable_mask;
+    treadmill_register_keyboard_error(&treadmill, keyboard_stuck_fault_code(group));
+  }
+}
+
+void keyboard_route_key_release(keyboard_input_source_t source) {
+  if (source >= KEYBOARD_INPUT_SOURCE_TOTAL) return;
+  uint32_t now = HAL_GetTick();
+  keyboard_c2v_update(now);
+  struct key_source_health *source_health = &g_key_source_health[source];
+  kbd_key_t last_key = source_health->last_key;
+  keyboard_source_group_t group = keyboard_source_group_from_input(source);
+  uint32_t held_ms = 0;
+  if (source_health->pressed && source_health->press_start_ms > 0) {
+    held_ms = now - source_health->press_start_ms;
+  }
+
+  if (source_health->pressed && keyboard_is_speed_shortcut_release_behavior(source, last_key)) {
+    // During training, long-pressed speed shortcuts are ignored instead of acting/sticking.
+    if (treadmill.scene == SCENE_TRAINING && held_ms >= keyboard_stuck_threshold_ms(group)) {
+      source_health->pressed = 0;
+      source_health->last_key = KEY_NONE;
+      source_health->press_start_ms = 0;
+      return;
+    }
+  }
+
+  if (source_health->pressed && keyboard_is_release_action(source, last_key)) {
+    uint8_t disable_mask = keyboard_source_disable_mask_from_group(keyboard_source_group_from_input(source));
+    uint8_t can_dispatch = ((treadmill.hw.keyboard.disabled_sources_mask & disable_mask) == 0);
+
+    if (!can_dispatch && treadmill.scene == SCENE_CONFIG && keyboard_is_config_navigation_start_key(last_key) &&
+        !keyboard_is_source_key_stuck_now(source, last_key)) {
+      can_dispatch = 1;
+    }
+
+    if (can_dispatch) {
+      if (keyboard_should_use_c2v_for_shortcut(last_key)) {
+        keyboard_store_c2v_pending_shortcut(last_key, now);
+      } else if (keyboard_is_start_release_action(source, last_key) && keyboard_c2v_enabled() &&
+                 treadmill.scene == SCENE_TRAINING && keyboard_try_confirm_c2v_shortcut(now)) {
+        // START acts as confirmation for pending speed shortcut in C2V mode.
+      } else {
+        treadmill_key_press(&treadmill, last_key);
+      }
+    }
+  }
+
+  source_health->pressed = 0;
+  source_health->last_key = KEY_NONE;
+  source_health->press_start_ms = 0;
+}
+
 #define SP_SPD_INC_PIN SP_PLUS_Pin
 #define SP_SPD_DEC_PIN SP_MINUS_Pin
 #define SP_START_PIN INC_MINUS_Pin
@@ -1339,9 +1788,97 @@ struct key_shortcut_state {
 };
 
 struct key_shortcut_state keys_shortcut[KEY_SHORTCUT_COUNT] = {0};
+struct ext_start_stop_combo_state {
+  uint8_t active;
+  uint8_t config_sent;
+  uint32_t pressed_tick;
+};
+
+static struct ext_start_stop_combo_state g_ext_start_stop_combo = {0};
+
+static void clear_shortcut_state(enum key_shortcut shortcut_index) {
+  keys_shortcut[shortcut_index] = (struct key_shortcut_state){0};
+}
+
+static uint8_t handle_external_start_stop_config_combo(void) {
+  uint8_t start_pressed = (HAL_GPIO_ReadPin(INC_MINUS_GPIO_Port, INC_MINUS_Pin) == GPIO_PIN_RESET);
+  uint8_t stop_pressed = (HAL_GPIO_ReadPin(INC_PLUS_GPIO_Port, INC_PLUS_Pin) == GPIO_PIN_RESET);
+  uint8_t both_pressed = (uint8_t)(start_pressed && stop_pressed);
+  uint32_t now = HAL_GetTick();
+
+  if (both_pressed) {
+    if (!g_ext_start_stop_combo.active) {
+      g_ext_start_stop_combo.active = 1;
+      g_ext_start_stop_combo.config_sent = 0;
+      g_ext_start_stop_combo.pressed_tick = now;
+      clear_shortcut_state(KEY_SHORTCUT_INC_DEC);
+      clear_shortcut_state(KEY_SHORTCUT_INC_INC);
+    }
+
+    if (!g_ext_start_stop_combo.config_sent &&
+        (now - g_ext_start_stop_combo.pressed_tick) >= HG_START_STOP_CONFIG_HOLD_MS) {
+      keyboard_route_key_event(KEYBOARD_INPUT_SOURCE_HG_START_STOP, KEY_CONFIG);
+      g_ext_start_stop_combo.config_sent = 1;
+    }
+
+    return 1;
+  }
+
+  if (g_ext_start_stop_combo.active) {
+    g_ext_start_stop_combo.active = 0;
+    g_ext_start_stop_combo.config_sent = 0;
+    g_ext_start_stop_combo.pressed_tick = 0;
+    clear_shortcut_state(KEY_SHORTCUT_INC_DEC);
+    clear_shortcut_state(KEY_SHORTCUT_INC_INC);
+    keyboard_route_key_release(KEYBOARD_INPUT_SOURCE_HG_START_STOP);
+    return 1;
+  }
+
+  return 0;
+}
+
+static keyboard_input_source_t shortcut_index_to_input_source(enum key_shortcut shortcut_index) {
+  switch (shortcut_index) {
+    case KEY_SHORTCUT_SPD_DEC:
+    case KEY_SHORTCUT_SPD_INC:
+      return KEYBOARD_INPUT_SOURCE_HG_SPEED;
+    case KEY_SHORTCUT_INC_DEC:
+    case KEY_SHORTCUT_INC_INC:
+      return KEYBOARD_INPUT_SOURCE_HG_START_STOP;
+    default:
+      return KEYBOARD_INPUT_SOURCE_HG_SPEED;
+  }
+}
+
+static void update_handgrip_release_state(keyboard_input_source_t source) {
+  static uint8_t hg_speed_pressed = 0;
+  static uint8_t hg_start_stop_pressed = 0;
+  uint8_t any_pressed = 0;
+  uint8_t *pressed_state = NULL;
+
+  if (source == KEYBOARD_INPUT_SOURCE_HG_SPEED) {
+    any_pressed = (HAL_GPIO_ReadPin(SP_MINUS_GPIO_Port, SP_MINUS_Pin) == GPIO_PIN_RESET) ||
+                  (HAL_GPIO_ReadPin(SP_PLUS_GPIO_Port, SP_PLUS_Pin) == GPIO_PIN_RESET);
+    pressed_state = &hg_speed_pressed;
+  } else if (source == KEYBOARD_INPUT_SOURCE_HG_START_STOP) {
+    any_pressed = (HAL_GPIO_ReadPin(INC_MINUS_GPIO_Port, INC_MINUS_Pin) == GPIO_PIN_RESET) ||
+                  (HAL_GPIO_ReadPin(INC_PLUS_GPIO_Port, INC_PLUS_Pin) == GPIO_PIN_RESET);
+    pressed_state = &hg_start_stop_pressed;
+  }
+
+  if (pressed_state == NULL) return;
+
+  if (any_pressed) {
+    *pressed_state = 1;
+  } else if (*pressed_state) {
+    keyboard_route_key_release(source);
+    *pressed_state = 0;
+  }
+}
 
 void update_handle_shortcut_keys(GPIO_TypeDef *port, uint16_t pin, enum key_shortcut shortcut_index, kbd_key_t action_key) {
 	GPIO_PinState state = HAL_GPIO_ReadPin(port, pin);
+  keyboard_input_source_t source = shortcut_index_to_input_source(shortcut_index);
 	if (keys_shortcut[shortcut_index].tick_since_high == 0) {
 		if (state == GPIO_PIN_SET && HAL_GetTick() > 0) {
 			keys_shortcut[shortcut_index].tick_since_high = HAL_GetTick();
@@ -1384,7 +1921,7 @@ void update_handle_shortcut_keys(GPIO_TypeDef *port, uint16_t pin, enum key_shor
 			}
 			
 			if (allow_press) {
-				treadmill_key_press(pTreadmill, action_key);
+				keyboard_route_key_event(source, action_key);
 				keys_shortcut[shortcut_index].count++;
 				keys_shortcut[shortcut_index].last_press_time = current_time;
 			}
@@ -1392,10 +1929,15 @@ void update_handle_shortcut_keys(GPIO_TypeDef *port, uint16_t pin, enum key_shor
 			keys_shortcut[shortcut_index].delta_high = 0;
 			keys_shortcut[shortcut_index].delta_low  = 0;
 		}
+
+    // Keep monitoring continuous press to detect stuck even if no new edge event is generated.
+    keyboard_route_key_hold(source, action_key);
 	} else {		
 		keys_shortcut[shortcut_index].tick_since_low = 0;
 		keys_shortcut[shortcut_index].delta_low = 0;
 	}
+
+  update_handgrip_release_state(source);
 } 
 
 int enable_shortcut_keys_reading = 0;
@@ -1508,13 +2050,13 @@ static inline int handle_combined_or_single_key_press(enum key singles, enum key
       *key_tick = HAL_GetTick();
     } else if (HAL_GetTick() - *key_tick >= 50) {
       if (pressed != combined && *previous == KEY_NONE) {
-        treadmill_key_press(&treadmill, pressed);
+        keyboard_route_key_event(KEYBOARD_INPUT_SOURCE_MAIN_MATRIX, pressed);
         *previous = pressed;
         return 1;
       } else {
         if (pressed == combined) {
           if (HAL_GetTick() - *key_tick >= 2000) {
-            if (pressed != *previous) treadmill_key_press(&treadmill, pressed);
+            if (pressed != *previous) keyboard_route_key_event(KEYBOARD_INPUT_SOURCE_MAIN_MATRIX, pressed);
             *previous = pressed;
           }
           return 1;
@@ -1532,7 +2074,9 @@ static inline void handle_key_press(void) {
   static enum key previous = KEY_NONE;
   static uint32_t key_tick = 0;
   static uint8_t slow_repeat_count = 0;
+
   pressed = get_key_pressed();
+  g_main_plus_minus_combo_pressed = ((pressed & KEY_LUB) == KEY_LUB) ? 1u : 0u;
 
   if (handle_combined_or_single_key_press((KEY_START | KEY_STOP), KEY_CONFIG, pressed, &previous, &key_tick)) {
     return;
@@ -1544,7 +2088,7 @@ static inline void handle_key_press(void) {
   }
 
   if (pressed != KEY_NONE && pressed != previous) {
-    treadmill_key_press(&treadmill, pressed);
+    keyboard_route_key_event(KEYBOARD_INPUT_SOURCE_MAIN_MATRIX, pressed);
     key_tick = 0;
     slow_repeat_count = 0;
     previous = pressed;
@@ -1558,11 +2102,12 @@ static inline void handle_key_press(void) {
     }
     if (slow_repeat_count < 255) slow_repeat_count++;
     if (slow_repeat_count <= 10) return;
-    treadmill_key_press(&treadmill, pressed);
+    keyboard_route_key_event(KEYBOARD_INPUT_SOURCE_MAIN_MATRIX, pressed);
   } else {
     key_tick = 0;
     previous = pressed;
     slow_repeat_count = 0;
+    keyboard_route_key_release(KEYBOARD_INPUT_SOURCE_MAIN_MATRIX);
     treadmill_key_press_clear(&treadmill);
   }
 }
@@ -1577,7 +2122,8 @@ void KeyboardTask(void const * argument)
     enable_shortcut_keys_reading = 1;
     // handle_shortcut_keys();
     handle_key_press();
-    ext_i2c_kbd_handler();    
+    ext_i2c_kbd_handler();
+    keyboard_service_idle_keyboard_fault_clear_combo();
     osDelay(1);  // 2 ms
   }
   /* USER CODE END KeyboardTask */
@@ -1700,16 +2246,26 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
     extern int enable_shortcut_keys_reading;
     if (enable_shortcut_keys_reading == 1) {
+      uint8_t hg_sp_plus_pressed = (HAL_GPIO_ReadPin(SP_PLUS_GPIO_Port, SP_PLUS_Pin) == GPIO_PIN_RESET);
+      uint8_t hg_sp_minus_pressed = (HAL_GPIO_ReadPin(SP_MINUS_GPIO_Port, SP_MINUS_Pin) == GPIO_PIN_RESET);
+      g_hg_plus_minus_combo_pressed = (uint8_t)(hg_sp_plus_pressed && hg_sp_minus_pressed);
+
+      uint8_t ext_start_stop_combo = handle_external_start_stop_config_combo();
+
       // put external shortcut keys filter logic here.
       // Call for each shortcut key (using GPIO definitions from main.h):
       // SPD_INC: SP_MINUS_GPIO_Port/SP_MINUS_Pin -> KEY_EXT_KBD_SPEED_INC
       update_handle_shortcut_keys(SP_MINUS_GPIO_Port, SP_PLUS_Pin, KEY_SHORTCUT_SPD_INC, KEY_EXT_KBD_SPEED_INC);
       // SPD_DEC: SP_PLUS_GPIO_Port/SP_PLUS_Pin -> KEY_EXT_KBD_SPEED_DEC
       update_handle_shortcut_keys(SP_PLUS_GPIO_Port, SP_MINUS_Pin, KEY_SHORTCUT_SPD_DEC, KEY_EXT_KBD_SPEED_DEC);
-      // START: INC_MINUS_GPIO_Port/INC_MINUS_Pin -> KEY_START
-      update_handle_shortcut_keys(INC_MINUS_GPIO_Port, INC_MINUS_Pin, KEY_SHORTCUT_INC_DEC, KEY_START);
-      // STOP: INC_PLUS_GPIO_Port/INC_PLUS_Pin -> KEY_STOP
-      update_handle_shortcut_keys(INC_PLUS_GPIO_Port, INC_PLUS_Pin, KEY_SHORTCUT_INC_INC, KEY_STOP);
+      if (!ext_start_stop_combo) {
+        // START: INC_MINUS_GPIO_Port/INC_MINUS_Pin -> KEY_EXT_KBD_START
+        update_handle_shortcut_keys(INC_MINUS_GPIO_Port, INC_MINUS_Pin, KEY_SHORTCUT_INC_DEC, KEY_EXT_KBD_START);
+        // STOP: INC_PLUS_GPIO_Port/INC_PLUS_Pin -> KEY_EXT_KBD_STOP
+        update_handle_shortcut_keys(INC_PLUS_GPIO_Port, INC_PLUS_Pin, KEY_SHORTCUT_INC_INC, KEY_EXT_KBD_STOP);
+      }
+    } else {
+      g_hg_plus_minus_combo_pressed = 0;
     }
   }
   /* USER CODE BEGIN Callback 1 */

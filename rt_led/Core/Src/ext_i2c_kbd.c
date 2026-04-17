@@ -190,58 +190,59 @@ void handle_key(uint8_t key) {
 
     if (key == 0xff) {    	
         if (_key == 0x0B && key_ble_debounce != 0) {
-            treadmill_key_press(pTreadmill, KEY_PROGRAM);
+            keyboard_route_key_event(KEYBOARD_INPUT_SOURCE_MAIN_I2C, KEY_PROGRAM);
             _key = key;
         }
         key_config_debounce = 0;
-        key_ble_debounce = 0;        
+        key_ble_debounce = 0;
+        keyboard_route_key_release(KEYBOARD_INPUT_SOURCE_MAIN_I2C);
         return;
     }
 
     switch (key) {
     case 1: {
-        treadmill_key_press(pTreadmill, KEY_EXT_KBD_SPEED_9);
+        keyboard_route_key_event(KEYBOARD_INPUT_SOURCE_MAIN_I2C, KEY_EXT_KBD_SPEED_9);
         break;
     }
     case 2: {
-        treadmill_key_press(pTreadmill, KEY_EXT_KBD_SPEED_6);
+        keyboard_route_key_event(KEYBOARD_INPUT_SOURCE_MAIN_I2C, KEY_EXT_KBD_SPEED_6);
         break;
     }
     case 3: {        
-        treadmill_key_press(pTreadmill, KEY_SPEED_DECREMENT);
+        keyboard_route_key_event(KEYBOARD_INPUT_SOURCE_MAIN_I2C, KEY_SPEED_DECREMENT);
         break;
     }
     case 4: {
-        treadmill_key_press(pTreadmill, KEY_EXT_KBD_SPEED_12);
+        keyboard_route_key_event(KEYBOARD_INPUT_SOURCE_MAIN_I2C, KEY_EXT_KBD_SPEED_12);
         break;
     }
     case 5: {
     	if (pTreadmill->config.incline.step == 0) {
-    		treadmill_key_press(pTreadmill, KEY_SPEED_DECREMENT);
+    		keyboard_route_key_event(KEYBOARD_INPUT_SOURCE_MAIN_I2C, KEY_SPEED_DECREMENT);
     	} else {
-    		treadmill_key_press(pTreadmill, KEY_INCLINE_INCREMENT);
+    		keyboard_route_key_event(KEYBOARD_INPUT_SOURCE_MAIN_I2C, KEY_INCLINE_INCREMENT);
     	}
 
         break;
     }
     case 6: {
-        treadmill_key_press(pTreadmill, KEY_SPEED_INCREMENT);
+        keyboard_route_key_event(KEYBOARD_INPUT_SOURCE_MAIN_I2C, KEY_SPEED_INCREMENT);
         break;
     }
     case 7: {
-        treadmill_key_press(pTreadmill, KEY_EXT_KBD_SPEED_15);
+        keyboard_route_key_event(KEYBOARD_INPUT_SOURCE_MAIN_I2C, KEY_EXT_KBD_SPEED_15);
         break;
     }
     case 8: {
-        treadmill_key_press(pTreadmill, KEY_INCLINE_DECREMENT);
+        keyboard_route_key_event(KEYBOARD_INPUT_SOURCE_MAIN_I2C, KEY_INCLINE_DECREMENT);
         break;
     }
     case 9: {
-        treadmill_key_press(pTreadmill, KEY_EXT_KBD_STOP);
+        keyboard_route_key_event(KEYBOARD_INPUT_SOURCE_MAIN_I2C, KEY_STOP);
         break;
     }
     case 0x0A: {
-        treadmill_key_press(pTreadmill, KEY_START);
+        keyboard_route_key_event(KEYBOARD_INPUT_SOURCE_MAIN_I2C, KEY_START);
         break;
     }
     case 0x0B: {
@@ -260,20 +261,20 @@ void handle_key(uint8_t key) {
                 }
             }            
         } else{
-            treadmill_key_press(pTreadmill, KEY_PROGRAM);
+            keyboard_route_key_event(KEYBOARD_INPUT_SOURCE_MAIN_I2C, KEY_PROGRAM);
         }
         break;
     }
     case 0x0C: {
-        treadmill_key_press(pTreadmill, KEY_INCLINE_6);
+        keyboard_route_key_event(KEYBOARD_INPUT_SOURCE_MAIN_I2C, KEY_INCLINE_6);
         break;
     }
     case 0x0D: {
-        treadmill_key_press(pTreadmill, KEY_INCLINE_9);
+        keyboard_route_key_event(KEYBOARD_INPUT_SOURCE_MAIN_I2C, KEY_INCLINE_9);
         break;
     }
     case 0x0E: {
-        treadmill_key_press(pTreadmill, KEY_INCLINE_12);
+        keyboard_route_key_event(KEYBOARD_INPUT_SOURCE_MAIN_I2C, KEY_INCLINE_12);
         break;
     }
     case 0x0F: {
@@ -283,11 +284,11 @@ void handle_key(uint8_t key) {
 		} else {
 			if (pTreadmill->get_time_ms() - key_config_debounce >= 1200) {
                 if (pTreadmill->scene != SCENE_CONFIG){
-                    treadmill_key_press(pTreadmill, KEY_CONFIG);
+                    keyboard_route_key_event(KEYBOARD_INPUT_SOURCE_MAIN_I2C, KEY_CONFIG);
                     key_config_debounce = 0;
                 }
                 if (pTreadmill->scene == SCENE_CONFIG && (pTreadmill->get_time_ms() - pTreadmill->scene_tick > 1000)){
-                    treadmill_key_press(pTreadmill, KEY_CONFIG);
+                    keyboard_route_key_event(KEYBOARD_INPUT_SOURCE_MAIN_I2C, KEY_CONFIG);
                     key_config_debounce = 0;
                 }
 			}
@@ -295,7 +296,7 @@ void handle_key(uint8_t key) {
         break;
     }
     case 0x10: {
-        treadmill_key_press(pTreadmill, KEY_PROGRAM);
+        keyboard_route_key_event(KEYBOARD_INPUT_SOURCE_MAIN_I2C, KEY_PROGRAM);
         break;
     }
     default:
