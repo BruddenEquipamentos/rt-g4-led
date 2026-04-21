@@ -1289,6 +1289,31 @@ static struct c2v_pending_shortcut g_c2v_pending_shortcut = {0};
 static uint8_t g_c2v_start_prompt_active = 0;
 static volatile uint8_t g_main_plus_minus_combo_pressed = 0;
 static volatile uint8_t g_hg_plus_minus_combo_pressed = 0;
+static uint8_t g_main_i2c_shortcut_seen_mask = 0;
+
+#define MAIN_I2C_SHORTCUT_SEEN_6 (1u << 0)
+#define MAIN_I2C_SHORTCUT_SEEN_9 (1u << 1)
+#define MAIN_I2C_SHORTCUT_SEEN_12 (1u << 2)
+#define MAIN_I2C_SHORTCUT_SEEN_15 (1u << 3)
+
+static uint8_t keyboard_main_i2c_shortcut_seen_bit(kbd_key_t key) {
+  switch (key) {
+    case KEY_EXT_KBD_SPEED_6:
+      return MAIN_I2C_SHORTCUT_SEEN_6;
+    case KEY_EXT_KBD_SPEED_9:
+      return MAIN_I2C_SHORTCUT_SEEN_9;
+    case KEY_EXT_KBD_SPEED_12:
+      return MAIN_I2C_SHORTCUT_SEEN_12;
+    case KEY_EXT_KBD_SPEED_15:
+      return MAIN_I2C_SHORTCUT_SEEN_15;
+    default:
+      return 0;
+  }
+}
+
+static void keyboard_main_i2c_shortcut_seen_reset(void) {
+  g_main_i2c_shortcut_seen_mask = 0;
+}
 
 static void keyboard_reset_source_health(keyboard_input_source_t source) {
   if (source >= KEYBOARD_INPUT_SOURCE_TOTAL) return;
@@ -1485,7 +1510,15 @@ static uint8_t keyboard_is_speed_shortcut_key(keyboard_input_source_t source, kb
   return 0;
 }
 
+static uint8_t keyboard_is_start_key(kbd_key_t key) {
+  return (key == KEY_START || key == KEY_EXT_KBD_START);
+}
+
 static uint8_t keyboard_should_check_stuck(keyboard_input_source_t source, kbd_key_t key) {
+  if (keyboard_is_start_key(key)) {
+    return 1;
+  }
+
   if (treadmill.scene == SCENE_IDLE) {
     return keyboard_is_speed_shortcut_key(source, key);
   }
@@ -1647,6 +1680,28 @@ void keyboard_route_key_event(keyboard_input_source_t source, kbd_key_t key) {
     return;
   }
 
+  struct key_source_health *source_health = &g_key_source_health[source];
+
+  if (source == KEYBOARD_INPUT_SOURCE_MAIN_I2C) {
+    uint8_t shortcut_seen_bit = keyboard_main_i2c_shortcut_seen_bit(key);
+    if (!source_health->pressed) {
+      keyboard_main_i2c_shortcut_seen_reset();
+    }
+
+    // I2C keyboard reports one key code at a time.
+    // During simultaneous presses it can transiently return an old key again
+    // (e.g. 15 -> 12 -> 15) before final release. Ignore this re-entry so the
+    // latest distinct shortcut remains the one dispatched on release.
+    if (shortcut_seen_bit != 0 && source_health->pressed && source_health->last_key != key &&
+        (g_main_i2c_shortcut_seen_mask & shortcut_seen_bit) != 0) {
+      return;
+    }
+
+    if (shortcut_seen_bit != 0) {
+      g_main_i2c_shortcut_seen_mask |= shortcut_seen_bit;
+    }
+  }
+
   keyboard_source_group_t group = keyboard_source_group_from_input(source);
   uint8_t disable_mask = keyboard_source_disable_mask_from_group(group);
   if (disable_mask == 0) return;
@@ -1675,7 +1730,6 @@ void keyboard_route_key_event(keyboard_input_source_t source, kbd_key_t key) {
   }
 
   uint32_t now = HAL_GetTick();
-  struct key_source_health *source_health = &g_key_source_health[source];
   uint8_t should_check_stuck = keyboard_should_check_stuck(source, key);
   uint8_t is_new_press = (!source_health->pressed || source_health->last_key != key);
 
@@ -1741,6 +1795,9 @@ static void keyboard_route_key_hold(keyboard_input_source_t source, kbd_key_t ke
 
 void keyboard_route_key_release(keyboard_input_source_t source) {
   if (source >= KEYBOARD_INPUT_SOURCE_TOTAL) return;
+  if (source == KEYBOARD_INPUT_SOURCE_MAIN_I2C) {
+    keyboard_main_i2c_shortcut_seen_reset();
+  }
   uint32_t now = HAL_GetTick();
   keyboard_c2v_update(now);
   struct key_source_health *source_health = &g_key_source_health[source];
