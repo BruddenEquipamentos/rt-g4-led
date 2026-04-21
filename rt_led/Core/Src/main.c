@@ -1258,14 +1258,11 @@ void StartDefaultTask(void const * argument)
  * @retval None
  */
 
-#define MAIN_STUCK_MS 2000u
 #define MAIN_BURST_WINDOW_MS 1000u
 #define MAIN_BURST_MAX 8u
-#define HG_STUCK_MS 2000u
 #define HG_BURST_WINDOW_MS 1000u
 #define HG_BURST_MAX 8u
 #define HG_START_STOP_CONFIG_HOLD_MS 2000u
-#define KEYBOARD_FAULT_CLEAR_HOLD_MS 10000u
 
 typedef enum keyboard_source_group {
   KEYBOARD_SOURCE_GROUP_MAIN = 0,
@@ -1354,10 +1351,8 @@ static uint8_t keyboard_source_disable_mask_from_group(keyboard_source_group_t g
 }
 
 static uint32_t keyboard_stuck_threshold_ms(keyboard_source_group_t group) {
-  if (group == KEYBOARD_SOURCE_GROUP_MAIN) {
-    return MAIN_STUCK_MS;
-  }
-  return HG_STUCK_MS;
+  (void)group;
+  return KEYBOARD_STUCK_THRESHOLD_MS;
 }
 
 static uint32_t keyboard_burst_window_ms(keyboard_source_group_t group) {
