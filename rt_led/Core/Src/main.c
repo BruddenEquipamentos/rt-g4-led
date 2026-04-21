@@ -1766,7 +1766,8 @@ void keyboard_route_key_release(keyboard_input_source_t source) {
 
   if (source_health->pressed && keyboard_is_speed_shortcut_release_behavior(source, last_key)) {
     // During training, long-pressed speed shortcuts are ignored instead of acting/sticking.
-    if (treadmill.scene == SCENE_TRAINING && held_ms >= keyboard_stuck_threshold_ms(group)) {
+    if (treadmill.scene == SCENE_TRAINING && treadmill.config.c2v == RT_LED_CONFIG_C2V_DISABLE &&
+        held_ms >= KEYBOARD_SHORTCUT_LONG_PRESS_IGNORE_MS) {
       source_health->pressed = 0;
       source_health->last_key = KEY_NONE;
       source_health->press_start_ms = 0;
