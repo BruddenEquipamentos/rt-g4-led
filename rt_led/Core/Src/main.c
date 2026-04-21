@@ -1293,6 +1293,39 @@ static uint8_t g_c2v_start_prompt_active = 0;
 static volatile uint8_t g_main_plus_minus_combo_pressed = 0;
 static volatile uint8_t g_hg_plus_minus_combo_pressed = 0;
 
+static void keyboard_reset_source_health(keyboard_input_source_t source) {
+  if (source >= KEYBOARD_INPUT_SOURCE_TOTAL) return;
+
+  g_key_source_health[source].pressed = 0;
+  g_key_source_health[source].last_key = KEY_NONE;
+  g_key_source_health[source].press_start_ms = 0;
+  g_key_source_health[source].burst_window_start_ms = 0;
+  g_key_source_health[source].burst_count = 0;
+}
+
+static uint8_t keyboard_is_error_clear_combo_active(void) {
+  if (treadmill.scene != SCENE_IDLE) return 0;
+
+  return (uint8_t)(g_main_plus_minus_combo_pressed || g_hg_plus_minus_combo_pressed ||
+                   ext_i2c_kbd_is_clear_combo_pressed());
+}
+
+static uint8_t keyboard_is_error_clear_combo_key(keyboard_input_source_t source, kbd_key_t key) {
+  if (source == KEYBOARD_INPUT_SOURCE_MAIN_MATRIX || source == KEYBOARD_INPUT_SOURCE_MAIN_I2C) {
+    return (key == KEY_SPEED_INCREMENT || key == KEY_SPEED_DECREMENT);
+  }
+
+  if (source == KEYBOARD_INPUT_SOURCE_HG_SPEED) {
+    return (key == KEY_EXT_KBD_SPEED_INC || key == KEY_EXT_KBD_SPEED_DEC);
+  }
+
+  return 0;
+}
+
+static uint8_t keyboard_should_suppress_fault_for_clear_combo(keyboard_input_source_t source, kbd_key_t key) {
+  return (keyboard_is_error_clear_combo_active() && keyboard_is_error_clear_combo_key(source, key));
+}
+
 static keyboard_source_group_t keyboard_source_group_from_input(keyboard_input_source_t source) {
   switch (source) {
     case KEYBOARD_INPUT_SOURCE_MAIN_MATRIX:
@@ -1580,7 +1613,7 @@ static void keyboard_service_idle_keyboard_fault_clear_combo(void) {
     return;
   }
 
-  uint8_t combo_pressed_now = (uint8_t)(g_main_plus_minus_combo_pressed || g_hg_plus_minus_combo_pressed);
+  uint8_t combo_pressed_now = keyboard_is_error_clear_combo_active();
   if (!combo_pressed_now) {
     combo_pressed_tick = 0;
     combo_action_done = 0;
@@ -1594,6 +1627,9 @@ static void keyboard_service_idle_keyboard_fault_clear_combo(void) {
 
   if (!combo_action_done && (now - combo_pressed_tick) >= KEYBOARD_FAULT_CLEAR_HOLD_MS) {
     treadmill_clear_keyboard_error_code_and_unlock(&treadmill);
+    keyboard_reset_source_health(KEYBOARD_INPUT_SOURCE_MAIN_MATRIX);
+    keyboard_reset_source_health(KEYBOARD_INPUT_SOURCE_MAIN_I2C);
+    keyboard_reset_source_health(KEYBOARD_INPUT_SOURCE_HG_SPEED);
     treadmill.hw.beep(BEEP_KEYPRESS_ACK);
     combo_action_done = 1;
   }
@@ -1602,6 +1638,11 @@ static void keyboard_service_idle_keyboard_fault_clear_combo(void) {
 void keyboard_route_key_event(keyboard_input_source_t source, kbd_key_t key) {
   if (source >= KEYBOARD_INPUT_SOURCE_TOTAL || key == KEY_NONE) return;
   keyboard_c2v_update(HAL_GetTick());
+
+  if (keyboard_should_suppress_fault_for_clear_combo(source, key)) {
+    keyboard_reset_source_health(source);
+    return;
+  }
 
   keyboard_source_group_t group = keyboard_source_group_from_input(source);
   uint8_t disable_mask = keyboard_source_disable_mask_from_group(group);
@@ -1674,6 +1715,10 @@ void keyboard_route_key_event(keyboard_input_source_t source, kbd_key_t key) {
 
 static void keyboard_route_key_hold(keyboard_input_source_t source, kbd_key_t key) {
   if (source >= KEYBOARD_INPUT_SOURCE_TOTAL || key == KEY_NONE) return;
+  if (keyboard_should_suppress_fault_for_clear_combo(source, key)) {
+    keyboard_reset_source_health(source);
+    return;
+  }
   if (!keyboard_should_check_stuck(source, key)) return;
 
   keyboard_source_group_t group = keyboard_source_group_from_input(source);
