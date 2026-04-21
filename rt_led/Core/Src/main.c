@@ -1486,7 +1486,15 @@ static uint8_t keyboard_is_speed_shortcut_key(keyboard_input_source_t source, kb
 }
 
 static uint8_t keyboard_should_check_stuck(keyboard_input_source_t source, kbd_key_t key) {
-  return (treadmill.scene == SCENE_IDLE && keyboard_is_speed_shortcut_key(source, key));
+  if (treadmill.scene == SCENE_IDLE) {
+    return keyboard_is_speed_shortcut_key(source, key);
+  }
+
+  if (treadmill.scene == SCENE_TRAINING && treadmill.config.c2v == RT_LED_CONFIG_C2V_DISABLE) {
+    return (key != KEY_NONE);
+  }
+
+  return 0;
 }
 
 static uint8_t keyboard_is_stop_key(kbd_key_t key) {
@@ -1741,6 +1749,19 @@ void keyboard_route_key_release(keyboard_input_source_t source) {
   uint32_t held_ms = 0;
   if (source_health->pressed && source_health->press_start_ms > 0) {
     held_ms = now - source_health->press_start_ms;
+  }
+
+  if (source_health->pressed && keyboard_should_check_stuck(source, last_key) &&
+      held_ms >= keyboard_stuck_threshold_ms(group)) {
+    uint8_t disable_mask = keyboard_source_disable_mask_from_group(group);
+    if (disable_mask != 0 && (treadmill.hw.keyboard.disabled_sources_mask & disable_mask) == 0) {
+      treadmill.hw.keyboard.disabled_sources_mask |= disable_mask;
+      treadmill_register_keyboard_error(&treadmill, keyboard_stuck_fault_code(group));
+    }
+    source_health->pressed = 0;
+    source_health->last_key = KEY_NONE;
+    source_health->press_start_ms = 0;
+    return;
   }
 
   if (source_health->pressed && keyboard_is_speed_shortcut_release_behavior(source, last_key)) {
