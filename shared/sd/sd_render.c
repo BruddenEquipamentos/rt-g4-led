@@ -81,11 +81,16 @@ static char sd_hex_nibble_to_char(uint8_t nibble) {
   }
 }
 
+static bool sd_is_keyboard_error_code(uint8_t error_code) {
+  return (error_code >= (uint8_t)KEYBOARD_ERROR_MAIN_STUCK &&
+          error_code <= (uint8_t)KEYBOARD_ERROR_HG_START_STOP_BURST);
+}
+
 static void sd_render_idle_error(treadmill_t *treadmill) {
   uint8_t error_code = treadmill_get_latest_error_code(treadmill);
   char error_text[5] = {' ', 'E', '0', '0', '\0'};
 
-  if (error_code == 0u) {
+  if (error_code == 0u || !sd_is_keyboard_error_code(error_code)) {
     sd_set_visible(&sd_program, false);
     return;
   }
