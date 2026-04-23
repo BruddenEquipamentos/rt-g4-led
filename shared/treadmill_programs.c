@@ -6,6 +6,7 @@
 #include "treadmill_action.h"
 
 #include "dm/dm_render.h"
+#include "dm/dm.h"
 
 extern int render_finished;
 

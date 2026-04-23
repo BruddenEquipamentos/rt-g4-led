@@ -2,7 +2,7 @@
 
 #include "../shared/treadmill.h"
 #include "main.h"
-
+#include "../shared/ble/ble_protocol/ble_protocol_command.h"
 #include <string.h>
 
 extern I2C_HandleTypeDef hi2c2;

@@ -1,4 +1,5 @@
 #include "dm.h"
+#include "string.h"
 void (*_dm_update)(const uint16_t dot_matrix[5]) = 0;
 
 uint16_t dm_buffer[5];

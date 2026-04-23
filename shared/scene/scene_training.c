@@ -3,6 +3,7 @@
 #include "scene.h"
 #include "sd/sd_render.h" /////////
 #include "../panel/rt_led.h"
+#include "../treadmill_action.h"
 
 // New includes for BLE commands and helpers
 #include "../shared/ble/ble_protocol/ble_protocol_command.h"

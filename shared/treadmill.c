@@ -9,7 +9,7 @@
 
 #include "ble/ble_protocol/ble_ftms_treadmill.h"
 #include "ble/ble_protocol/ble_protocol_helper.h" //Lucas 23/03
-
+#include "ble/ble_protocol/ble_protocol_command.h"
 #include "lang.h"
 
 char *scene_name[SCENE_TOTALS] = {

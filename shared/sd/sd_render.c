@@ -17,6 +17,15 @@ calories pace bpm
 extern int report_state;
 extern uint8_t config_error_index;
 
+static const uint8_t keyboard_error_count_index_for_display[KEYBOARD_ERROR_COUNT] = {
+  0u, // A1 -> MAIN_STUCK
+  4u, // A2 -> HG_START_STOP_STUCK
+  2u, // A3 -> HG_SPEED_STUCK
+  1u, // A4 -> MAIN_BURST
+  5u, // A5 -> HG_START_STOP_BURST
+  3u, // A6 -> HG_SPEED_BURST
+};
+
 sd_t sd_distance = {.flag = SD_FLAG_VISIBLE};
 sd_t sd_time = {.flag = SD_FLAG_VISIBLE};
 sd_t sd_speed = {.flag = SD_FLAG_VISIBLE};
@@ -361,8 +370,13 @@ static void render_config_data(treadmill_t *treadmill) {
           sd_set_text(&sd_pace, last_error_logic[last_error_index]);
         }
       } else if (config_error_index < CONFIG_ERRORS_TOTAL_ENTRIES) {
-        uint8_t keyboard_error_index = config_error_index - keyboard_count_start;
-        sd_set_value(&sd_pace, treadmill->hw.keyboard.error[keyboard_error_index].count);
+        uint8_t keyboard_display_index = config_error_index - keyboard_count_start;
+        if (keyboard_display_index < KEYBOARD_ERROR_COUNT) {
+          uint8_t keyboard_error_index = keyboard_error_count_index_for_display[keyboard_display_index];
+          sd_set_value(&sd_pace, treadmill->hw.keyboard.error[keyboard_error_index].count);
+        } else {
+          sd_set_value(&sd_pace, 0);
+        }
       } else {
         sd_set_value(&sd_pace, 0);
       }

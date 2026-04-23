@@ -1,5 +1,5 @@
 #include "scene.h"
-
+#include "../shared/dm/dm.h"
 #include "treadmill_action.h" ///////
 
 extern int report_state;
