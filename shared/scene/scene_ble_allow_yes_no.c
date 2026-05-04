@@ -1,6 +1,7 @@
 #include "../treadmill_motor_modbus.h"
 #include "scene.h"
 #include "../shared/dm/dm.h"
+#include "string.h"
 
 // #include "treadmill_ble.h" //Lucas
 #include "../shared/ble/ble_protocol/ble_protocol_command.h" //Lucas

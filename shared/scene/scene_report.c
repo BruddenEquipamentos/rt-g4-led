@@ -1,6 +1,7 @@
 #include "scene.h"
 #include "../panel/rt_led.h"
 #include "treadmill_action.h" ///////
+#include "../shared/dm/dm.h"
 
 extern int report_state;
 extern int completed_goal;

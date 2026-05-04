@@ -2,6 +2,8 @@
 
 #include <stddef.h>
 #include <string.h>
+#include <stdio.h>
+
 
 extern scene_t scene_init;
 extern scene_t scene_idle;

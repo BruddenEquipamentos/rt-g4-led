@@ -2,6 +2,7 @@
 
 #include "../shared/treadmill.h"
 #include "main.h"
+#include "../shared/ble/ble_protocol/ble_protocol_command.h"
 
 #include <string.h>
 

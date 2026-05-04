@@ -3,4 +3,6 @@
 
 void ext_i2c_kbd_handler(void);
 
+void ext_i2c_kbd_irq(void);
+
 #endif

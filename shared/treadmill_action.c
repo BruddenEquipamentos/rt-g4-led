@@ -7,6 +7,7 @@
 #include "treadmill_programs_update.h"
 #include "ble/ble_protocol/ble_ftms_treadmill.h"
 #include "ble/ble_protocol/ble_protocol_helper.h"
+#include "ble/ble_protocol/ble_protocol_command.h"
 #include "panel/rt_led.h"
 
 #include "../shared/dm/dm.h"

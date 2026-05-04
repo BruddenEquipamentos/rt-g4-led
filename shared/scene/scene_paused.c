@@ -1,4 +1,5 @@
 #include "scene.h"
+#include "../dm/dm.h"
 
 static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
