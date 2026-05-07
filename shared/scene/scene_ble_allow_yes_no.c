@@ -14,19 +14,14 @@ static void keypress(treadmill_t* treadmill, const kbd_key_t key) {
    switch (key) {
        case KEY_START:
        case KEY_EXT_KBD_START:{
-           if (strlen(treadmill->hw.ble.hrm.device_name) >= 0){ ///////WIP - polar
-               uint8_t buffer[128];
-               uint8_t length;
-               build_hrm_connect_packet(buffer, &length, 128);
-               ble_post_message((const char *)buffer, "", 0);
-               treadmill->hw.ble.status = BLE_STATUS_PERMISSION_ALLOWED;
-               treadmill_set_scene(treadmill, SCENE_IDLE);
-               ble_allowed = 1;
-           }
-           else{
-
-           }
-            break;
+           uint8_t buffer[128];
+           uint8_t length;
+           build_hrm_connect_packet(buffer, &length, 128);
+           ble_post_message((const char *)buffer, "", 0);
+           treadmill->hw.ble.status = BLE_STATUS_PERMISSION_ALLOWED;
+           treadmill_set_scene(treadmill, SCENE_IDLE);
+           ble_allowed = 1;
+           break;
        }
        case KEY_STOP:
        case KEY_EXT_KBD_STOP:{

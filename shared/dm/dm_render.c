@@ -307,7 +307,8 @@ void dm_render_calories(treadmill_t *treadmill) {
 ////////////////////////////////////////////////////////////////////////////
 
 static void dm_render_prog_time(treadmill_t *treadmill) {
-  uint16_t conclusion_percentage[16] = {0};
+  int conclusion = (int)treadmill->training.conclusion_percentage;
+  int conclusion_percentage[16] = {0};
   uint8_t dots_by_percentage[16] = {0};
 
   for (int i = 0; i < 16; i++){
@@ -316,11 +317,11 @@ static void dm_render_prog_time(treadmill_t *treadmill) {
     if (i == 15){
       conclusion_percentage[i] = 100;
     }
-    if (treadmill->training.conclusion_percentage <= 7){
+    if (conclusion <= 7){
         dm_render_column_with_height(dots_by_percentage[0], 5, treadmill->get_time_ms(), 800);
     }
-    else if (treadmill->training.conclusion_percentage >= conclusion_percentage[i]){
-      if (treadmill->training.conclusion_percentage > (conclusion_percentage[i] - 7) && treadmill->training.conclusion_percentage < conclusion_percentage[i] + 7){
+    else if (conclusion >= conclusion_percentage[i]){
+      if (conclusion > (conclusion_percentage[i] - 7) && conclusion < conclusion_percentage[i] + 7){
         dm_render_column_with_height(dots_by_percentage[i], 5, treadmill->get_time_ms(), 800);
       }
       else{
@@ -490,7 +491,7 @@ void dm_render(treadmill_t *treadmill) {
             dm_render_prog_time(treadmill);
             break;
           }
-          case PROGRAM_200K_CALORIES: /// percentage of calorie target completion
+          case PROGRAM_200K_CALORIES: { /// percentage of calorie target completion
             uint32_t meta_50per = treadmill->program.p_200k_calories.kcal / 2;
             if ((treadmill->training.kcal / 1000) >= (meta_50per) && (treadmill->training.kcal / 1000) <= (meta_50per + 2)) {
               dm_render_text_animated(get_string(treadmill, STR_50_PERCENT), 70, treadmill->get_time_ms());
@@ -499,6 +500,7 @@ void dm_render(treadmill_t *treadmill) {
               dm_render_calories(treadmill);
             }
             break;
+          }
           case PROGRAM_CALORIES: {
             if ((treadmill->training.kcal / 1000) >= (treadmill->program.p_calories.kcal / 2) && (treadmill->training.kcal / 1000) <= ((treadmill->program.p_calories.kcal / 2) + 2)) {
               dm_render_text_animated(get_string(treadmill, STR_50_PERCENT), 70, treadmill->get_time_ms());

@@ -29,7 +29,7 @@ file(GLOB source_files
           "*.h"
           "*.c")
 
-add_compile_options(-g -Wall -Wextra -pedantic -Werror -Wno-unused-parameter -Wno-unused-function -Wno-gnu-binary-literal)
+add_compile_options(-g -Wall -Wextra -pedantic -Werror -Wno-unused-parameter -Wno-unused-function)
 
 add_executable(main ${source_files})
 
@@ -42,5 +42,10 @@ target_include_directories(main PRIVATE
 target_compile_options(main PRIVATE -include "${CMAKE_CURRENT_SOURCE_DIR}/compat.h")
 
 if (CMAKE_C_COMPILER_ID MATCHES "Clang")
-          target_compile_options(main PRIVATE -Wno-c23-extensions)
+          target_compile_options(main PRIVATE -Wno-c23-extensions -Wno-gnu-binary-literal)
+elseif (CMAKE_C_COMPILER_ID STREQUAL "GNU")
+          set_source_files_properties(
+                    "${CMAKE_CURRENT_SOURCE_DIR}/../shared/dm/dm.c"
+                    "${CMAKE_CURRENT_SOURCE_DIR}/../shared/dm/dm_digits.c"
+                    PROPERTIES COMPILE_OPTIONS "-Wno-pedantic")
 endif()

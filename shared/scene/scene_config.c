@@ -216,7 +216,7 @@ static void change_config_errors(treadmill_t *treadmill, const kbd_key_t key) {
   (void)treadmill;
   switch (key) {
     case KEY_SPEED_INCREMENT:{
-      if (config_error_index + 1 < CONFIG_ERRORS_TOTAL_ENTRIES) {
+      if (config_error_index + 1u < CONFIG_ERRORS_TOTAL_ENTRIES) {
         config_error_index++;
       }
       else{
