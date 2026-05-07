@@ -97,6 +97,7 @@ static void jumpToApplication() {
 
 	__set_MSP(appStack);
 	appEntry();
+
 }
 
 int _ble_module_connected = 0;
