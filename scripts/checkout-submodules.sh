@@ -20,12 +20,32 @@ MSG
   exit 2
 fi
 
-if [[ -n "${CI_SUBMODULE_TOKEN:-}" ]]; then
-  git -C "$repo_root" config --local --unset-all http.https://github.com/.extraheader 2>/dev/null || true
-  git config --global \
-    url."https://x-access-token:${CI_SUBMODULE_TOKEN}@github.com/".insteadOf \
-    "https://github.com/"
-fi
-
 git -C "$repo_root" submodule sync --recursive
-git -C "$repo_root" submodule update --init --recursive
+
+if [[ -n "${CI_SUBMODULE_TOKEN:-}" ]]; then
+  token_url="https://x-access-token:${CI_SUBMODULE_TOKEN}@github.com/"
+  git -C "$repo_root" config --local --unset-all http.https://github.com/.extraheader 2>/dev/null || true
+
+  if ! git -c url."$token_url".insteadOf=https://github.com/ \
+    ls-remote https://github.com/BruddenEquipamentos/ble_protocol.git HEAD >/dev/null; then
+    cat >&2 <<'MSG'
+error: CI_SUBMODULE_TOKEN cannot read BruddenEquipamentos/ble_protocol.
+
+Update the secret with a fine-grained GitHub token that has:
+  - Resource owner: BruddenEquipamentos
+  - Repository access: BruddenEquipamentos/ble_protocol
+  - Repository access: BruddenEquipamentos/rt-g4-led
+  - Repository permissions: Contents read-only
+
+If the organization requires SSO or fine-grained token approval, approve/authorize
+the token for BruddenEquipamentos before rerunning CI.
+MSG
+    exit 2
+  fi
+
+  git -C "$repo_root" \
+    -c url."$token_url".insteadOf=https://github.com/ \
+    submodule update --init --recursive
+else
+  git -C "$repo_root" submodule update --init --recursive
+fi
