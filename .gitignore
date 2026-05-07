@@ -5,6 +5,10 @@ Debug/
 Drivers/
 /rt_led_bootloader/Drivers
 Middlewares/
+!rt_led/Drivers/
+!rt_led/Drivers/**
+!rt_led/Middlewares/
+!rt_led/Middlewares/**
 main
 *.dSYM
 __pycache__/
