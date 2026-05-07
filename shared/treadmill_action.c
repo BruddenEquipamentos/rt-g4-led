@@ -7,6 +7,7 @@
 #include "treadmill_programs_update.h"
 #include "ble/ble_protocol/ble_ftms_treadmill.h"
 #include "ble/ble_protocol/ble_protocol_helper.h"
+#include "ble/ble_protocol/ble_protocol_command.h"
 #include "panel/rt_led.h"
 
 #include "../shared/dm/dm.h"
@@ -401,8 +402,8 @@ int treadmill_send_ftms_data(treadmill_t *treadmill) {
   uint16_t calories = treadmill->training.kcal / 1000;    
 
   // packet size = 2 + 2 + 3 + 4 + 4 + 4 + 1 + 1 + 2 = 23 bytes    
-  const packet_size = 25;    
-  const mtu = treadmill->hw.ble.connection.mtu > 0 ? treadmill->hw.ble.connection.mtu - 3 : 0;
+  const int packet_size = 25;
+  const int mtu = treadmill->hw.ble.connection.mtu > 0 ? treadmill->hw.ble.connection.mtu - 3 : 0;
   
   if (mtu && mtu < packet_size) {
       // split in two

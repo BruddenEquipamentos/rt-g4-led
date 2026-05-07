@@ -4,6 +4,8 @@
 #include "main.h"
 
 #include <string.h>
+#include "ble/ble_protocol/ble_protocol_command.h"
+
 
 extern I2C_HandleTypeDef hi2c2;
 extern treadmill_t *pTreadmill;

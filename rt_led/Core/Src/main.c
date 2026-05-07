@@ -37,6 +37,7 @@
 #include "treadmill_motor.h"
 #include "ext_i2c_kbd.h"
 #include "../shared/ble/ble_protocol/ble_protocol_helper.h"
+#include "ble/ble_protocol/ble_protocol_command.h"
 #include "../shared/ble/ble_protocol/ble_ftms_treadmill.h"
 #include "lang.h"
 /* USER CODE END Includes */
@@ -1430,9 +1431,25 @@ static void handle_emergency(void) {
 
 static int handle_combined_or_single_key_press(enum key singles, enum key combined, enum key pressed,
                                                enum key *previous, uint32_t *key_tick) {
+  /*
+   * KEY_PROGRAM has special short/long-press behavior only in IDLE.
+   * In other scenes it must flow through normal processing so scene
+   * callbacks (e.g. SCENE_PROGRAM) can consume it.
+   */
+  if ((singles & KEY_PROGRAM) && pressed == KEY_PROGRAM && treadmill.scene != SCENE_IDLE) {
+    return 0;
+  }
+
   if (pressed & (singles | combined)) {
     if (*key_tick == 0) {
       *key_tick = HAL_GetTick();
+      /*
+       * KEY_PROGRAM short-press is resolved on key release. Mark it here
+       * so the release branch can detect which key started this hold.
+       */
+      if (pressed == KEY_PROGRAM && treadmill.scene == SCENE_IDLE) {
+        *previous = KEY_PROGRAM;
+      }
       return 1;
     } else if (HAL_GetTick() - *key_tick >= 50) {
       if (pressed != KEY_PROGRAM && pressed != combined && *previous == KEY_NONE) {
@@ -1488,7 +1505,6 @@ static void handle_key_press(void) {
   if (pressed != KEY_NONE && pressed != previous) {
     if (treadmill.scene == SCENE_IDLE && pressed == KEY_PROGRAM) {
       previous = pressed;
-      while (1);
       // treadmill_key_press(&treadmill, pressed);
     } else{
       treadmill_key_press(&treadmill, pressed);
@@ -1515,7 +1531,7 @@ static void handle_key_press(void) {
   } else {
     if (previous == KEY_PROGRAM && treadmill.scene == SCENE_IDLE && key_tick != 0) {
       uint32_t duration = HAL_GetTick() - key_tick;
-      if (duration < 2000) {
+      if (duration >= 50 && duration < 2000) {
         treadmill_key_press(&treadmill, KEY_PROGRAM);
       }
     }
