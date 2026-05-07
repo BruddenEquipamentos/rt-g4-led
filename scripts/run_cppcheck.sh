@@ -72,7 +72,6 @@ cppcheck \
   -i"$repo_root/rt_led/Middlewares" \
   -i"$repo_root/rt_led/Debug" \
   -i"$repo_root/rt_led/Release" \
-  -i"$repo_root/rt_led_bootloader/Drivers" \
   -i"$repo_root/rt_led_bootloader/Middlewares" \
   -i"$repo_root/rt_led_bootloader/Debug" \
   -i"$repo_root/rt_led_bootloader/Release" \
