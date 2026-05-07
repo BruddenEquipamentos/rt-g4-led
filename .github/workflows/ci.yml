@@ -26,6 +26,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
+          token: ${{ secrets.CI_SUBMODULE_TOKEN || github.token }}
 
       - name: Detect affected firmware targets
         id: detect
@@ -44,6 +45,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+          token: ${{ secrets.CI_SUBMODULE_TOKEN || github.token }}
 
       - name: Install host build dependencies
         run: sudo apt-get update && sudo apt-get install -y build-essential cmake
@@ -59,6 +61,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+          token: ${{ secrets.CI_SUBMODULE_TOKEN || github.token }}
 
       - name: Install cppcheck
         run: sudo apt-get update && sudo apt-get install -y cppcheck
@@ -83,13 +86,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+          token: ${{ secrets.CI_SUBMODULE_TOKEN || github.token }}
 
       - name: Build firmware
-        uses: xanderhendriks/action-build-stm32cubeide@v17.0
-        with:
-          project-path: ${{ matrix.target }}
-          project-target: ${{ format('{0}/{1}', matrix.target, env.STM32_BUILD_CONFIG) }}
-          stm32cubeide-version: ${{ env.STM32CUBEIDE_VERSION }}
+        run: ./scripts/build-cubeide-docker.sh "${{ matrix.target }}" "${{ env.STM32_BUILD_CONFIG }}" "${{ env.STM32CUBEIDE_VERSION }}"
 
       - name: Package firmware artifacts
         run: ./scripts/package-firmware-artifacts.sh "${{ matrix.target }}" "${{ env.STM32_BUILD_CONFIG }}"

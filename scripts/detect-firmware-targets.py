@@ -13,8 +13,6 @@ from pathlib import Path
 
 FIRMWARE_TARGETS = ("rt_led", "rt_led_bootloader")
 ALL_TARGETS_MARKERS = (
-    ".github/",
-    "scripts/",
     "ci/",
 )
 ROOT_BUILD_SUFFIXES = (".mk", ".yml", ".yaml")
@@ -64,7 +62,6 @@ def root_build_file(path: str) -> bool:
 def affects_all(path: str) -> bool:
     return (
         path.startswith(ALL_TARGETS_MARKERS)
-        or path == "documents/ci-cd-prep.md"
         or root_build_file(path)
     )
 

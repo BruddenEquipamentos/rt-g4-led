@@ -34,13 +34,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+          token: ${{ secrets.CI_SUBMODULE_TOKEN || github.token }}
 
       - name: Build firmware
-        uses: xanderhendriks/action-build-stm32cubeide@v17.0
-        with:
-          project-path: ${{ inputs.target }}
-          project-target: ${{ format('{0}/{1}', inputs.target, inputs.configuration) }}
-          stm32cubeide-version: ${{ inputs.stm32cubeide_version }}
+        run: ./scripts/build-cubeide-docker.sh "${{ inputs.target }}" "${{ inputs.configuration }}" "${{ inputs.stm32cubeide_version }}"
 
       - name: Package firmware artifacts
         run: ./scripts/package-firmware-artifacts.sh "${{ inputs.target }}" "${{ inputs.configuration }}"
