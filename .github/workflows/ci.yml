@@ -5,8 +5,7 @@ on:
     branches:
       - main
       - master
-      - 'release-*'
-      - 'product-*'
+      - 'Aria-*'
   pull_request:
   workflow_dispatch:
 
@@ -20,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.detect.outputs.matrix }}
-      any: ${{ steps.detect.outputs.any }}
+      has_targets: ${{ steps.detect.outputs.has_targets }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -74,7 +73,7 @@ jobs:
       - detect-targets
       - host-tests
       - static-analysis
-    if: needs.detect-targets.outputs.any == 'true'
+    if: needs.detect-targets.outputs.has_targets == 'true'
     strategy:
       fail-fast: false
       matrix:

@@ -4,7 +4,7 @@ on:
   push:
     tags:
       - 'v*'
-      - 'release-*'
+      - 'Aria-*'
 
 env:
   STM32_BUILD_CONFIG: Release

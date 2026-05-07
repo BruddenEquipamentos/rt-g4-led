@@ -91,9 +91,11 @@ def detect_targets(changed_files: list[str]) -> list[str]:
 
 
 def write_github_output(matrix: list[str], output_path: str) -> None:
+    has_targets = "true" if matrix else "false"
     with open(output_path, "a", encoding="utf-8") as output:
         output.write(f"matrix={json.dumps(matrix)}\n")
-        output.write(f"any={'true' if matrix else 'false'}\n")
+        output.write(f"has_targets={has_targets}\n")
+        output.write(f"any={has_targets}\n")
 
 
 def main() -> int:

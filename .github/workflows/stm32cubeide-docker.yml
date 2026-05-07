@@ -1,4 +1,4 @@
-name: Firmware CubeIDE
+name: STM32CubeIDE Docker
 
 on:
   workflow_dispatch:
