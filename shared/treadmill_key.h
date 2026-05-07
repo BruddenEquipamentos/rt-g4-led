@@ -35,7 +35,7 @@ typedef enum key {
   
   KEY_EXT_KBD_START,        
 
-  KEY_LAST = 0xFFFFFFFF,
+  KEY_LAST = 0x7FFFFFFF,
 } kbd_key_t ;
 
 
