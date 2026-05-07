@@ -13,7 +13,9 @@ from pathlib import Path
 
 FIRMWARE_TARGETS = ("rt_led", "rt_led_bootloader")
 ALL_TARGETS_MARKERS = (
+    ".github/",
     "ci/",
+    "scripts/",
 )
 ROOT_BUILD_SUFFIXES = (".mk", ".yml", ".yaml")
 ROOT_BUILD_NAMES = {

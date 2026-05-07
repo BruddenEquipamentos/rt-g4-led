@@ -36,6 +36,9 @@ jobs:
       - name: Build firmware
         run: ./scripts/build-cubeide-docker.sh "${{ inputs.target }}" "${{ inputs.configuration }}" "${{ inputs.stm32cubeide_version }}"
 
+      - name: Check firmware size
+        run: ./scripts/check-firmware-size.py "${{ inputs.target }}" "${{ inputs.configuration }}"
+
       - name: Package firmware artifacts
         run: ./scripts/package-firmware-artifacts.sh "${{ inputs.target }}" "${{ inputs.configuration }}"
 
