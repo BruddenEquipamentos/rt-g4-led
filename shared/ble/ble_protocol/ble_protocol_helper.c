@@ -113,7 +113,7 @@ uint32_t next_u32_ne(char **ptr) {
 }
 #endif
 
-int inline flat_bin_to_ascii_8(uint8_t *buffer, uint8_t *length, const uint8_t max_length, const uint8_t data) {
+int flat_bin_to_ascii_8(uint8_t *buffer, uint8_t *length, const uint8_t max_length, const uint8_t data) {
     if (*length + 2 > max_length) return 0;
     buffer[*length] = hex_nibble_high(data);
     buffer[*length + 1] = hex_nibble_low(data);
@@ -121,13 +121,13 @@ int inline flat_bin_to_ascii_8(uint8_t *buffer, uint8_t *length, const uint8_t m
     return 1;
 }
 
-int inline flat_bin_to_ascii_16(uint8_t *buffer, uint8_t *length, const uint8_t max_length, const uint16_t data) {
+int flat_bin_to_ascii_16(uint8_t *buffer, uint8_t *length, const uint8_t max_length, const uint16_t data) {
     if (!flat_bin_to_ascii_8(buffer, length, max_length, (data & 0xff))) return 0;
     if (!flat_bin_to_ascii_8(buffer, length, max_length, (data >> 8) & 0xff)) return 0;
     return 1;
 }
 
-int inline flat_bin_to_ascii_24(uint8_t *buffer, uint8_t *length, const uint8_t max_length, const uint32_t data) {
+int flat_bin_to_ascii_24(uint8_t *buffer, uint8_t *length, const uint8_t max_length, const uint32_t data) {
     if (!flat_bin_to_ascii_8(buffer, length, max_length, (data & 0xff))) return 0;
     if (!flat_bin_to_ascii_8(buffer, length, max_length, (data >> 8) & 0xff)) return 0;
     if (!flat_bin_to_ascii_8(buffer, length, max_length, (data >> 16) & 0xff)) return 0;
