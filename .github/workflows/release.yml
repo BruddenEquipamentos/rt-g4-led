@@ -19,13 +19,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-
-      - name: Checkout submodules
-        env:
-          CI_SUBMODULE_TOKEN: ${{ secrets.CI_SUBMODULE_TOKEN }}
-        run: ./scripts/checkout-submodules.sh
 
       - name: Install host build dependencies
         run: sudo apt-get update && sudo apt-get install -y build-essential cmake
@@ -39,13 +32,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-
-      - name: Checkout submodules
-        env:
-          CI_SUBMODULE_TOKEN: ${{ secrets.CI_SUBMODULE_TOKEN }}
-        run: ./scripts/checkout-submodules.sh
 
       - name: Install cppcheck
         run: sudo apt-get update && sudo apt-get install -y cppcheck
@@ -68,13 +54,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-
-      - name: Checkout submodules
-        env:
-          CI_SUBMODULE_TOKEN: ${{ secrets.CI_SUBMODULE_TOKEN }}
-        run: ./scripts/checkout-submodules.sh
 
       - name: Build firmware
         run: ./scripts/build-cubeide-docker.sh "${{ matrix.target }}" "${{ env.STM32_BUILD_CONFIG }}" "${{ env.STM32CUBEIDE_VERSION }}"
