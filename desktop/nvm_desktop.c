@@ -62,7 +62,7 @@ static NVM_Status_t NVM_ReadVariable32bits(uint16_t VirtAddress,
   fseek(fp, 0, SEEK_SET);
   char line[80];
   while ((fgets(line, 80, fp)) != NULL) {
-    if (sscanf(line, "%hx,%d", &address, &value) == 2) {
+    if (sscanf(line, "%hx,%u", &address, &value) == 2) {
       if (address == VirtAddress) {
         *pData = value;
         NVM_Close();

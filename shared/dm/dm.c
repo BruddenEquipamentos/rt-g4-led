@@ -1,4 +1,7 @@
 #include "dm.h"
+
+#include <string.h>
+
 void (*_dm_update)(const uint16_t dot_matrix[5]) = 0;
 
 uint16_t dm_buffer[5];
@@ -40,7 +43,7 @@ void dm_update(void) {
   if (_dm_update != 0) _dm_update(dm_buffer);
 }
 
-void dm_render_text(char *text, int frame) {
+void dm_render_text(const char *text, int frame) {
   int start_x = 16;
   dm_clear_buffer();
   while (*text) {
@@ -52,7 +55,7 @@ void dm_render_text(char *text, int frame) {
   }
 }
 
-int dm_render_text_animated(char *text, const uint32_t ms_per_frame, const uint32_t ms) {
+int dm_render_text_animated(const char *text, const uint32_t ms_per_frame, const uint32_t ms) {
   frametime = ms_per_frame;
   dm_tick(ms);
   int length = dm_compute_length(text);

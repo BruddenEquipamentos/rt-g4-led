@@ -247,9 +247,11 @@ void treadmill_ble_clear_messages(treadmill_t *treadmill) {
 void treadmill_ble_post_message(enum ble_rx_event event, uint8_t *data, uint8_t length) {
     struct ble_data *ble_data_msg = &ble_data[_head];
     ble_data_msg->event = event;
-    ble_data_msg->length = length;
-    memset(ble_data_msg->data, 0x00, 64);
-    memcpy(ble_data_msg->data, data, length);
+    ble_data_msg->length = data == NULL ? 0 : length;
+    memset(ble_data_msg->data, 0x00, sizeof(ble_data_msg->data));
+    if (data != NULL && length > 0) {
+        memcpy(ble_data_msg->data, data, length);
+    }
     _head = (_head + 1) % BLE_DATA_QUEUE_LENGTH;
 }
 

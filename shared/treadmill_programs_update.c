@@ -23,7 +23,7 @@ typedef struct program_training_callback {
 /////// new update
 static void update_program_none(treadmill_t *treadmill) {
   treadmill->training.remaining_seconds = 0; // avoid overflow on not used variable
-  if ((treadmill->config.max_time != 0) && treadmill->training.seconds >= treadmill->config.max_time){
+  if ((treadmill->config.max_time != 0) && treadmill->training.seconds >= (uint32_t)treadmill->config.max_time){
     treadmill_finish_program(treadmill);
   }
 }
@@ -287,7 +287,7 @@ static void update_program_fat_burn(treadmill_t *treadmill) {
         }
         else {}
       } 
-      else if ((gk_was_connected == 1)) { //Lucas check for SH needed?
+      else if (gk_was_connected == 1) { //Lucas check for SH needed?
         if (treadmill->hw.ble.gk.connected == 0 && treadmill->hw.ble.sh.connected == 0){
           gk_lost_bpm++;
           if (gk_lost_bpm == 4 && (treadmill->training.incline != 0)){
@@ -354,7 +354,7 @@ static void update_program_super_cardio(treadmill_t *treadmill) {
         }
         else {}
       } 
-      else if ((gk_was_connected == 1)) { //Lucas check for SH needed?
+      else if (gk_was_connected == 1) { //Lucas check for SH needed?
         if (treadmill->hw.ble.gk.connected == 0 && treadmill->hw.ble.sh.connected == 0){
           gk_lost_bpm++;
           if (gk_lost_bpm == 4 && (treadmill->training.incline != 0)){

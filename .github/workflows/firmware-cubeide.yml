@@ -1,0 +1,53 @@
+name: Firmware CubeIDE
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: STM32CubeIDE project directory
+        required: true
+        default: rt_led
+        type: choice
+        options:
+          - rt_led
+          - rt_led_bootloader
+      configuration:
+        description: Build configuration
+        required: true
+        default: Debug
+        type: choice
+        options:
+          - Debug
+          - Release
+      stm32cubeide_version:
+        description: STM32CubeIDE version used by the Docker action
+        required: true
+        default: 2.1.1
+        type: string
+
+jobs:
+  cubeide:
+    name: CubeIDE headless build (${{ inputs.target }})
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build firmware
+        uses: xanderhendriks/action-build-stm32cubeide@v17.0
+        with:
+          project-path: ${{ inputs.target }}
+          project-target: ${{ format('{0}/{1}', inputs.target, inputs.configuration) }}
+          stm32cubeide-version: ${{ inputs.stm32cubeide_version }}
+
+      - name: Package firmware artifacts
+        run: ./scripts/package-firmware-artifacts.sh "${{ inputs.target }}" "${{ inputs.configuration }}"
+
+      - name: Upload firmware artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.target }}-${{ inputs.configuration }}
+          path: build/firmware/${{ inputs.target }}/
+          if-no-files-found: error

@@ -1,0 +1,96 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+      - 'release-*'
+
+env:
+  STM32_BUILD_CONFIG: Release
+  STM32CUBEIDE_VERSION: 2.1.1
+
+jobs:
+  host-tests:
+    name: Host tests
+    runs-on: ubuntu-latest
+    env:
+      CI_JOBS: 2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install host build dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake
+
+      - name: Run host tests
+        run: ./scripts/ci_test_host.sh
+
+  static-analysis:
+    name: Static analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install cppcheck
+        run: sudo apt-get update && sudo apt-get install -y cppcheck
+
+      - name: Run static analysis
+        run: ./scripts/ci_static_analysis.sh
+
+  firmware-build:
+    name: Firmware build (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    needs:
+      - host-tests
+      - static-analysis
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - rt_led
+          - rt_led_bootloader
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build firmware
+        uses: xanderhendriks/action-build-stm32cubeide@v17.0
+        with:
+          project-path: ${{ matrix.target }}
+          project-target: ${{ format('{0}/{1}', matrix.target, env.STM32_BUILD_CONFIG) }}
+          stm32cubeide-version: ${{ env.STM32CUBEIDE_VERSION }}
+
+      - name: Package firmware artifacts
+        run: ./scripts/package-firmware-artifacts.sh "${{ matrix.target }}" "${{ env.STM32_BUILD_CONFIG }}"
+
+      - name: Upload firmware artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}-${{ env.STM32_BUILD_CONFIG }}
+          path: build/firmware/${{ matrix.target }}/
+          if-no-files-found: error
+
+  publish-release:
+    name: Publish GitHub Release
+    runs-on: ubuntu-latest
+    needs: firmware-build
+    permissions:
+      contents: write
+    steps:
+      - name: Download firmware artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-artifacts/**/*

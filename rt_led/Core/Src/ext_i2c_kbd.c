@@ -1,6 +1,7 @@
 #include "ext_i2c_kbd.h"
 
 #include "../shared/treadmill.h"
+#include "../shared/ble/ble_protocol/ble_protocol_command.h"
 #include "main.h"
 
 #include <string.h>
@@ -296,7 +297,7 @@ void handle_key(uint8_t key) {
                     uint8_t buffer[64];
                     uint8_t length;
                     build_hrm_scan_packet(buffer, &length, 64);
-                    ble_post_message(buffer, "", 0);
+                    ble_post_message((const char *)buffer, "", 0);
                     treadmill_set_scene(pTreadmill, SCENE_BLE_ALLOW_YES_NO);
                     key_ble_debounce = 0;
                 }

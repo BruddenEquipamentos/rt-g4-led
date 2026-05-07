@@ -23,8 +23,8 @@ void dm_init(void);
 void dm_print_buffer(void);
 
 void dm_render_number(int decimal);
-void dm_render_text(char *text, int frame);
-int dm_render_text_animated(char *text, const uint32_t ms_per_frame,
+void dm_render_text(const char *text, int frame);
+int dm_render_text_animated(const char *text, const uint32_t ms_per_frame,
                              const uint32_t ms);
 
 extern void (*_dm_update)(const uint16_t dot_matrix[5]);

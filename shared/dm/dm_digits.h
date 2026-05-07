@@ -57,6 +57,6 @@ extern digit_map_t dm_map[];
 const digit_t *dm_number(const int number);
 const digit_t *dm_digit(char ch);
 
-int dm_compute_length(char *text);
+int dm_compute_length(const char *text);
 
 #endif

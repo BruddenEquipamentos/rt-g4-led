@@ -218,7 +218,7 @@ static void dm_render_time_walk_30(treadmill_t *treadmill) {
   int seconds = treadmill->training.seconds;
   uint32_t time_ms = treadmill->get_time_ms();
 
-  for (int i = 0; i < sizeof(intervals)/sizeof(intervals[0]); i++) {
+  for (size_t i = 0; i < sizeof(intervals)/sizeof(intervals[0]); i++) {
     int start = intervals[i].start_min * 60;
     int end = intervals[i].end_min * 60;
     int active = (seconds > start && seconds <= end) || (i == 0 && seconds <= end);
@@ -251,7 +251,7 @@ static void dm_render_time_walk_08(treadmill_t *treadmill) {
   int seconds = treadmill->training.seconds;
   uint32_t time_ms = treadmill->get_time_ms();
 
-  for (int i = 0; i < sizeof(intervals)/sizeof(intervals[0]); i++) {
+  for (size_t i = 0; i < sizeof(intervals)/sizeof(intervals[0]); i++) {
     int start = intervals[i].start_min * 60;
     int end = intervals[i].end_min * 60;
     int active = (seconds > start && seconds <= end) || (i == 0 && seconds <= end);
@@ -263,7 +263,7 @@ static void dm_render_time_walk_08(treadmill_t *treadmill) {
 
 /// new render for calorie programs (normal and 200kcal)
 void dm_render_calories(treadmill_t *treadmill) {
-    int calorias = 0;
+    uint32_t calorias = 0;
     switch (treadmill->program.id) {
         case PROGRAM_200K_CALORIES:
             calorias = treadmill->program.p_200k_calories.kcal;
@@ -289,10 +289,10 @@ void dm_render_calories(treadmill_t *treadmill) {
         {91,100,  {15},         1, 4 }
     };
 
-    int kcal = treadmill->training.kcal / 1000;
-    for (int i = 0; i < sizeof(intervals)/sizeof(intervals[0]); i++) {
-        int start = intervals[i].start_pct * calorias / 100;
-        int end   = intervals[i].end_pct   * calorias / 100;
+    uint32_t kcal = treadmill->training.kcal / 1000;
+    for (size_t i = 0; i < sizeof(intervals)/sizeof(intervals[0]); i++) {
+        uint32_t start = (uint32_t)intervals[i].start_pct * calorias / 100u;
+        uint32_t end   = (uint32_t)intervals[i].end_pct   * calorias / 100u;
         int active = (kcal >= start && kcal <= end);
         int off = (kcal > end);
 
@@ -491,7 +491,7 @@ void dm_render(treadmill_t *treadmill) {
             break;
           }
           case PROGRAM_200K_CALORIES: /// percentage of calorie target completion
-            int meta_50per = treadmill->program.p_200k_calories.kcal / 2;
+            uint32_t meta_50per = treadmill->program.p_200k_calories.kcal / 2;
             if ((treadmill->training.kcal / 1000) >= (meta_50per) && (treadmill->training.kcal / 1000) <= (meta_50per + 2)) {
               dm_render_text_animated(get_string(treadmill, STR_50_PERCENT), 70, treadmill->get_time_ms());
             }

@@ -610,7 +610,7 @@ const digit_t *dm_digit(char ch) {
     return 0;
 }
 
-int dm_compute_length(char *text) {
+int dm_compute_length(const char *text) {
     int length = 0;
     while (*text) {
         const digit_t *dm = dm_digit(*text);

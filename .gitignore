@@ -3,9 +3,11 @@ FreeRTOS_TAD_logs/
 .settings/
 Debug/
 Drivers/
+/rt_led_bootloader/Drivers
 Middlewares/
 main
 *.dSYM
+__pycache__/
 .DS_Store
 build/
 *.dat

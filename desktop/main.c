@@ -81,7 +81,7 @@ static void* thread_input(void *arg) {
 			break;
 		}
 		case 'n': {
-			treadmill_set_bpm_stop(treadmill);
+			treadmill_set_bpm_stop(treadmill, 0);
 			break;
 		}
 		case 'm': {
@@ -208,17 +208,17 @@ static void display_update(treadmill_t *treadmill) {
 				programs_name[treadmill->program.id]);
 		fprintf(stdout, "Treadmill Countdown Value: %d\n",
 				treadmill->countdown.value);
-		fprintf(stdout, "Treadmill Training Centimeters: %d\n",
+		fprintf(stdout, "Treadmill Training Centimeters: %u\n",
 				treadmill->training.cm);
-		fprintf(stdout, "Treadmill Training Meters: %d\n",
+		fprintf(stdout, "Treadmill Training Meters: %u\n",
 				treadmill->training.meters);
-		fprintf(stdout, "Treadmill Training Seconds: %d\n",
+		fprintf(stdout, "Treadmill Training Seconds: %u\n",
 				treadmill->training.seconds);
 		fprintf(stdout, "Treadmill Training Speed: %d\n",
 				treadmill->training.speed);
 		fprintf(stdout, "Treadmill Training Incline: %d\n",
 				treadmill->training.incline);
-		fprintf(stdout, "Treadmill Training Calories: %d\n",
+		fprintf(stdout, "Treadmill Training Calories: %u\n",
 				treadmill->training.kcal);
 		fprintf(stdout, "\n");
 
@@ -331,7 +331,7 @@ static int treadmill_speed_changed(treadmill_t *t, const uint16_t speed) {
 	// data[data_length++] = speed & 0xff;
 	// data[data_length++] = (speed >> 8) & 0xff;
 
-	const int BUFSIZE = 32;
+	enum { BUFSIZE = 32 };
 	uint8_t buffer[BUFSIZE] = { 0 };
 	uint8_t i = 0;
 
@@ -351,7 +351,7 @@ static int treadmill_speed_changed(treadmill_t *t, const uint16_t speed) {
 }
 
 static int treadmill_incline_changed(treadmill_t *t, const int16_t incline) {
-	const int BUFSIZE = 32;
+	enum { BUFSIZE = 32 };
 	uint8_t buffer[BUFSIZE] = { 0 };
 	uint8_t i = 0;
 
@@ -377,7 +377,7 @@ static int treadmill_incline_changed(treadmill_t *t, const int16_t incline) {
 int update_fms_count = 0;
 static int treadmill_update_fms(treadmill_t *t, const uint8_t status,
 		const void *param) {
-	const int BUFSIZE = 32;
+	enum { BUFSIZE = 32 };
 	uint8_t buffer[BUFSIZE] = { 0 };
 	uint8_t i = 0;
 

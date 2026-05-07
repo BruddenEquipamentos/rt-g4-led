@@ -22,6 +22,7 @@
 #include "stm32g0xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "ext_i2c_kbd.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/

@@ -6,6 +6,7 @@
 #include "treadmill_programs.h"
 #include "treadmill_programs_update.h"
 #include "ble/ble_protocol/ble_ftms_treadmill.h"
+#include "ble/ble_protocol/ble_protocol_command.h"
 #include "ble/ble_protocol/ble_protocol_helper.h"
 #include "panel/rt_led.h"
 
@@ -111,7 +112,7 @@ void treadmill_finish_training(treadmill_t *treadmill) {
   uint8_t buffer[64];
   uint8_t length;
   build_hrm_disconnect_packet(buffer, &length, 64);
-  ble_post_message(buffer, "", 0); 
+  ble_post_message((const char *)buffer, "", 0); 
 
   memset(&treadmill->hw.ble.hrm, 0, sizeof(treadmill->hw.ble.hrm)); //Lucas -- disconnect from BLE strap only
  
@@ -393,16 +394,9 @@ int treadmill_send_ftms_data(treadmill_t *treadmill) {
   uint8_t buffer[BUFSIZE] = {0};
   uint8_t bindex = 0;
 
-  uint16_t instantaneous_speed = treadmill->training.speed;
-  uint16_t average_speed = treadmill->training.average_speed; //Lucas
-  uint32_t total_distance = treadmill->training.meters;
-  uint16_t elapsed_time = treadmill->training.seconds;
-  uint16_t inclination = treadmill->training.incline;
-  uint16_t calories = treadmill->training.kcal / 1000;    
-
   // packet size = 2 + 2 + 3 + 4 + 4 + 4 + 1 + 1 + 2 = 23 bytes    
-  const packet_size = 25;    
-  const mtu = treadmill->hw.ble.connection.mtu > 0 ? treadmill->hw.ble.connection.mtu - 3 : 0;
+  const uint16_t packet_size = 25;    
+  const uint16_t mtu = treadmill->hw.ble.connection.mtu > 0 ? treadmill->hw.ble.connection.mtu - 3 : 0;
   
   if (mtu && mtu < packet_size) {
       // split in two

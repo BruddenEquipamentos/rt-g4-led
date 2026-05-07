@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 void ext_i2c_kbd_handler(void);
+void ext_i2c_kbd_irq(void);
 uint8_t ext_i2c_kbd_is_clear_combo_pressed(void);
 
 #endif

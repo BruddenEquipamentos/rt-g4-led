@@ -1187,7 +1187,7 @@ static inline void bpm_read_handler(void) {
   {  // POLAR
     if (ICCapturedPolarLastTick) {
       uint32_t t = HAL_GetTick() - ICCapturedPolarLastTick;
-      if (PolarBPM < 40 && PolarBPM > 240) {
+      if (PolarBPM < 40 || PolarBPM > 240) {
         treadmill_set_bpm_read(&treadmill);
       } else if (t >= 10000) {
         PolarICDiff = 0;

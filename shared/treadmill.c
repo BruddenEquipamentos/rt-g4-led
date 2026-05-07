@@ -8,6 +8,7 @@
 #include "panel/rt_led.h"
 
 #include "ble/ble_protocol/ble_ftms_treadmill.h"
+#include "ble/ble_protocol/ble_protocol_command.h"
 #include "ble/ble_protocol/ble_protocol_helper.h" //Lucas 23/03
 
 #include "lang.h"
@@ -169,7 +170,6 @@ uint32_t treadmill_current_average_speed(treadmill_t *treadmill) {
 
     uint32_t cm_sec = (treadmill->training.meters * 100 / treadmill->training.seconds);
     uint32_t speed = ((cm_sec * 36) / 10); // 333 * 36 = 1198
-    uint32_t speed_mod = speed % 10;
     // if (speed_mod >= 5)
     //     speed = speed + (10 - speed_mod);
     return speed;
@@ -403,7 +403,7 @@ void treadmill_emergency_pressed(treadmill_t *treadmill) {
   uint8_t buffer[64];
   uint8_t length;
   build_hrm_disconnect_packet(buffer, &length, 64);
-  ble_post_message(buffer, "", 0);
+  ble_post_message((const char *)buffer, "", 0);
   if (treadmill->on_update_fms_callback) { //Lucas 23/03
     uint8_t stopped = 0x01;
     treadmill->on_update_fms_callback(treadmill, StoppedOrPausedByTheUser, &stopped);
