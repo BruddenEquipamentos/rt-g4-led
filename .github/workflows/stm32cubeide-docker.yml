@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Build firmware
         run: ./scripts/build-cubeide-docker.sh "${{ inputs.target }}" "${{ inputs.configuration }}" "${{ inputs.stm32cubeide_version }}"
@@ -43,7 +43,7 @@ jobs:
         run: ./scripts/package-firmware-artifacts.sh "${{ inputs.target }}" "${{ inputs.configuration }}"
 
       - name: Upload firmware artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ inputs.target }}-${{ inputs.configuration }}
           path: build/firmware/${{ inputs.target }}/

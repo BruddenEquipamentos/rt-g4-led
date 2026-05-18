@@ -18,7 +18,7 @@ jobs:
       CI_JOBS: 2
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install host build dependencies
         run: sudo apt-get update && sudo apt-get install -y build-essential cmake
@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install cppcheck
         run: sudo apt-get update && sudo apt-get install -y cppcheck
@@ -53,7 +53,7 @@ jobs:
           - rt_led_bootloader
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Build firmware
         run: ./scripts/build-cubeide-docker.sh "${{ matrix.target }}" "${{ env.STM32_BUILD_CONFIG }}" "${{ env.STM32CUBEIDE_VERSION }}"
@@ -65,7 +65,7 @@ jobs:
         run: ./scripts/package-firmware-artifacts.sh "${{ matrix.target }}" "${{ env.STM32_BUILD_CONFIG }}"
 
       - name: Upload firmware artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.target }}-${{ env.STM32_BUILD_CONFIG }}
           path: build/firmware/${{ matrix.target }}/
@@ -79,11 +79,11 @@ jobs:
       contents: write
     steps:
       - name: Download firmware artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: release-artifacts
 
       - name: Publish release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: release-artifacts/**/*
