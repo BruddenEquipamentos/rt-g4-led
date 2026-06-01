@@ -35,23 +35,33 @@ static void ext_i2c_kbd_reset_clear_combo_state(void) {
   g_ext_i2c_clear_combo_pressed = 0;
 }
 
-static uint32_t ext_i2c_kbd_tick_abs_diff(uint32_t a, uint32_t b) {
-  return (a >= b) ? (a - b) : (b - a);
+static void ext_i2c_kbd_cancel_source(void) {
+  keyboard_route_key_release(KEYBOARD_INPUT_SOURCE_MAIN_I2C);
+  ext_i2c_kbd_reset_clear_combo_state();
 }
 
-static void ext_i2c_kbd_track_clear_combo_speed_key(kbd_key_t key) {
-  uint32_t now = HAL_GetTick();
+static void ext_i2c_kbd_track_clear_combo_speed_key(uint8_t key) {
+  uint32_t now = pTreadmill->get_time_ms();
 
-  if (key == KEY_SPEED_INCREMENT) {
-    g_ext_i2c_last_speed_inc_tick = now;
-  } else if (key == KEY_SPEED_DECREMENT) {
-    g_ext_i2c_last_speed_dec_tick = now;
+  if (pTreadmill->scene != SCENE_IDLE) {
+    return;
   }
 
-  if (g_ext_i2c_last_speed_inc_tick > 0 && g_ext_i2c_last_speed_dec_tick > 0 &&
-      ext_i2c_kbd_tick_abs_diff(g_ext_i2c_last_speed_inc_tick, g_ext_i2c_last_speed_dec_tick) <=
-          EXT_I2C_CLEAR_COMBO_WINDOW_MS) {
-    g_ext_i2c_clear_combo_pressed = 1;
+  if (key == 6u) {
+    g_ext_i2c_last_speed_inc_tick = now;
+    if (g_ext_i2c_last_speed_dec_tick != 0u &&
+        (now - g_ext_i2c_last_speed_dec_tick) <= EXT_I2C_CLEAR_COMBO_WINDOW_MS) {
+      g_ext_i2c_clear_combo_pressed = 1;
+    }
+    return;
+  }
+
+  if (key == 3u || (key == 5u && pTreadmill->config.incline.step == 0)) {
+    g_ext_i2c_last_speed_dec_tick = now;
+    if (g_ext_i2c_last_speed_inc_tick != 0u &&
+        (now - g_ext_i2c_last_speed_inc_tick) <= EXT_I2C_CLEAR_COMBO_WINDOW_MS) {
+      g_ext_i2c_clear_combo_pressed = 1;
+    }
   }
 }
 
@@ -147,37 +157,29 @@ void ext_i2c_kbd_handler(void) {
 
             // TODO: refactor
             uint32_t interval = 300;
-            if (pTreadmill->config.incline.step > 0 && read_buffer[0] == 5 || read_buffer[0] == 8) {
+            if ((read_buffer[0] == 5 && pTreadmill->config.incline.step > 0) || read_buffer[0] == 8) {
                 // incline increment / decrement
                 if (repeat_presses_count < 3) {
                     interval = 150;
                 } else {
                     interval = 50;
                 }
-            } else if (pTreadmill->config.incline.step  == 0 && read_buffer[0] == 5 || read_buffer[0] == 6) {
-				if (pTreadmill->scene == SCENE_PROGRAM){ /////////// ok
+            } else if ((read_buffer[0] == 5 && pTreadmill->config.incline.step == 0) || read_buffer[0] == 3 ||
+                       read_buffer[0] == 6) {
+				if (pTreadmill->scene == SCENE_PROGRAM) { /////////// ok
 					// speed increment / decrement
 					if (repeat_presses_count < 3) {
 						interval = 150;
 					} else {
 						interval = 50;
 					}
-				}
-				else{
+				} else {
+					ext_i2c_kbd_cancel_source();
 					ext_kbd_state = EXT_KBD_STATE_IDLE;
-				}
-            } else if (read_buffer[0] == 3 || read_buffer[0] == 6) {
-				if (pTreadmill->scene == SCENE_PROGRAM){ /////////// ok
-					// speed increment / decrement
-					if (repeat_presses_count < 3) {
-						interval = 150;
-					} else {
-						interval = 50;
-					}
-				// todo: limit the increment time window
-				}
-				else{
-					ext_kbd_state = EXT_KBD_STATE_IDLE;
+					state_tick = HAL_GetTick();
+					repeat_tick = 0;
+					repeat_presses_count = 0;
+					return;
 				}
             }
 
@@ -237,6 +239,8 @@ void handle_key(uint8_t key) {
         return;
     }
 
+    ext_i2c_kbd_track_clear_combo_speed_key(key);
+
     switch (key) {
     case 1: {
         keyboard_route_key_event(KEYBOARD_INPUT_SOURCE_MAIN_I2C, KEY_EXT_KBD_SPEED_9);
@@ -248,7 +252,6 @@ void handle_key(uint8_t key) {
     }
     case 3: {        
         keyboard_route_key_event(KEYBOARD_INPUT_SOURCE_MAIN_I2C, KEY_SPEED_DECREMENT);
-        ext_i2c_kbd_track_clear_combo_speed_key(KEY_SPEED_DECREMENT);
         break;
     }
     case 4: {
@@ -258,7 +261,6 @@ void handle_key(uint8_t key) {
     case 5: {
     	if (pTreadmill->config.incline.step == 0) {
     		keyboard_route_key_event(KEYBOARD_INPUT_SOURCE_MAIN_I2C, KEY_SPEED_DECREMENT);
-            ext_i2c_kbd_track_clear_combo_speed_key(KEY_SPEED_DECREMENT);
     	} else {
     		keyboard_route_key_event(KEYBOARD_INPUT_SOURCE_MAIN_I2C, KEY_INCLINE_INCREMENT);
     	}
@@ -267,7 +269,6 @@ void handle_key(uint8_t key) {
     }
     case 6: {
         keyboard_route_key_event(KEYBOARD_INPUT_SOURCE_MAIN_I2C, KEY_SPEED_INCREMENT);
-        ext_i2c_kbd_track_clear_combo_speed_key(KEY_SPEED_INCREMENT);
         break;
     }
     case 7: {
