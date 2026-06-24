@@ -1511,8 +1511,14 @@ static uint8_t keyboard_is_start_release_action(keyboard_input_source_t source, 
   return 0;
 }
 
+static uint8_t keyboard_is_speed_increment_release_action(kbd_key_t key) {
+  return (key == KEY_SPEED_INCREMENT);
+}
+
 static uint8_t keyboard_is_release_action(keyboard_input_source_t source, kbd_key_t key) {
-  return (keyboard_is_speed_shortcut_release_behavior(source, key) || keyboard_is_start_release_action(source, key));
+  return (keyboard_is_speed_shortcut_release_behavior(source, key) ||
+          keyboard_is_start_release_action(source, key) ||
+          keyboard_is_speed_increment_release_action(key));
 }
 
 static uint8_t keyboard_is_speed_shortcut_key(keyboard_input_source_t source, kbd_key_t key) {
@@ -1654,7 +1660,8 @@ static uint8_t keyboard_should_ignore_training_long_press(keyboard_input_source_
     return 0;
   }
 
-  return keyboard_is_release_action(source, key);
+  return (keyboard_is_speed_shortcut_release_behavior(source, key) ||
+          keyboard_is_start_release_action(source, key));
 }
 
 static uint8_t keyboard_is_source_key_stuck_now(keyboard_input_source_t source, kbd_key_t key) {
@@ -1956,6 +1963,11 @@ void keyboard_route_key_release(keyboard_input_source_t source) {
 
     if (!can_dispatch && treadmill.scene == SCENE_CONFIG && keyboard_is_config_navigation_start_key(last_key) &&
         !keyboard_is_source_key_stuck_now(source, last_key)) {
+      can_dispatch = 1;
+    }
+
+    if (!can_dispatch && treadmill.scene == SCENE_CONFIG && treadmill.config.option == CONFIG_OPTION_ERRORS &&
+        keyboard_is_config_errors_browse_key(last_key)) {
       can_dispatch = 1;
     }
 

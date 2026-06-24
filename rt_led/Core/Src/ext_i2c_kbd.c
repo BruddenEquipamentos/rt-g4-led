@@ -174,6 +174,9 @@ void ext_i2c_kbd_handler(void) {
 						interval = 50;
 					}
 				} else {
+                    if (read_buffer[0] == 6) {
+                        return;
+                    }
 					ext_i2c_kbd_cancel_source();
 					ext_kbd_state = EXT_KBD_STATE_IDLE;
 					state_tick = HAL_GetTick();
