@@ -1263,6 +1263,7 @@ void StartDefaultTask(void const * argument)
 #define HG_BURST_WINDOW_MS 1000u
 #define HG_BURST_MAX 8u
 #define HG_START_STOP_CONFIG_HOLD_MS 2000u
+#define KEYBOARD_DISABLED_KEYS_PER_SOURCE 8u
 
 typedef enum keyboard_source_group {
   KEYBOARD_SOURCE_GROUP_MAIN = 0,
@@ -1285,6 +1286,9 @@ struct c2v_pending_shortcut {
 };
 
 static struct key_source_health g_key_source_health[KEYBOARD_INPUT_SOURCE_TOTAL] = {0};
+static kbd_key_t g_disabled_keys_by_source[KEYBOARD_INPUT_SOURCE_TOTAL][KEYBOARD_DISABLED_KEYS_PER_SOURCE] = {
+  {KEY_NONE},
+};
 static struct c2v_pending_shortcut g_c2v_pending_shortcut = {0};
 static uint8_t g_c2v_start_prompt_active = 0;
 static volatile uint8_t g_main_plus_minus_combo_pressed = 0;
@@ -1323,6 +1327,20 @@ static void keyboard_reset_source_health(keyboard_input_source_t source) {
   g_key_source_health[source].press_start_ms = 0;
   g_key_source_health[source].burst_window_start_ms = 0;
   g_key_source_health[source].burst_count = 0;
+}
+
+static void keyboard_clear_disabled_keys(void) {
+  for (uint8_t source = 0; source < KEYBOARD_INPUT_SOURCE_TOTAL; source++) {
+    for (uint8_t key_index = 0; key_index < KEYBOARD_DISABLED_KEYS_PER_SOURCE; key_index++) {
+      g_disabled_keys_by_source[source][key_index] = KEY_NONE;
+    }
+  }
+}
+
+static void keyboard_sync_disabled_keys(void) {
+  if (treadmill.hw.keyboard.disabled_sources_mask == 0u) {
+    keyboard_clear_disabled_keys();
+  }
 }
 
 static uint8_t keyboard_is_error_clear_combo_active(void) {
@@ -1514,17 +1532,101 @@ static uint8_t keyboard_is_start_key(kbd_key_t key) {
   return (key == KEY_START || key == KEY_EXT_KBD_START);
 }
 
+static uint8_t keyboard_should_lock_on_fault(void) {
+  if (treadmill.config.c2v == RT_LED_CONFIG_C2V_DISABLE) {
+    return (treadmill.scene == SCENE_IDLE);
+  }
+
+  return 1;
+}
+
+static uint8_t keyboard_main_matrix_key_contains(kbd_key_t key, kbd_key_t expected_key) {
+  if (key == expected_key) {
+    return 1;
+  }
+
+  if (key == KEY_CONFIG && (expected_key == KEY_START || expected_key == KEY_STOP)) {
+    return 1;
+  }
+
+  if (key == KEY_LUB && (expected_key == KEY_SPEED_INCREMENT || expected_key == KEY_SPEED_DECREMENT)) {
+    return 1;
+  }
+
+  if (key <= KEY_FAN && expected_key <= KEY_FAN && expected_key != KEY_NONE) {
+    return (uint8_t)((key & expected_key) == expected_key);
+  }
+
+  return 0;
+}
+
+static uint8_t keyboard_key_matches_disabled_key(keyboard_input_source_t source, kbd_key_t key,
+                                                 kbd_key_t disabled_key) {
+  if (source == KEYBOARD_INPUT_SOURCE_MAIN_MATRIX) {
+    return keyboard_main_matrix_key_contains(key, disabled_key);
+  }
+
+  return (key == disabled_key);
+}
+
+static uint8_t keyboard_is_key_disabled_by_fault(keyboard_input_source_t source, kbd_key_t key, uint8_t disable_mask) {
+  if ((treadmill.hw.keyboard.disabled_sources_mask & disable_mask) == 0u) {
+    return 0;
+  }
+
+  for (uint8_t key_index = 0; key_index < KEYBOARD_DISABLED_KEYS_PER_SOURCE; key_index++) {
+    kbd_key_t disabled_key = g_disabled_keys_by_source[source][key_index];
+    if (disabled_key == KEY_NONE) {
+      continue;
+    }
+
+    if (keyboard_key_matches_disabled_key(source, key, disabled_key)) {
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
+static void keyboard_store_disabled_key(keyboard_input_source_t source, kbd_key_t key) {
+  for (uint8_t key_index = 0; key_index < KEYBOARD_DISABLED_KEYS_PER_SOURCE; key_index++) {
+    if (g_disabled_keys_by_source[source][key_index] == KEY_NONE) {
+      g_disabled_keys_by_source[source][key_index] = key;
+      return;
+    }
+  }
+}
+
+static void keyboard_disable_key_on_fault(keyboard_input_source_t source, kbd_key_t key, uint8_t disable_mask,
+                                          keyboard_error_code_t fault_code) {
+  if (key == KEY_NONE) return;
+
+  uint8_t already_disabled = keyboard_is_key_disabled_by_fault(source, key, disable_mask);
+  if (!already_disabled) {
+    keyboard_store_disabled_key(source, key);
+  }
+  treadmill.hw.keyboard.disabled_sources_mask |= disable_mask;
+  if (!already_disabled) {
+    treadmill_register_keyboard_error(&treadmill, fault_code);
+  }
+  keyboard_reset_source_health(source);
+}
+
 static uint8_t keyboard_should_check_stuck(keyboard_input_source_t source, kbd_key_t key) {
+  if (!keyboard_should_lock_on_fault()) {
+    return 0;
+  }
+
+  if (treadmill.scene == SCENE_TRAINING) {
+    return 0;
+  }
+
   if (keyboard_is_start_key(key)) {
     return 1;
   }
 
   if (treadmill.scene == SCENE_IDLE) {
     return keyboard_is_speed_shortcut_key(source, key);
-  }
-
-  if (treadmill.scene == SCENE_TRAINING && treadmill.config.c2v == RT_LED_CONFIG_C2V_DISABLE) {
-    return (key != KEY_NONE);
   }
 
   return 0;
@@ -1540,6 +1642,19 @@ static uint8_t keyboard_is_config_key(kbd_key_t key) {
 
 static uint8_t keyboard_is_config_navigation_start_key(kbd_key_t key) {
   return (key == KEY_START || key == KEY_EXT_KBD_START);
+}
+
+static uint8_t keyboard_should_ignore_training_long_press(keyboard_input_source_t source, kbd_key_t key,
+                                                          uint32_t held_ms) {
+  if (treadmill.scene != SCENE_TRAINING) {
+    return 0;
+  }
+
+  if (held_ms < KEYBOARD_SHORTCUT_LONG_PRESS_IGNORE_MS) {
+    return 0;
+  }
+
+  return keyboard_is_release_action(source, key);
 }
 
 static uint8_t keyboard_is_source_key_stuck_now(keyboard_input_source_t source, kbd_key_t key) {
@@ -1663,6 +1778,7 @@ static void keyboard_service_idle_keyboard_fault_clear_combo(void) {
 
   if (!combo_action_done && (now - combo_pressed_tick) >= KEYBOARD_FAULT_CLEAR_HOLD_MS) {
     treadmill_clear_keyboard_error_code_and_unlock(&treadmill);
+    keyboard_clear_disabled_keys();
     keyboard_reset_source_health(KEYBOARD_INPUT_SOURCE_MAIN_MATRIX);
     keyboard_reset_source_health(KEYBOARD_INPUT_SOURCE_MAIN_I2C);
     keyboard_reset_source_health(KEYBOARD_INPUT_SOURCE_HG_SPEED);
@@ -1673,6 +1789,7 @@ static void keyboard_service_idle_keyboard_fault_clear_combo(void) {
 
 void keyboard_route_key_event(keyboard_input_source_t source, kbd_key_t key) {
   if (source >= KEYBOARD_INPUT_SOURCE_TOTAL || key == KEY_NONE) return;
+  keyboard_sync_disabled_keys();
   keyboard_c2v_update(HAL_GetTick());
 
   if (keyboard_should_suppress_fault_for_clear_combo(source, key)) {
@@ -1705,8 +1822,9 @@ void keyboard_route_key_event(keyboard_input_source_t source, kbd_key_t key) {
   keyboard_source_group_t group = keyboard_source_group_from_input(source);
   uint8_t disable_mask = keyboard_source_disable_mask_from_group(group);
   if (disable_mask == 0) return;
+  uint8_t should_lock_on_fault = keyboard_should_lock_on_fault();
 
-  if (treadmill.hw.keyboard.disabled_sources_mask & disable_mask) {
+  if (keyboard_is_key_disabled_by_fault(source, key, disable_mask)) {
     // Safety rule: STOP and CONFIG must never be disabled by keyboard fault latches.
     // In CONFIG scene, START is available to navigate to ERR reset only when that START is not stuck.
     // In CONFIG/ERR, allow principal '+' to browse stored errors during maintenance.
@@ -1730,6 +1848,7 @@ void keyboard_route_key_event(keyboard_input_source_t source, kbd_key_t key) {
   }
 
   uint32_t now = HAL_GetTick();
+  uint8_t should_check_burst = should_lock_on_fault;
   uint8_t should_check_stuck = keyboard_should_check_stuck(source, key);
   uint8_t is_new_press = (!source_health->pressed || source_health->last_key != key);
 
@@ -1738,23 +1857,26 @@ void keyboard_route_key_event(keyboard_input_source_t source, kbd_key_t key) {
     source_health->last_key = key;
     source_health->press_start_ms = now;
 
-    if (source_health->burst_window_start_ms == 0 ||
-        (now - source_health->burst_window_start_ms) > keyboard_burst_window_ms(group)) {
-      source_health->burst_window_start_ms = now;
-      source_health->burst_count = 1;
-    } else if (source_health->burst_count < 255u) {
-      source_health->burst_count++;
-    }
+    if (should_check_burst) {
+      if (source_health->burst_window_start_ms == 0 ||
+          (now - source_health->burst_window_start_ms) > keyboard_burst_window_ms(group)) {
+        source_health->burst_window_start_ms = now;
+        source_health->burst_count = 1;
+      } else if (source_health->burst_count < 255u) {
+        source_health->burst_count++;
+      }
 
-    if (source_health->burst_count > keyboard_burst_max(group)) {
-      treadmill.hw.keyboard.disabled_sources_mask |= disable_mask;
-      treadmill_register_keyboard_error(&treadmill, keyboard_burst_fault_code(group));
-      return;
+      if (source_health->burst_count > keyboard_burst_max(group)) {
+        keyboard_disable_key_on_fault(source, key, disable_mask, keyboard_burst_fault_code(group));
+        return;
+      }
+    } else {
+      source_health->burst_window_start_ms = 0;
+      source_health->burst_count = 0;
     }
   } else if (should_check_stuck && source_health->press_start_ms > 0 &&
              (now - source_health->press_start_ms) >= keyboard_stuck_threshold_ms(group)) {
-    treadmill.hw.keyboard.disabled_sources_mask |= disable_mask;
-    treadmill_register_keyboard_error(&treadmill, keyboard_stuck_fault_code(group));
+    keyboard_disable_key_on_fault(source, key, disable_mask, keyboard_stuck_fault_code(group));
     return;
   }
 
@@ -1772,6 +1894,7 @@ void keyboard_route_key_event(keyboard_input_source_t source, kbd_key_t key) {
 
 static void keyboard_route_key_hold(keyboard_input_source_t source, kbd_key_t key) {
   if (source >= KEYBOARD_INPUT_SOURCE_TOTAL || key == KEY_NONE) return;
+  keyboard_sync_disabled_keys();
   if (keyboard_should_suppress_fault_for_clear_combo(source, key)) {
     keyboard_reset_source_health(source);
     return;
@@ -1781,20 +1904,20 @@ static void keyboard_route_key_hold(keyboard_input_source_t source, kbd_key_t ke
   keyboard_source_group_t group = keyboard_source_group_from_input(source);
   uint8_t disable_mask = keyboard_source_disable_mask_from_group(group);
   if (disable_mask == 0) return;
-  if (treadmill.hw.keyboard.disabled_sources_mask & disable_mask) return;
+  if (keyboard_is_key_disabled_by_fault(source, key, disable_mask)) return;
 
   struct key_source_health *source_health = &g_key_source_health[source];
   if (!source_health->pressed || source_health->last_key != key || source_health->press_start_ms == 0) return;
 
   uint32_t now = HAL_GetTick();
   if ((now - source_health->press_start_ms) >= keyboard_stuck_threshold_ms(group)) {
-    treadmill.hw.keyboard.disabled_sources_mask |= disable_mask;
-    treadmill_register_keyboard_error(&treadmill, keyboard_stuck_fault_code(group));
+    keyboard_disable_key_on_fault(source, key, disable_mask, keyboard_stuck_fault_code(group));
   }
 }
 
 void keyboard_route_key_release(keyboard_input_source_t source) {
   if (source >= KEYBOARD_INPUT_SOURCE_TOTAL) return;
+  keyboard_sync_disabled_keys();
   if (source == KEYBOARD_INPUT_SOURCE_MAIN_I2C) {
     keyboard_main_i2c_shortcut_seen_reset();
   }
@@ -1811,9 +1934,8 @@ void keyboard_route_key_release(keyboard_input_source_t source) {
   if (source_health->pressed && keyboard_should_check_stuck(source, last_key) &&
       held_ms >= keyboard_stuck_threshold_ms(group)) {
     uint8_t disable_mask = keyboard_source_disable_mask_from_group(group);
-    if (disable_mask != 0 && (treadmill.hw.keyboard.disabled_sources_mask & disable_mask) == 0) {
-      treadmill.hw.keyboard.disabled_sources_mask |= disable_mask;
-      treadmill_register_keyboard_error(&treadmill, keyboard_stuck_fault_code(group));
+    if (disable_mask != 0) {
+      keyboard_disable_key_on_fault(source, last_key, disable_mask, keyboard_stuck_fault_code(group));
     }
     source_health->pressed = 0;
     source_health->last_key = KEY_NONE;
@@ -1821,20 +1943,16 @@ void keyboard_route_key_release(keyboard_input_source_t source) {
     return;
   }
 
-  if (source_health->pressed && keyboard_is_speed_shortcut_release_behavior(source, last_key)) {
-    // During training, long-pressed speed shortcuts are ignored instead of acting/sticking.
-    if (treadmill.scene == SCENE_TRAINING && treadmill.config.c2v == RT_LED_CONFIG_C2V_DISABLE &&
-        held_ms >= KEYBOARD_SHORTCUT_LONG_PRESS_IGNORE_MS) {
-      source_health->pressed = 0;
-      source_health->last_key = KEY_NONE;
-      source_health->press_start_ms = 0;
-      return;
-    }
+  if (source_health->pressed && keyboard_should_ignore_training_long_press(source, last_key, held_ms)) {
+    source_health->pressed = 0;
+    source_health->last_key = KEY_NONE;
+    source_health->press_start_ms = 0;
+    return;
   }
 
   if (source_health->pressed && keyboard_is_release_action(source, last_key)) {
     uint8_t disable_mask = keyboard_source_disable_mask_from_group(keyboard_source_group_from_input(source));
-    uint8_t can_dispatch = ((treadmill.hw.keyboard.disabled_sources_mask & disable_mask) == 0);
+    uint8_t can_dispatch = !keyboard_is_key_disabled_by_fault(source, last_key, disable_mask);
 
     if (!can_dispatch && treadmill.scene == SCENE_CONFIG && keyboard_is_config_navigation_start_key(last_key) &&
         !keyboard_is_source_key_stuck_now(source, last_key)) {
