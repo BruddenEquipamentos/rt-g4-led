@@ -1263,7 +1263,6 @@ void StartDefaultTask(void const * argument)
 #define HG_BURST_WINDOW_MS 1000u
 #define HG_BURST_MAX 8u
 #define HG_START_STOP_CONFIG_HOLD_MS 2000u
-#define KEYBOARD_DISABLED_KEYS_PER_SOURCE 8u
 
 typedef enum keyboard_source_group {
   KEYBOARD_SOURCE_GROUP_MAIN = 0,
@@ -1286,9 +1285,6 @@ struct c2v_pending_shortcut {
 };
 
 static struct key_source_health g_key_source_health[KEYBOARD_INPUT_SOURCE_TOTAL] = {0};
-static kbd_key_t g_disabled_keys_by_source[KEYBOARD_INPUT_SOURCE_TOTAL][KEYBOARD_DISABLED_KEYS_PER_SOURCE] = {
-  {KEY_NONE},
-};
 static struct c2v_pending_shortcut g_c2v_pending_shortcut = {0};
 static uint8_t g_c2v_start_prompt_active = 0;
 static volatile uint8_t g_main_plus_minus_combo_pressed = 0;
@@ -1332,7 +1328,7 @@ static void keyboard_reset_source_health(keyboard_input_source_t source) {
 static void keyboard_clear_disabled_keys(void) {
   for (uint8_t source = 0; source < KEYBOARD_INPUT_SOURCE_TOTAL; source++) {
     for (uint8_t key_index = 0; key_index < KEYBOARD_DISABLED_KEYS_PER_SOURCE; key_index++) {
-      g_disabled_keys_by_source[source][key_index] = KEY_NONE;
+      treadmill.hw.keyboard.disabled_keys[source][key_index] = KEY_NONE;
     }
   }
 }
@@ -1512,7 +1508,7 @@ static uint8_t keyboard_is_start_release_action(keyboard_input_source_t source, 
 }
 
 static uint8_t keyboard_is_speed_increment_release_action(kbd_key_t key) {
-  return (key == KEY_SPEED_INCREMENT);
+  return (key == KEY_SPEED_INCREMENT || key == KEY_EXT_KBD_SPEED_INC);
 }
 
 static uint8_t keyboard_is_release_action(keyboard_input_source_t source, kbd_key_t key) {
@@ -1581,7 +1577,7 @@ static uint8_t keyboard_is_key_disabled_by_fault(keyboard_input_source_t source,
   }
 
   for (uint8_t key_index = 0; key_index < KEYBOARD_DISABLED_KEYS_PER_SOURCE; key_index++) {
-    kbd_key_t disabled_key = g_disabled_keys_by_source[source][key_index];
+    kbd_key_t disabled_key = treadmill.hw.keyboard.disabled_keys[source][key_index];
     if (disabled_key == KEY_NONE) {
       continue;
     }
@@ -1596,8 +1592,9 @@ static uint8_t keyboard_is_key_disabled_by_fault(keyboard_input_source_t source,
 
 static void keyboard_store_disabled_key(keyboard_input_source_t source, kbd_key_t key) {
   for (uint8_t key_index = 0; key_index < KEYBOARD_DISABLED_KEYS_PER_SOURCE; key_index++) {
-    if (g_disabled_keys_by_source[source][key_index] == KEY_NONE) {
-      g_disabled_keys_by_source[source][key_index] = key;
+    if (treadmill.hw.keyboard.disabled_keys[source][key_index] == KEY_NONE) {
+      treadmill.hw.keyboard.disabled_keys[source][key_index] = key;
+      treadmill.hw.keyboard.errors_dirty = 1;
       return;
     }
   }

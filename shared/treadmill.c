@@ -52,20 +52,75 @@ static int keyboard_error_code_to_index(keyboard_error_code_t code) {
   }
 }
 
-static uint8_t keyboard_error_code_to_source_mask(keyboard_error_code_t code) {
-  switch (code) {
-    case KEYBOARD_ERROR_MAIN_STUCK:
-    case KEYBOARD_ERROR_MAIN_BURST:
+static uint16_t keyboard_disabled_key_nvm_address(uint8_t source, uint8_t key_index) {
+  return (uint16_t)(NVM_U32_KEYBOARD_DISABLED_KEY_0 +
+                    (source * KEYBOARD_DISABLED_KEYS_PER_SOURCE) + key_index);
+}
+
+static uint8_t keyboard_source_index_to_mask(uint8_t source) {
+  switch (source) {
+    case KEYBOARD_DISABLED_SOURCE_MAIN_MATRIX:
+    case KEYBOARD_DISABLED_SOURCE_MAIN_I2C:
       return KEYBOARD_SOURCE_MASK_MAIN;
-    case KEYBOARD_ERROR_HG_SPEED_STUCK:
-    case KEYBOARD_ERROR_HG_SPEED_BURST:
+    case KEYBOARD_DISABLED_SOURCE_HG_SPEED:
       return KEYBOARD_SOURCE_MASK_HG_SPEED;
-    case KEYBOARD_ERROR_HG_START_STOP_STUCK:
-    case KEYBOARD_ERROR_HG_START_STOP_BURST:
+    case KEYBOARD_DISABLED_SOURCE_HG_START_STOP:
       return KEYBOARD_SOURCE_MASK_HG_START_STOP;
     default:
       return 0;
   }
+}
+
+static uint8_t keyboard_disabled_key_is_valid(kbd_key_t key) {
+  if (key == KEY_NONE) return 1;
+  if (key > KEY_NONE && key <= KEY_FAN) return 1;
+  return (key >= KEY_EXT_KBD_SPEED_6 && key <= KEY_EXT_KBD_START);
+}
+
+static void keyboard_clear_disabled_keys(treadmill_t *treadmill) {
+  for (uint8_t source = 0; source < KEYBOARD_DISABLED_SOURCE_COUNT; source++) {
+    for (uint8_t key_index = 0; key_index < KEYBOARD_DISABLED_KEYS_PER_SOURCE; key_index++) {
+      treadmill->hw.keyboard.disabled_keys[source][key_index] = KEY_NONE;
+    }
+  }
+}
+
+static void keyboard_write_disabled_keys_to_nvm(treadmill_t *treadmill) {
+  for (uint8_t source = 0; source < KEYBOARD_DISABLED_SOURCE_COUNT; source++) {
+    for (uint8_t key_index = 0; key_index < KEYBOARD_DISABLED_KEYS_PER_SOURCE; key_index++) {
+      nvm.NVM_WriteVariable32bits(keyboard_disabled_key_nvm_address(source, key_index),
+                                  (uint32_t)treadmill->hw.keyboard.disabled_keys[source][key_index]);
+    }
+  }
+}
+
+static void keyboard_load_disabled_keys_from_nvm(treadmill_t *treadmill) {
+  for (uint8_t source = 0; source < KEYBOARD_DISABLED_SOURCE_COUNT; source++) {
+    for (uint8_t key_index = 0; key_index < KEYBOARD_DISABLED_KEYS_PER_SOURCE; key_index++) {
+      uint32_t key = 0;
+      if (nvm.NVM_ReadVariable32bits(keyboard_disabled_key_nvm_address(source, key_index), &key) &&
+          keyboard_disabled_key_is_valid((kbd_key_t)key)) {
+        treadmill->hw.keyboard.disabled_keys[source][key_index] = (kbd_key_t)key;
+      } else {
+        treadmill->hw.keyboard.disabled_keys[source][key_index] = KEY_NONE;
+      }
+    }
+  }
+}
+
+static uint8_t keyboard_disabled_sources_mask_from_keys(treadmill_t *treadmill) {
+  uint8_t disabled_sources_mask = 0;
+
+  for (uint8_t source = 0; source < KEYBOARD_DISABLED_SOURCE_COUNT; source++) {
+    for (uint8_t key_index = 0; key_index < KEYBOARD_DISABLED_KEYS_PER_SOURCE; key_index++) {
+      if (treadmill->hw.keyboard.disabled_keys[source][key_index] != KEY_NONE) {
+        disabled_sources_mask |= keyboard_source_index_to_mask(source);
+        break;
+      }
+    }
+  }
+
+  return disabled_sources_mask;
 }
 
 void treadmill_setup(treadmill_t *treadmill) {
@@ -545,6 +600,7 @@ void treadmill_save_errors(treadmill_t *treadmill) {
   nvm.NVM_WriteVariable8bits(NVM_U8_KEYBOARD_LAST_ERROR_0, treadmill->hw.keyboard.last_errors[0]);
   nvm.NVM_WriteVariable8bits(NVM_U8_KEYBOARD_LAST_ERROR_1, treadmill->hw.keyboard.last_errors[1]);
   nvm.NVM_WriteVariable8bits(NVM_U8_KEYBOARD_LAST_ERROR_2, treadmill->hw.keyboard.last_errors[2]);
+  keyboard_write_disabled_keys_to_nvm(treadmill);
 }
 
 void treadmill_reset_errors(treadmill_t *treadmill) {
@@ -569,6 +625,8 @@ void treadmill_reset_errors(treadmill_t *treadmill) {
   nvm.NVM_WriteVariable8bits(NVM_U8_KEYBOARD_LAST_ERROR_0, 0);
   nvm.NVM_WriteVariable8bits(NVM_U8_KEYBOARD_LAST_ERROR_1, 0);
   nvm.NVM_WriteVariable8bits(NVM_U8_KEYBOARD_LAST_ERROR_2, 0);
+  keyboard_clear_disabled_keys(treadmill);
+  keyboard_write_disabled_keys_to_nvm(treadmill);
 
   for (uint8_t i = 0; i < INVERTER_ERROR_COUNT; i++) {
     treadmill->hw.inverter.error[i].count = 0;
@@ -606,10 +664,12 @@ void treadmill_clear_keyboard_error_code_and_unlock(treadmill_t *treadmill) {
   treadmill->hw.keyboard.disabled_sources_mask = 0;
   treadmill->hw.keyboard.errors_dirty = 0;
   treadmill->hw.keyboard.last_error_save_time_ms = 0;
+  keyboard_clear_disabled_keys(treadmill);
 
   nvm.NVM_WriteVariable8bits(NVM_U8_KEYBOARD_LAST_ERROR_0, 0);
   nvm.NVM_WriteVariable8bits(NVM_U8_KEYBOARD_LAST_ERROR_1, 0);
   nvm.NVM_WriteVariable8bits(NVM_U8_KEYBOARD_LAST_ERROR_2, 0);
+  keyboard_write_disabled_keys_to_nvm(treadmill);
 }
 
 void treadmill_load_errors(treadmill_t *treadmill) {
@@ -659,9 +719,6 @@ void treadmill_load_errors(treadmill_t *treadmill) {
   treadmill->hw.keyboard.errors_dirty = 0;
   treadmill->hw.inverter.last_error_save_time_ms = 0;
   treadmill->hw.keyboard.last_error_save_time_ms = 0;
-  uint8_t disabled_sources_mask = 0;
-  for (uint8_t i = 0; i < LAST_ERROR_HISTORY_COUNT; i++) {
-    disabled_sources_mask |= keyboard_error_code_to_source_mask(treadmill->hw.keyboard.last_errors[i]);
-  }
-  treadmill->hw.keyboard.disabled_sources_mask = disabled_sources_mask;
+  keyboard_load_disabled_keys_from_nvm(treadmill);
+  treadmill->hw.keyboard.disabled_sources_mask = keyboard_disabled_sources_mask_from_keys(treadmill);
 }

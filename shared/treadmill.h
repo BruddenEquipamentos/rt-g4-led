@@ -49,6 +49,7 @@
 #define NVM_U8_KEYBOARD_LAST_ERROR_1 0x0020
 #define NVM_U8_KEYBOARD_LAST_ERROR_2 0x0021
 #define NVM_U8_C2V 0x0022
+#define NVM_U32_KEYBOARD_DISABLED_KEY_0 0x0023
 
 // Exemplo de NSU "8196085000000597694"
 #define NVM_NS_MAX_LENGTH (22)
@@ -75,6 +76,13 @@
 #define KEYBOARD_SOURCE_MASK_MAIN (0x01u)
 #define KEYBOARD_SOURCE_MASK_HG_SPEED (0x02u)
 #define KEYBOARD_SOURCE_MASK_HG_START_STOP (0x04u)
+#define KEYBOARD_DISABLED_SOURCE_MAIN_MATRIX (0u)
+#define KEYBOARD_DISABLED_SOURCE_MAIN_I2C (1u)
+#define KEYBOARD_DISABLED_SOURCE_HG_SPEED (2u)
+#define KEYBOARD_DISABLED_SOURCE_HG_START_STOP (3u)
+#define KEYBOARD_DISABLED_SOURCE_COUNT (4u)
+#define KEYBOARD_DISABLED_KEYS_PER_SOURCE (8u)
+#define KEYBOARD_DISABLED_KEY_TOTAL (KEYBOARD_DISABLED_SOURCE_COUNT * KEYBOARD_DISABLED_KEYS_PER_SOURCE)
 
 // Códigos de erro do inversor
 typedef enum inverter_error_code {
@@ -314,6 +322,7 @@ typedef struct treadmill {
       uint32_t last_error_save_time_ms;
       uint8_t errors_dirty;
       uint8_t disabled_sources_mask;
+      kbd_key_t disabled_keys[KEYBOARD_DISABLED_SOURCE_COUNT][KEYBOARD_DISABLED_KEYS_PER_SOURCE];
     } keyboard;
 
     struct {
