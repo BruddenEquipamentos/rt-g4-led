@@ -17,6 +17,8 @@ calories pace bpm
 extern int report_state;
 extern uint8_t config_error_index;
 
+#define KEYBOARD_ERROR_BEEP_INTERVAL_MS (5000u)
+
 static const uint8_t keyboard_error_count_index_for_display[KEYBOARD_ERROR_COUNT] = {
   0u, // A1 -> MAIN_STUCK
   4u, // A2 -> HG_START_STOP_STUCK
@@ -92,7 +94,25 @@ static char sd_hex_nibble_to_char(uint8_t nibble) {
 
 static bool sd_is_keyboard_error_code(uint8_t error_code) {
   return (error_code >= (uint8_t)KEYBOARD_ERROR_MAIN_STUCK &&
-          error_code <= (uint8_t)KEYBOARD_ERROR_HG_START_STOP_BURST);
+          error_code <= (uint8_t)KEYBOARD_ERROR_HG_SPEED_BURST);
+}
+
+static void sd_update_keyboard_error_beep(treadmill_t *treadmill, uint8_t error_code) {
+  static uint8_t active_error_code = 0;
+  static uint32_t last_beep_ms = 0;
+
+  if (error_code == 0u || !sd_is_keyboard_error_code(error_code)) {
+    active_error_code = 0;
+    last_beep_ms = 0;
+    return;
+  }
+
+  uint32_t now = treadmill->get_time_ms();
+  if (active_error_code != error_code || (now - last_beep_ms) >= KEYBOARD_ERROR_BEEP_INTERVAL_MS) {
+    treadmill->hw.beep(BEEP_KEYPRESS_NAK);
+    active_error_code = error_code;
+    last_beep_ms = now;
+  }
 }
 
 static void sd_render_idle_error(treadmill_t *treadmill) {
@@ -100,10 +120,12 @@ static void sd_render_idle_error(treadmill_t *treadmill) {
   char error_text[5] = {' ', 'E', '0', '0', '\0'};
 
   if (error_code == 0u || !sd_is_keyboard_error_code(error_code)) {
+    sd_update_keyboard_error_beep(treadmill, 0u);
     sd_set_visible(&sd_program, false);
     return;
   }
 
+  sd_update_keyboard_error_beep(treadmill, error_code);
   error_text[2] = sd_hex_nibble_to_char(error_code >> 4);
   error_text[3] = sd_hex_nibble_to_char(error_code);
   sd_set_visible(&sd_program, true);
