@@ -1530,6 +1530,19 @@ static uint8_t keyboard_is_speed_shortcut_key(keyboard_input_source_t source, kb
   return 0;
 }
 
+static uint8_t keyboard_is_speed_increment_stuck_key(keyboard_input_source_t source, kbd_key_t key) {
+  if ((source == KEYBOARD_INPUT_SOURCE_MAIN_MATRIX || source == KEYBOARD_INPUT_SOURCE_MAIN_I2C) &&
+      key == KEY_SPEED_INCREMENT) {
+    return 1;
+  }
+
+  if (source == KEYBOARD_INPUT_SOURCE_HG_SPEED && key == KEY_EXT_KBD_SPEED_INC) {
+    return 1;
+  }
+
+  return 0;
+}
+
 static uint8_t keyboard_is_start_key(kbd_key_t key) {
   return (key == KEY_START || key == KEY_EXT_KBD_START);
 }
@@ -1629,7 +1642,8 @@ static uint8_t keyboard_should_check_stuck(keyboard_input_source_t source, kbd_k
   }
 
   if (treadmill.scene == SCENE_IDLE) {
-    return keyboard_is_speed_shortcut_key(source, key);
+    return (keyboard_is_speed_shortcut_key(source, key) ||
+            keyboard_is_speed_increment_stuck_key(source, key));
   }
 
   return 0;

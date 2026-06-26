@@ -175,6 +175,7 @@ void ext_i2c_kbd_handler(void) {
 					}
 				} else {
                     if (read_buffer[0] == 6) {
+                        handle_key(read_buffer[0]);
                         return;
                     }
 					ext_i2c_kbd_cancel_source();
