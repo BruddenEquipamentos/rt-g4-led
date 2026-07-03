@@ -1672,7 +1672,8 @@ static uint8_t keyboard_should_ignore_training_long_press(keyboard_input_source_
   }
 
   return (keyboard_is_speed_shortcut_release_behavior(source, key) ||
-          keyboard_is_start_release_action(source, key));
+          keyboard_is_start_release_action(source, key) ||
+          keyboard_is_speed_increment_release_action(key));
 }
 
 static uint8_t keyboard_is_source_key_stuck_now(keyboard_input_source_t source, kbd_key_t key) {
