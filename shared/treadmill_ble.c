@@ -1,5 +1,6 @@
 #include "treadmill_ble.h"
 
+#include <stdio.h>
 #include <string.h>
 
 #include "./ble/ble.h"
@@ -62,7 +63,7 @@ void treadmill_ble_process_init(treadmill_t *treadmill) {
         break;
     }
     case BLE_INIT_POST_COMMANDS: {
-        char data[32];
+        char data[32] = {0};
         uint8_t length;
         ble_clear_commands();
         ble_protocol_command_ftms_data((uint8_t *)data, &length, 32, FTMS_TREADMILL_DATA_UUID);
@@ -80,6 +81,21 @@ void treadmill_ble_process_init(treadmill_t *treadmill) {
         ble_post_message("\x02"
                          "SID,10\n",
                          "AOK", 1000);
+
+        size_t nsu_length = 0U;
+        while (nsu_length < sizeof(treadmill->config.nsu) && treadmill->config.nsu[nsu_length] != '\0') {
+            ++nsu_length;
+        }
+        if (nsu_length > 0U && nsu_length < sizeof(treadmill->config.nsu)) {
+            int written = snprintf(data, sizeof(data),
+                                   "\x02"
+                                   "SET_NSU,%s\n",
+                                   treadmill->config.nsu);
+            if (written <= 0 || written >= (int)sizeof(data) || !ble_post_message(data, "AOK", 1000)) {
+                ble->init_state = BLE_INIT_STATE_INIT;
+                break;
+            }
+        }
 
         // TODO: name according to model
         strncpy(data, "\x02SDN,", sizeof(data));

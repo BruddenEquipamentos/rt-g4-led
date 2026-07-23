@@ -28,15 +28,22 @@ typedef enum ble_command_status {
 } ble_command_status_t;
 
 typedef struct ble_command {
-    char data[32];
+    char data[192];
     char response[16];
+    uint16_t data_length;
+    uint8_t response_length;
     ble_command_status_t status;
     uint32_t tick;
     uint32_t timeout_tick;
     uint32_t delay;
+    uint8_t retries;
+    uint8_t max_retries;
 } ble_command_t;
 
 #define MAX_NUM_COMMANDS 8
+#define BLE_SHORT_COMMAND_LENGTH 32U
+#define BLE_LONG_COMMAND_LENGTH 192U
+#define BLE_RESPONSE_LENGTH 16U
 static ble_command_t commands[MAX_NUM_COMMANDS];
 static int head = 0;
 static int tail = 0;
@@ -47,15 +54,64 @@ void ble_clear_commands(void) {
     tail = 0;
 }
 
-int ble_post_message(const char *data, const char *response, const uint32_t timeout_tick) {
+static int ble_message_length(const char *data, uint16_t max_length, uint16_t *length) {
+    if (data == NULL || length == NULL) {
+        return 0;
+    }
+
+    if ((uint8_t)data[0] == BLE_PROTOCOL_MESSAGE_START) {
+        for (uint16_t i = 0; i < max_length; ++i) {
+            if ((uint8_t)data[i] == BLE_PROTOCOL_MESSAGE_END) {
+                *length = i + 1U;
+                return 1;
+            }
+        }
+        return 0;
+    }
+
+    for (uint16_t i = 0; i < max_length; ++i) {
+        if (data[i] == '\0') {
+            *length = i;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int ble_post_message_internal(const char *data, uint16_t max_data_length,
+                                     const char *response, const uint32_t timeout_tick,
+                                     uint8_t max_retries) {
+    uint16_t data_length = 0;
+    uint16_t response_length = 0;
+    int next_head = (head + 1) % MAX_NUM_COMMANDS;
+
+    if (next_head == tail ||
+        !ble_message_length(data, max_data_length, &data_length) ||
+        !ble_message_length(response, BLE_RESPONSE_LENGTH, &response_length) ||
+        response_length >= BLE_RESPONSE_LENGTH) {
+        return 0;
+    }
+
     ble_command_t *cmd = &commands[head];
-    strncpy(cmd->data, data, 32);
-    strncpy(cmd->response, response, 16);
+    memset(cmd, 0x00, sizeof(*cmd));
+    memcpy(cmd->data, data, data_length);
+    memcpy(cmd->response, response, response_length);
+    cmd->data_length = data_length;
+    cmd->response_length = (uint8_t)response_length;
     cmd->tick = 0;
     cmd->timeout_tick = timeout_tick;
+    cmd->max_retries = max_retries;
     cmd->status = BLE_COMMAND_STATUS_PENDING;
-    head = (head + 1) % MAX_NUM_COMMANDS;
+    head = next_head;
     return 1;
+}
+
+int ble_post_message(const char *data, const char *response, const uint32_t timeout_tick) {
+    return ble_post_message_internal(data, BLE_SHORT_COMMAND_LENGTH, response, timeout_tick, 0U);
+}
+
+int ble_post_long_message(const char *data, const char *response, const uint32_t timeout_tick) {
+    return ble_post_message_internal(data, BLE_LONG_COMMAND_LENGTH, response, timeout_tick, 2U);
 }
 
 // static void temp_debug_print(const char *response, const int length) {
@@ -392,8 +448,8 @@ int ble_process_commands(ble_t *ble) {
         ble_command_t *cmd = &commands[tail];
         switch (cmd->status) {
         case BLE_COMMAND_STATUS_PENDING: {
-            ble->send_data((uint8_t *)cmd->data, strlen(cmd->data));
-            if (strlen(cmd->response) > 0 && cmd->timeout_tick > 0) {
+            ble->send_data((uint8_t *)cmd->data, cmd->data_length);
+            if (cmd->response_length > 0 && cmd->timeout_tick > 0) {
                 cmd->status = BLE_COMMAND_STATUS_WAIT_FOR_RESPONSE;
                 cmd->tick = ble->get_tick();
             } else {
@@ -408,13 +464,24 @@ int ble_process_commands(ble_t *ble) {
             break;
         }
         case BLE_COMMAND_STATUS_OK: {
+            memset(cmd, 0x00, sizeof(*cmd));
             tail = (tail + 1) % MAX_NUM_COMMANDS;
             break;
         }
         case BLE_COMMAND_STATUS_TIMEDOUT: {
+            if (cmd->retries < cmd->max_retries) {
+                ++cmd->retries;
+                cmd->status = BLE_COMMAND_STATUS_PENDING;
+                return BLE_PROCESS_STATUS_OK;
+            }
             return BLE_PROCESS_STATUS_ERROR;
         }
         case BLE_COMMAND_STATUS_ERROR: {
+            if (cmd->retries < cmd->max_retries) {
+                ++cmd->retries;
+                cmd->status = BLE_COMMAND_STATUS_PENDING;
+                return BLE_PROCESS_STATUS_OK;
+            }
             return BLE_PROCESS_STATUS_ERROR;
         }
         }

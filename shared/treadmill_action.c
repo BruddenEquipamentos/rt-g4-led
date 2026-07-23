@@ -42,13 +42,6 @@ void treadmill_start_training(treadmill_t *treadmill) {
   //////////////////// max pace max speed max bpm
   treadmill_set_speed(treadmill, treadmill->config.speed.min);  //Lucas --- no tft10 não tem
 
-  // disable gymkit pairing for training session after start
-  ble_post_message(
-          "\x02"
-          "SET_BLE_FLAGS,32\n",
-          "", 1000);
-
-
   treadmill_set_scene(treadmill, SCENE_TRAINING);
 
   if (treadmill->on_update_fms_callback) {
@@ -115,12 +108,6 @@ void treadmill_finish_training(treadmill_t *treadmill) {
   ble_post_message(buffer, "", 0); 
 
   memset(&treadmill->hw.ble.hrm, 0, sizeof(treadmill->hw.ble.hrm)); //Lucas -- disconnect from BLE strap only
- 
-  // enable gymkit pairing for training session after start
-  ble_post_message(
-          "\x02"
-          "SET_BLE_FLAGS,0\n",
-          "", 1000);
  
   if (treadmill->on_update_fms_callback) {
     uint8_t stopped = 0x01;
@@ -335,7 +322,9 @@ static void build_ftms_data_packet(treadmill_t *treadmill, uint8_t *buffer, uint
     uint32_t total_distance = treadmill->training.meters;
     uint16_t elapsed_time = treadmill->training.seconds;
     uint16_t inclination = treadmill->training.incline;
-    uint16_t calories = treadmill->training.kcal / 1000;
+    uint32_t calories_u32 = treadmill->training.kcal / 1000U;
+    uint16_t calories = calories_u32 > 0xFFFFU ? 0xFFFFU : (uint16_t)calories_u32;
+    uint8_t heart_rate = treadmill->training.bpm;
 
     buffer[(*size)++] = BLE_PROTOCOL_MESSAGE_START;
     flat_bin_to_ascii_8(buffer, size, max_size, BP_NOTIFY);
@@ -374,7 +363,7 @@ static void build_ftms_data_packet(treadmill_t *treadmill, uint8_t *buffer, uint
     }
 
     if (flags & TD_HEART_RATE_PRESENT) {
-        flat_bin_to_ascii_8(buffer, size, max_size, 0);
+        flat_bin_to_ascii_8(buffer, size, max_size, heart_rate);
     }
 
     if (flags & TD_ELAPSED_TIME_PRESENT) {
@@ -393,50 +382,53 @@ int treadmill_send_ftms_data(treadmill_t *treadmill) {
 #define BUFSIZE 128
   uint8_t buffer[BUFSIZE] = {0};
   uint8_t bindex = 0;
+  const uint8_t packet_size_full = treadmill->training.bpm > 0U ? 25U : 24U;
+  const uint16_t mtu = treadmill->hw.ble.connection.mtu > 3U
+                           ? treadmill->hw.ble.connection.mtu - 3U
+                           : 0U;
+  uint16_t flags = TD_AVERAGE_SPEED_PRESENT |
+                   TD_TOTAL_DISTANCE_PRESENT |
+                   TD_INCLINATION_RAMP_ANGLE_SETTING_PRESENT |
+                   TD_ELEVATION_GAIN_PRESENT |
+                   TD_ELAPSED_TIME_PRESENT;
 
-  uint16_t instantaneous_speed = treadmill->training.speed;
-  uint16_t average_speed = treadmill->training.average_speed; //Lucas
-  uint32_t total_distance = treadmill->training.meters;
-  uint16_t elapsed_time = treadmill->training.seconds;
-  uint16_t inclination = treadmill->training.incline;
-  uint16_t calories = treadmill->training.kcal / 1000;    
-
-  // packet size = 2 + 2 + 3 + 4 + 4 + 4 + 1 + 1 + 2 = 23 bytes    
-  const int packet_size = 25;
-  const int mtu = treadmill->hw.ble.connection.mtu > 0 ? treadmill->hw.ble.connection.mtu - 3 : 0;
-  
-  if (mtu && mtu < packet_size) {
-      // split in two
-      uint16_t flags = 0x0000;
-      bindex = 0;
-      flags |= TD_MORE_DATA;             // -ok
-      flags |= TD_ELAPSED_TIME_PRESENT;  // -ok      
-      flags |= TD_AVERAGE_SPEED_PRESENT; // -ok
-      build_ftms_data_packet(treadmill, buffer, BUFSIZE, &bindex, flags);
-      // send packet
-      treadmill->hw.ble.send_data(buffer, bindex);
-
-      flags = 0x0000;
-      bindex = 0;
-      flags |= TD_TOTAL_DISTANCE_PRESENT; // -ok
-      flags |= TD_INCLINATION_RAMP_ANGLE_SETTING_PRESENT; // -ok
-      flags |= TD_ELEVATION_GAIN_PRESENT; // -ok
-      flags |= TD_EXPENDED_ENERGY_PRESENT; // -ok
-      build_ftms_data_packet(treadmill, buffer, BUFSIZE, &bindex, flags);
-  } else {
-      // single packet
-      uint16_t flags = 0x0000;
-      bindex = 0;
-      flags |= TD_AVERAGE_SPEED_PRESENT; // -ok
-      flags |= TD_TOTAL_DISTANCE_PRESENT; // -ok
-      flags |= TD_INCLINATION_RAMP_ANGLE_SETTING_PRESENT; // -ok
-      flags |= TD_ELEVATION_GAIN_PRESENT; // -ok
-      flags |= TD_EXPENDED_ENERGY_PRESENT; // -ok
-      // // flags |= TD_HEART_RATE_PRESENT;
-      flags |= TD_ELAPSED_TIME_PRESENT; // -ok
-      build_ftms_data_packet(treadmill, buffer, BUFSIZE, &bindex, flags);        
+  if (treadmill->training.bpm > 0U) {
+    flags |= TD_HEART_RATE_PRESENT;
   }
 
+  if (mtu == 0U || mtu >= packet_size_full) {
+    flags |= TD_EXPENDED_ENERGY_PRESENT;
+    build_ftms_data_packet(treadmill, buffer, BUFSIZE, &bindex, flags);
+    return treadmill->hw.ble.send_data(buffer, bindex);
+  }
+
+  /* With a reduced ATT payload, preserve every field by splitting the FTMS
+     data. The first fragment omits instantaneous speed through MORE_DATA. */
+  const uint8_t packet_size_first = 11U;
+  const uint8_t packet_size_second = treadmill->training.bpm > 0U ? 16U : 15U;
+  if (mtu < packet_size_first || mtu < packet_size_second) {
+    return 0;
+  }
+
+  flags = TD_MORE_DATA |
+          TD_AVERAGE_SPEED_PRESENT |
+          TD_EXPENDED_ENERGY_PRESENT |
+          TD_ELAPSED_TIME_PRESENT;
+  build_ftms_data_packet(treadmill, buffer, BUFSIZE, &bindex, flags);
+  if (treadmill->hw.ble.send_data(buffer, bindex) <= 0) {
+    return 0;
+  }
+
+  memset(buffer, 0, sizeof(buffer));
+  bindex = 0;
+  flags = TD_TOTAL_DISTANCE_PRESENT |
+          TD_INCLINATION_RAMP_ANGLE_SETTING_PRESENT |
+          TD_ELEVATION_GAIN_PRESENT;
+  if (treadmill->training.bpm > 0U) {
+    flags |= TD_HEART_RATE_PRESENT;
+  }
+
+  build_ftms_data_packet(treadmill, buffer, BUFSIZE, &bindex, flags);
   return treadmill->hw.ble.send_data(buffer, bindex);
 }
 void treadmill_clear_bpm_hg_loss(treadmill_t *treadmill) {

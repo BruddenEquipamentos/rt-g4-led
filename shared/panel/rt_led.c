@@ -1,6 +1,7 @@
 #include "rt_led.h"
 
 #include <stddef.h>
+#include <stdio.h>
 #include <string.h>
 
 extern scene_t scene_init;
@@ -74,6 +75,41 @@ void rt_led_ble_name_update(treadmill_t *treadmill) {
     return; // Modelo desconhecido, não faz nada
   }
   strncpy(treadmill->config.device_name, device_name_id, 15);
+}
+
+int rt_led_send_training_data(treadmill_t *treadmill) {
+  static const char command_format[] =
+      "\x02"
+      "MD,{\"duration\":%u,\"dist\":%u,\"cal\":%u,\"avgSpd\":%u,\"maxSpd\":%u,"
+      "\"avgPace\":%u,\"avgHR\":%u,\"maxHR\":%u}\n";
+  char command[192] = {0};
+
+  if (treadmill == NULL ||
+      treadmill->hw.ble.state != BLE_STATE_READY ||
+      !treadmill->hw.ble.connected ||
+      !treadmill->hw.ble.ftms.subscribed) {
+    return 0;
+  }
+
+  /* Movement report contract: duration=s, dist=m, cal=kcal,
+     speed=0.01 km/h, pace=s/km and HR=bpm. */
+  uint32_t average_pace = treadmill->training.average_speed > 0U
+                              ? 360000U / treadmill->training.average_speed
+                              : 0U;
+  int command_length = snprintf(command, sizeof(command), command_format,
+                                (unsigned)treadmill->training.seconds,
+                                (unsigned)treadmill->training.meters,
+                                (unsigned)(treadmill->training.kcal / 1000U),
+                                (unsigned)treadmill->training.average_speed,
+                                (unsigned)treadmill->training.speed_max,
+                                (unsigned)average_pace,
+                                (unsigned)treadmill->training.bpm_average,
+                                (unsigned)treadmill->training.bpm_max);
+  if (command_length <= 0 || command_length >= (int)sizeof(command)) {
+    return 0;
+  }
+
+  return ble_post_long_message(command, "AOK", 1000);
 }
 
 void rt_led_load_model_params(treadmill_t *treadmill, rt_led_model_t model) {

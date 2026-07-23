@@ -1,5 +1,6 @@
 #include "scene.h"
 #include "../shared/dm/dm.h"
+#include "../panel/rt_led.h"
 #include "treadmill_action.h" ///////
 
 extern int report_state;
@@ -7,6 +8,41 @@ extern int completed_goal;
 extern int report_goal;
 
 static uint32_t nfc_tick_ms = 0; // temp
+static uint32_t training_data_last_attempt_ms = 0U;
+static uint8_t training_data_attempts = 0U;
+static uint8_t training_data_queued = 0U;
+
+#define TRAINING_DATA_MAX_ATTEMPTS 3U
+#define TRAINING_DATA_RETRY_MS 500U
+
+static void reset_training_data_queue(void) {
+  training_data_last_attempt_ms = 0U;
+  training_data_attempts = 0U;
+  training_data_queued = 0U;
+}
+
+static void queue_training_data_once(treadmill_t *treadmill) {
+  uint32_t now = treadmill->get_time_ms();
+
+  if (training_data_queued || training_data_attempts >= TRAINING_DATA_MAX_ATTEMPTS) {
+    return;
+  }
+  if (treadmill->hw.ble.state != BLE_STATE_READY ||
+      !treadmill->hw.ble.connected ||
+      !treadmill->hw.ble.ftms.subscribed) {
+    return;
+  }
+  if (training_data_attempts > 0U &&
+      now - training_data_last_attempt_ms < TRAINING_DATA_RETRY_MS) {
+    return;
+  }
+
+  training_data_last_attempt_ms = now;
+  ++training_data_attempts;
+  if (rt_led_send_training_data(treadmill)) {
+    training_data_queued = 1U;
+  }
+}
 
 static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
   switch (key) {
@@ -45,14 +81,22 @@ static void update(treadmill_t *treadmill) {
   // temp
   if (nfc_tick_ms == 0) {
     nfc_tick_ms = treadmill->get_time_ms();
-  } else if (nfc_tick_ms != 0xffffffff) {
+    reset_training_data_queue();
+  } else if (nfc_tick_ms != 0xffffffffU) {
     if (treadmill->get_time_ms() - nfc_tick_ms >= 1500) {
-      ble_post_message(
-        "\x02"
-        "NFC,0\n",
-        "AOK", 1000);
-      nfc_tick_ms = 0xffffffff;
+      if (ble_post_message(
+            "\x02"
+            "NFC,0\n",
+            "AOK", 1000)) {
+        nfc_tick_ms = 0xffffffffU;
+      }
     }
+  }
+
+  /* BLE commands are processed in FIFO order. Queue the Movement report only
+     after NFC,0 so its AOK is handled before the report is transmitted. */
+  if (nfc_tick_ms == 0xffffffffU) {
+    queue_training_data_once(treadmill);
   }
   
   if (completed_goal == 0){

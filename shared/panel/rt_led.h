@@ -92,5 +92,6 @@ void rt_led_render(treadmill_t *treadmill);
 void rt_led_load_model_params(treadmill_t *treadmill, rt_led_model_t model);
 
 void rt_led_ble_name_update(treadmill_t *treadmill);
+int rt_led_send_training_data(treadmill_t *treadmill);
 
 #endif

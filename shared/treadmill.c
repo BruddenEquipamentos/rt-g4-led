@@ -139,56 +139,34 @@ void treadmill_setup(treadmill_t *treadmill) {
   treadmill->debug.print_states = true;
 }
 
+static const char *treadmill_ble_flags_for_scene(treadmill_scene_t scene) {
+  switch (scene) {
+    case SCENE_TRAINING:
+      return "\x02" "SET_BLE_FLAGS,32\n";
+    case SCENE_PAUSED:
+      return "\x02" "SET_BLE_FLAGS,8\n";
+    case SCENE_EMERGENCY:
+      return "\x02" "SET_BLE_FLAGS,128\n";
+    case SCENE_BLE_ALLOW_YES_NO:
+      return "\x02" "SET_BLE_FLAGS,4\n";
+    case SCENE_REPORT:
+      return "\x02" "SET_BLE_FLAGS,0\n";
+    default:
+      return "\x02" "SET_BLE_FLAGS,16\n";
+  }
+}
+
 void treadmill_set_scene(treadmill_t *treadmill, treadmill_scene_t scene) {
   treadmill->previous_scene = treadmill->scene;
   treadmill->scene = scene;
   treadmill->scene_tick = treadmill->get_time_ms();
   treadmill->idle_tick = treadmill->get_time_ms();
-  
-  // if (treadmill->on_state_changed_callback) {
-  //   treadmill->on_state_changed_callback(treadmill, scene);
-  // }
-// switch (scene) {
-//         case SCENE_TRAINING: {
-//             ble_post_message(
-//             "\x02"
-//             "SET_BLE_FLAGS,32\n",
-//             "AOK", 1000);
-//             break;
-//         }
-//         case SCENE_PAUSED: {
-//             ble_post_message(
-//             "\x02"
-//             "SET_BLE_FLAGS,8\n",
-//             "AOK", 1000);
-//             break;
-//         }
-//         case SCENE_EMERGENCY: {
-//             ble_post_message(
-//             "\x02"
-//             "SET_BLE_FLAGS,128\n", // check this later
-//             "AOK", 1000);
-//             break;
-//         }
-//         case SCENE_BLE_ALLOW_YES_NO: {
-//             if (treadmill->hw.ble.connected == 1){
-//               ble_post_message(
-//               "\x02"
-//               "SET_BLE_FLAGS,4\n",
-//               "AOK", 1000);
-//             }
-//             else{}
-//             break;
-//         }
-//         default: {
-//             ble_post_message(
-//             "\x02"
-//             "SET_BLE_FLAGS,16\n",
-//             "AOK", 1000);
-//             break;
-//         }
-//     }
 
+  /* Do not change advertising data while GymKit or S Health owns the BLE
+     connection. Scene notifications (including pause) use the FTMS path. */
+  if (!treadmill->hw.ble.gk.connected && !treadmill->hw.ble.sh.connected) {
+    ble_post_message(treadmill_ble_flags_for_scene(scene), "", 1000);
+  }
 }
 uint32_t treadmill_calculate_pace(const uint16_t speed) {
   extern treadmill_t *pTreadmill;
