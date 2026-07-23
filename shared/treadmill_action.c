@@ -248,16 +248,26 @@ void treadmill_exit_config(treadmill_t *treadmill) {
   treadmill_set_scene(treadmill, SCENE_IDLE);
 }
 
-static int valid_ns(const char *nsu, const int length) {
-  if (length > 22) return 0;
+static int valid_ns(const char *ns, const int length) {
+  return ns != NULL && length > 0 && length < NVM_NS_MAX_LENGTH;
+}
+
+static int treadmill_save_ns(char *destination, uint16_t nvm_address,
+                             const char *value, const int length) {
+  if (!valid_ns(value, length)) return 0;
+  if (nvm.NVM_WriteString(nvm_address, value, (uint32_t)length,
+                          NVM_NS_MAX_LENGTH) != NVM_STATUS_OK) {
+    return 0;
+  }
+
+  memset(destination, 0, NVM_NS_MAX_LENGTH);
+  memcpy(destination, value, (size_t)length);
   return 1;
 }
 
 int treadmill_save_nsu(treadmill_t *treadmill, const char *nsu, const int length) {
-  if (!valid_ns(nsu, length)) return 0;
-  strncpy(treadmill->config.nsu, nsu, NVM_NS_MAX_LENGTH);
-  nvm.NVM_WriteString(NVM_NSU_START_ADDRESS, nsu, length, NVM_NS_MAX_LENGTH);
-  return 1;
+  return treadmill_save_ns(treadmill->config.nsu, NVM_NSU_START_ADDRESS,
+                           nsu, length);
 }
 
 // testing nsu write
@@ -272,17 +282,13 @@ int treadmill_save_nsu(treadmill_t *treadmill, const char *nsu, const int length
 // }
 
 int treadmill_save_nsp(treadmill_t *treadmill, const char *nsp, const int length) {
-  if (!valid_ns(nsp, length)) return 0;
-  strncpy(treadmill->config.nsp, nsp, NVM_NS_MAX_LENGTH);
-  nvm.NVM_WriteString(NVM_NSP_START_ADDRESS, nsp, length, NVM_NS_MAX_LENGTH);
-  return 1;
+  return treadmill_save_ns(treadmill->config.nsp, NVM_NSP_START_ADDRESS,
+                           nsp, length);
 }
 
 int treadmill_save_nsi(treadmill_t *treadmill, const char *nsi, const int length) {
-  if (!valid_ns(nsi, length)) return 0;
-  strncpy(treadmill->config.nsi, nsi, NVM_NS_MAX_LENGTH);
-  nvm.NVM_WriteString(NVM_NSI_START_ADDRESS, nsi, length, NVM_NS_MAX_LENGTH);
-  return 1;
+  return treadmill_save_ns(treadmill->config.nsi, NVM_NSI_START_ADDRESS,
+                           nsi, length);
 }
 
 int treadmill_save_total_distance(treadmill_t *treadmill, uint32_t total_distance_in_meters) {

@@ -340,9 +340,11 @@ void treadmill_load_config(treadmill_t *treadmill) {
     rt_led_ble_name_update(treadmill);
   }
 
-  char ns[22];
-  if (nvm.NVM_ReadString(NVM_NSU_START_ADDRESS, (uint8_t *)ns, 22)) {
-    strncpy(treadmill->config.nsu, ns, 22);
+  char ns[NVM_NS_MAX_LENGTH] = {0};
+  if (nvm.NVM_ReadString(NVM_NSU_START_ADDRESS, (uint8_t *)ns,
+                         sizeof(ns)) == NVM_STATUS_OK) {
+    ns[sizeof(ns) - 1U] = '\0';
+    memcpy(treadmill->config.nsu, ns, sizeof(treadmill->config.nsu));
   }
   // testing
   // for (int i = 0; i < 22; ++i) {
@@ -357,12 +359,18 @@ void treadmill_load_config(treadmill_t *treadmill) {
   // }
 
 
-  if (nvm.NVM_ReadString(NVM_NSP_START_ADDRESS, (uint8_t *)ns, 22)) {
-    strncpy(treadmill->config.nsp, ns, 22);
+  memset(ns, 0, sizeof(ns));
+  if (nvm.NVM_ReadString(NVM_NSP_START_ADDRESS, (uint8_t *)ns,
+                         sizeof(ns)) == NVM_STATUS_OK) {
+    ns[sizeof(ns) - 1U] = '\0';
+    memcpy(treadmill->config.nsp, ns, sizeof(treadmill->config.nsp));
   }
 
-  if (nvm.NVM_ReadString(NVM_NSI_START_ADDRESS, (uint8_t *)ns, 22)) {
-    strncpy(treadmill->config.nsi, ns, 22);
+  memset(ns, 0, sizeof(ns));
+  if (nvm.NVM_ReadString(NVM_NSI_START_ADDRESS, (uint8_t *)ns,
+                         sizeof(ns)) == NVM_STATUS_OK) {
+    ns[sizeof(ns) - 1U] = '\0';
+    memcpy(treadmill->config.nsi, ns, sizeof(treadmill->config.nsi));
   }
 
   treadmill_load_errors(treadmill);

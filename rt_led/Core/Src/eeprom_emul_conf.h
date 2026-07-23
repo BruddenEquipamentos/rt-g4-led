@@ -66,7 +66,7 @@
 /** @defgroup Exported_Configuration_Constants Exported Configuration Constants
   * @{
   */
-#define NB_OF_VARIABLES         66U  /*!< Number of variables to handle in eeprom */
+#define NB_OF_VARIABLES         165U /*!< Highest contiguous virtual address used in eeprom */
 
 /**
   * @}
