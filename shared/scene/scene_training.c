@@ -1,6 +1,9 @@
 #include "../treadmill_motor_modbus.h"
 #include "../treadmill_programs_update.h"
 #include "scene.h"
+#include "sd/sd_render.h" /////////
+#include "../panel/rt_led.h"
+#include "../treadmill_action.h"
 
 static void keypress(treadmill_t *treadmill, const kbd_key_t key) {
   treadmill_clear_bpm_hg_loss(treadmill); // avoid colision with programs fat burn and super cardio

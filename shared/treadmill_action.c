@@ -323,10 +323,10 @@ int treadmill_send_ftms_data(treadmill_t *treadmill) {
     // flat_bin_to_ascii_16(buffer, &bindex, BUFSIZE, FTMS_TREADMILL_DATA_UUID);
 
     // packet size = 2 + 2 + 3 + 4 + 4 + 4 + 1 + 1 + 2 = 23 bytes    
-    const packet_size = 23;
-    const mtu = treadmill->hw.ble.connection.mtu > 0 ? treadmill->hw.ble.connection.mtu - 3 : 0;
+    const int packet_size = 23;
+    const int mtu = treadmill->hw.ble.connection.mtu > 0 ? treadmill->hw.ble.connection.mtu - 3 : 0;
 
-    if (mtu == 0) return;
+    if (mtu == 0) return 0;
 
     if (mtu < packet_size) {
         // split in two

@@ -7,6 +7,7 @@
 #include "nvm/nvm.h"
 #include "panel/rt_led.h"
 #include "./dm/dm_render.h"
+#include "./dm/dm.h"
 
 char *scene_name[SCENE_TOTALS] = {
     "SCENE_INIT",    "SCENE_IDLE",      "SCENE_EMERGENCY", "SCENE_LUB",    "SCENE_CONFIG",
